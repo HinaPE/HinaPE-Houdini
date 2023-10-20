@@ -6,6 +6,7 @@
   - LMB: 旋转视角
   - MMB: 平移视角
   - RMB: 缩放视角
+  - D: Display Options
 
 ## Node Network View
 
