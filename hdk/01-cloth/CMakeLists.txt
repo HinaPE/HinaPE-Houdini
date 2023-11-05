@@ -20,6 +20,7 @@ set(SRC
         DLLEntrance.cpp
         solver.cpp
         solver.h
+        attribute_helper.h
 )
 
 add_library(
