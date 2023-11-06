@@ -1,6 +1,7 @@
 # Houdini Python Scripting
 
 which python?
+
 - mac: system python
 - windows: built-in python in Houdini
 
@@ -11,20 +12,20 @@ which python?
 - Hinge Constraint (Pendulum)
 - Group Dynamics Objects (PaddleWheel)
 
-
 ## Examples
 
 SimpleRBD
+
 - Ground Plane
 - Static Object
 
 DeformingRBD
+
 - Manipulate/Twist (For Geo)
 - `@Frame` -> current frame
 
 FrictionBalls
-- 
-
+-
 
 ## GETTING STARTED
 
@@ -32,10 +33,12 @@ FrictionBalls
 
 - `hou.frame()`: show current frame index
 
-
 ## Dynamics
 
-
-
-
 https://jurajtomori.wordpress.com/2018/02/20/houdini-tip-using-hou-module-in-visual-studio-code/
+
+
+
+## 3D Asset Library
+
+- [Poly Haven](https://polyhaven.com/)

@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(TARGET HinaCloth)
 
-set(Houdini_PATH "C:/Program Files/Side Effects Software/Houdini19.5.773")
+set(Houdini_PATH "C:/Program Files/Side Effects Software/Houdini 19.5.773")
 set(Houdini_DIR ${Houdini_PATH}/toolkit/cmake)
 find_package(Houdini REQUIRED)
 
