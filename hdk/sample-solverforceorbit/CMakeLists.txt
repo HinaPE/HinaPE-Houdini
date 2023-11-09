@@ -10,17 +10,15 @@ project(HinaPE-Houdini)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(TARGET HinaCloth)
+set(TARGET SolverForceOrbit)
 
 set(Houdini_PATH "C:/Program Files/Side Effects Software/Houdini 20.0.506")
 set(Houdini_DIR ${Houdini_PATH}/toolkit/cmake)
 find_package(Houdini REQUIRED)
 
 set(SRC
-        DLLEntrance.cpp
-        solver.cpp
-        solver.h
-        attribute_helper.h
+        SIM_ForceOrbit.h
+        SIM_ForceOrbit.C
 )
 
 add_library(

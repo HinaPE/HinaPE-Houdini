@@ -33,8 +33,8 @@ struct MySolverWrapper
 	MySolverWrapper() = default;
 	std::unique_ptr<MySolver> my_solver;
 
-	SIM_Solver::SIM_Result Init(SolverArgs &args);
-	SIM_Solver::SIM_Result Solve(SolverArgs &args);
+	auto Init(SolverArgs &args) -> SIM_Solver::SIM_Result;
+	auto Solve(SolverArgs &args) -> SIM_Solver::SIM_Result;
 };
 
 class Solver : public SIM_SingleSolver, public SIM_OptionsUser
