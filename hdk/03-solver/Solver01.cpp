@@ -5,13 +5,18 @@
 #include <SIM/SIM_PRMShared.h>
 #include <SIM/SIM_DopDescription.h>
 
+#include <SIM/SIM_Object.h>
+#include <SIM/SIM_Position.h>
+
+#include <iostream>
+
 void
 initializeSIM(void *)
 {
 	IMPLEMENT_DATAFACTORY(Solver01);
 }
 
-Solver01::Solver01(const SIM_DataFactory *factory) : SIM_Solver(factory), SIM_OptionsUser(this) {}
+Solver01::Solver01(const SIM_DataFactory *factory) : SIM_SingleSolver(factory), SIM_OptionsUser(this) {}
 Solver01::~Solver01() = default;
 
 auto Solver01::getSolver01Description() -> const SIM_DopDescription *
@@ -32,7 +37,38 @@ auto Solver01::getSolver01Description() -> const SIM_DopDescription *
 
 	return &theDopDescription;
 }
-auto Solver01::solveObjectsSubclass(SIM_Engine &engine, SIM_ObjectArray &objects, SIM_ObjectArray &newobjects, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep) -> SIM_Solver::SIM_Result
+auto Solver01::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject) -> SIM_Solver::SIM_Result
 {
-	return SIM_SOLVER_SUCCESS;
+	// init
+	if (newobject)
+	{
+
+	}
+
+//	UT_Vector3 pos;
+//	object.getPosition()->getPosition(pos);
+//	std::cout << pos << "\n";
+
+//	// update
+//	const auto& name = object.getName();
+//	std::cout << name << '\n';
+	auto *geo = object.getGeometry();
+//
+//	{
+//		SIM_GeometryAutoReadLock lock(geo);
+//		auto& gdp = lock.getGdp();
+//
+//		GA_Index;
+//	}
+//
+	return geo ? SIM_SOLVER_SUCCESS : SIM_SOLVER_FAIL;
+}
+
+void MyGeometry::initializeSubclass()
+{
+	SIM_Geometry::initializeSubclass();
+}
+auto MyGeometry::getGeometrySubclass() const -> GU_ConstDetailHandle
+{
+	return SIM_Geometry::getGeometrySubclass();
 }

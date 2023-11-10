@@ -37,8 +37,12 @@ FrictionBalls
 
 https://jurajtomori.wordpress.com/2018/02/20/houdini-tip-using-hou-module-in-visual-studio-code/
 
-
-
 ## 3D Asset Library
 
 - [Poly Haven](https://polyhaven.com/)
+
+
+
+[CB-Geo (github.com)](https://github.com/cb-geo)
+
+[Research – CB-Geo](https://www.cb-geo.com/)

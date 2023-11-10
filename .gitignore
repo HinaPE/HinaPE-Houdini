@@ -1,3 +1,4 @@
 backup
 cmake-build-relwithdebinfo
+cmake-build-debug
 .idea
