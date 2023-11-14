@@ -1,10 +1,3 @@
-# This file handles building each task as sub-project.
-#
-# Each task becomes an independent project in which you can experiment.
-#
-# Tasks are added as separate sub-projects so as compilation errors in
-# one task don't affect another task.
-
 cmake_minimum_required(VERSION 3.26)
 project(HinaPE-Houdini)
 
@@ -17,8 +10,11 @@ set(Houdini_DIR ${Houdini_PATH}/toolkit/cmake)
 find_package(Houdini REQUIRED)
 
 set(SRC
-        Solver01.h
-        Solver01.cpp
+        Entrance.cpp
+        solver.h
+        solver.cpp
+        data.cpp
+        data.h
 )
 
 add_library(
