@@ -17,24 +17,6 @@
 HinaClothSolver::HinaClothSolver(const SIM_DataFactory *factory) : SIM_SingleSolver(factory), SIM_OptionsUser(this) {}
 HinaClothSolver::~HinaClothSolver() = default;
 
-auto HinaClothSolver::getSolver01Description() -> const SIM_DopDescription *
-{
-	static PRM_Name theTest("test", "Test");
-
-	static std::array<PRM_Template, 2> PRMS{
-			PRM_Template(PRM_FLT_J,	1, &theTest, PRMoneDefaults),
-			PRM_Template()
-	};
-
-	static SIM_DopDescription theDopDescription(true,
-												"hina_cloth_solver",	// operator name
-												"Hina Cloth Solver",	// English name
-												"HinaClothSolver",	// default data name
-												classname(),
-												PRMS.data());
-
-	return &theDopDescription;
-}
 auto HinaClothSolver::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject) -> SIM_Solver::SIM_Result
 {
 	SIM_GeometryCopy *geo = nullptr;
@@ -73,4 +55,49 @@ auto HinaClothSolver::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &
 	}
 
 	return SIM_SOLVER_SUCCESS;
+}
+auto HinaClothSolver::getDescription() -> const SIM_DopDescription *
+{
+	static PRM_Name theTest("test", "Test");
+
+	static std::array<PRM_Template, 2> PRMS{
+			PRM_Template(PRM_FLT_J,	1, &theTest, PRMoneDefaults),
+			PRM_Template()
+	};
+
+	static SIM_DopDescription theDopDescription(true,
+												"hina_cloth_solver",	// operator name
+												"Hina Cloth Solver",	// English name
+												"HinaClothSolver",	// default data name
+												classname(),
+												PRMS.data());
+
+	return &theDopDescription;
+}
+
+HinaClothSolver2::HinaClothSolver2(const SIM_DataFactory *factory) : SIM_Solver(factory), SIM_OptionsUser(this) {}
+HinaClothSolver2::~HinaClothSolver2() = default;
+
+auto HinaClothSolver2::solveObjectsSubclass(SIM_Engine &engine, SIM_ObjectArray &objects, SIM_ObjectArray &newobjects, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep) -> SIM_Solver::SIM_Result
+{
+	return SIM_SOLVER_SUCCESS;
+}
+
+auto HinaClothSolver2::getDescription() -> const SIM_DopDescription *
+{
+	static PRM_Name theTest("test", "Test");
+
+	static std::array<PRM_Template, 2> PRMS{
+			PRM_Template(PRM_FLT_J,	1, &theTest, PRMoneDefaults),
+			PRM_Template()
+	};
+
+	static SIM_DopDescription theDopDescription(true,
+												"hina_cloth_solver2",	// operator name
+												"Hina Cloth Solver 2",	// English name
+												"HinaClothSolver2",	// default data name
+												classname(),
+												PRMS.data());
+
+	return &theDopDescription;
 }
