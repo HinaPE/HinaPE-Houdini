@@ -27,7 +27,7 @@ public:
 	auto operator[](size i) -> Iter { return Iter(&array[i * Dimension]); }
 
 private:
-	BaseType *array{nullptr};
+	BaseType * const array{nullptr};
 	size array_size{0};
 };
 
@@ -47,7 +47,7 @@ public:
 	auto operator[](size i) const -> Iter { return Iter(&array[i * Dimension]); }
 
 private:
-	const BaseType *array{nullptr};
+	const BaseType * const array{nullptr};
 	size array_size{0};
 };
 
