@@ -6,7 +6,7 @@
 void
 initializeSIM(void *)
 {
-	IMPLEMENT_DATAFACTORY(HinaClothSolver);
+//	IMPLEMENT_DATAFACTORY(HinaClothSolver);
 	IMPLEMENT_DATAFACTORY(HinaClothSolver2);
 	IMPLEMENT_DATAFACTORY(HinaClothData);
 }

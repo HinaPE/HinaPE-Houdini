@@ -5,8 +5,13 @@
 #include <SIM/SIM_DopDescription.h>
 
 #include <SIM/SIM_Object.h>
+#include <SIM/SIM_ObjectArray.h>
 #include <SIM/SIM_Position.h>
+#include <SIM/SIM_PositionSimple.h>
+#include <SIM/SIM_PositionComposite.h>
 #include <SIM/SIM_GeometryCopy.h>
+#include <SIM/SIM_ColliderInfo.h>
+
 
 #include <GU/GU_Detail.h>
 #include <GEO/GEO_PrimList.h>
@@ -19,23 +24,31 @@ HinaClothSolver::~HinaClothSolver() = default;
 
 auto HinaClothSolver::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject) -> SIM_Solver::SIM_Result
 {
-	SIM_GeometryCopy *geo = nullptr;
-
+	// We don't deal with newobject occasion currently
 	if (newobject)
+		return SIM_SOLVER_FAIL;
+
+	SIM_GeometryCopy *geo = nullptr;
+	SIM_Position *pos = nullptr;
+
+	geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
+	pos = SIM_DATA_GET(object, "Position", SIM_Position);
+
+	if (!geo || !pos)
+		return SIM_SOLVER_FAIL;
+
 	{
-		geo = SIM_DATA_CREATE(object, "Geometry", SIM_GeometryCopy, SIM_DATA_RETURN_EXISTING | SIM_DATA_ADOPT_EXISTING_ON_DELETE);
-	}
-	else
-	{
-		geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
+
 	}
 
-	if (!geo)
-		return SIM_SOLVER_FAIL;
+
+
 
 	{
 		SIM_GeometryAutoWriteLock write_lock(geo);
 		GU_Detail& gdp = write_lock.getGdp();
+
+		object.getPosition();
 
 		GEO_PrimList prims = gdp.primitives();
 		GA_Size num_prims = prims.entries();
@@ -80,15 +93,31 @@ HinaClothSolver2::~HinaClothSolver2() = default;
 
 auto HinaClothSolver2::solveObjectsSubclass(SIM_Engine &engine, SIM_ObjectArray &objects, SIM_ObjectArray &newobjects, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep) -> SIM_Solver::SIM_Result
 {
+	std::cout << "feedback: " << feedbacktoobjects.entries() << '\n';
+	for (int i = 0; i < objects.entries(); ++i)
+	{
+		SIM_Object *object = objects(i);
+		SIM_PositionSimple *pos = nullptr;
+
+		pos = SIM_DATA_GET(*object, "Position", SIM_PositionSimple);
+
+		if (!pos)
+			return SIM_SOLVER_FAIL;
+
+		const fpreal64 G = getGravity();
+		UT_Vector3 p = pos->getPosition();
+		p.y() -= G;
+		pos->setPosition(p);
+	}
 	return SIM_SOLVER_SUCCESS;
 }
 
 auto HinaClothSolver2::getDescription() -> const SIM_DopDescription *
 {
-	static PRM_Name theTest("test", "Test");
+	static PRM_Name theGravity("gravity", "Gravity");
 
 	static std::array<PRM_Template, 2> PRMS{
-			PRM_Template(PRM_FLT_J,	1, &theTest, PRMoneDefaults),
+			PRM_Template(PRM_FLT_J,	1, &theGravity, PRMoneDefaults),
 			PRM_Template()
 	};
 

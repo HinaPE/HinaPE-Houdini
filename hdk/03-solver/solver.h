@@ -34,7 +34,7 @@ private:
 	static auto getDescription() -> const SIM_DopDescription *;
 DECLARE_STANDARD_GETCASTTOTYPE();
 DECLARE_DATAFACTORY(HinaClothSolver2, SIM_Solver, "Hina Cloth Solver 2", getDescription());
-	GETSET_DATA_FUNCS_F("test", Test);
+	GETSET_DATA_FUNCS_F("gravity", Gravity);
 };
 
 #endif //INC_03_SOLVER_SOLVER01_H
