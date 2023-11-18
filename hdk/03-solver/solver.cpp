@@ -12,6 +12,9 @@
 #include <SIM/SIM_GeometryCopy.h>
 #include <SIM/SIM_ColliderInfo.h>
 
+#include <SIM/SIM_SweptCollisionUtility.h>
+#include <SIM/SIM_SurfaceCollisionParms.h>
+
 
 #include <GU/GU_Detail.h>
 #include <GEO/GEO_PrimList.h>

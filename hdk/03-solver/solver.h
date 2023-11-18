@@ -15,8 +15,6 @@ protected:
 private:
 	static auto getDescription() -> const SIM_DopDescription *;
 
-
-public:
 DECLARE_STANDARD_GETCASTTOTYPE();
 DECLARE_DATAFACTORY(HinaClothSolver, SIM_SingleSolver, "Hina Cloth Solver", getDescription());
 	GETSET_DATA_FUNCS_F("test", Test);

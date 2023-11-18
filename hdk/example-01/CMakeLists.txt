@@ -1,29 +1,32 @@
 cmake_minimum_required(VERSION 3.26)
-project(HinaPE-Houdini)
+project(example_01)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(TARGET HinaSolver01)
+set(TARGET MyFirstSolver)
 
+# Find Houdini
 set(Houdini_PATH "C:/Program Files/Side Effects Software/Houdini 20.0.506")
 set(Houdini_DIR ${Houdini_PATH}/toolkit/cmake)
 find_package(Houdini REQUIRED)
 
-set(SRC
+# Load Source
+add_library(
+        ${TARGET}
+        SHARED
         Entrance.cpp
-        solver.h
         solver.cpp
-        data.cpp
-        data.h
-        collider.cpp
-        collider.h
+        solver.h
 )
 
-add_library(
-        ${TARGET}  SHARED ${SRC}
+# Link Houdini Toolkit
+target_link_libraries(
+        ${TARGET}
+        PUBLIC
+        Houdini
 )
-target_link_libraries(${TARGET} PUBLIC Houdini)
-target_include_directories(${TARGET}
+target_include_directories(
+        ${TARGET}
         PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}
 )
