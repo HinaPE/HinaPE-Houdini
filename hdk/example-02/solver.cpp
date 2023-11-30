@@ -102,7 +102,7 @@ void GravityCollisionSolver::solve_gravity_effect(SIM_Object &obj, const SIM_Tim
 	VelocityData *vel;
 	vel = SIM_DATA_GET(obj, "VelocityData", VelocityData);
 	if (!vel)
-		Log.error_nullptr("INIT::VelocityData");
+		Log.error_nullptr("SOLVE::VelocityData");
 
 	// Dead simple Semi-Euler
 	UT_Vector3 p = pos->getPosition();
