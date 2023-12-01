@@ -6,16 +6,19 @@
 #include <SIM/SIM_DopDescription.h>
 #include <SIM/SIM_Utils.h>
 
+#include <iostream>
+
 /// Very Simple Gravity and Collision With Plane Example
 class PBDClothSolver : public SIM_SingleSolver, public SIM_OptionsUser
 {
 public:
 	GETSET_DATA_FUNCS_V3("gravity", Gravity);
 	GETSET_DATA_FUNCS_F("stiffness", Stiffness);
+	GETSET_DATA_FUNCS_I("constraint_iteration", ConstraintIteration);
 
 private:
-	PBDClothSolver(const SIM_DataFactory *factory) : SIM_SingleSolver(factory), SIM_OptionsUser(this) {}
-	~PBDClothSolver() override = default;
+	PBDClothSolver(const SIM_DataFactory *factory) : SIM_SingleSolver(factory), SIM_OptionsUser(this) { std::cout << "Create" << "\n"; }
+	~PBDClothSolver() override { std::cout << "Delete" << "\n"; }
 	SIM_Result solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject) override;
 	static const SIM_DopDescription *GetDescription();
 
@@ -25,8 +28,16 @@ DECLARE_DATAFACTORY(PBDClothSolver, SIM_SingleSolver, "PBD Cloth Solver Descript
 
 // ==================== Custom Field ====================
 protected:
-	void init(SIM_Object &obj);
-	void solve(SIM_Object &obj, const SIM_Time &dt);
+	void init(SIM_Object &obj) const;
+	void solve(SIM_Object &obj, const SIM_Time &dt) const;
+
+public:
+	struct DistanceConstraint
+	{
+		GA_Offset P1, P2;
+		fpreal rest_length;
+	};
+	static std::vector<DistanceConstraint> DCs;
 };
 
 
