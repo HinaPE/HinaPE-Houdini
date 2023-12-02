@@ -1,48 +1,27 @@
-# Houdini Python Scripting
+# HinaPE for Houdini
 
-which python?
+## Introduction
 
-- mac: system python
-- windows: built-in python in Houdini
+HinaPE is a recursive acronym for "HinaPE is not a Physics Engine". 
 
-## Learned Node
+## RoadMap v0.1.0
 
-- Rest Position
-- Merge
-- Hinge Constraint (Pendulum)
-- Group Dynamics Objects (PaddleWheel)
+Position Solver
 
-## Examples
+- [x] Gravity With Simple Collision
 
-SimpleRBD
+Cloth Solver
 
-- Ground Plane
-- Static Object
+- [x] PBD Cloth no Collision
 
-DeformingRBD
+- [ ] PBD Cloth with Primitive Collision
 
-- Manipulate/Twist (For Geo)
-- `@Frame` -> current frame
+- [ ] PBD Cloth with Arbitrary Geometry Collision
 
-FrictionBalls
--
+Particle System
 
-## GETTING STARTED
+- [ ] Firework
 
-### HOM introduction
+Fluid Solver
 
-- `hou.frame()`: show current frame index
-
-## Dynamics
-
-https://jurajtomori.wordpress.com/2018/02/20/houdini-tip-using-hou-module-in-visual-studio-code/
-
-## 3D Asset Library
-
-- [Poly Haven](https://polyhaven.com/)
-
-
-
-[CB-Geo (github.com)](https://github.com/cb-geo)
-
-[Research – CB-Geo](https://www.cb-geo.com/)
+- PBF 
