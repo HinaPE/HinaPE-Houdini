@@ -7,6 +7,9 @@
 
 class MySolver : public SIM_Solver, public SIM_OptionsUser
 {
+public:
+	GETSET_DATA_FUNCS_F("my_gravity", MyGravity);
+
 protected:
 	MySolver(const SIM_DataFactory *factory);
 	~MySolver() override;
@@ -19,7 +22,6 @@ private:
 
 	DECLARE_STANDARD_GETCASTTOTYPE();
 	DECLARE_DATAFACTORY(MySolver, SIM_Solver, "My Solver", GetDescription());
-	GETSET_DATA_FUNCS_F("my_gravity", MyGravity);
 };
 
 #endif //EXAMPLE_01_SOLVER_H
