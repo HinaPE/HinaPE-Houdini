@@ -169,7 +169,10 @@ void PBDClothSolver::solve(SIM_Object &obj, const SIM_Time &dt) const
 			UT_Vector3 velocity = velhandle.get(offset);
 			UT_Vector3 position = gdp.getPos3(offset);
 
-			velocity = velocity + dt * external_force;
+			if (isfixhandle.get(offset))
+				velocity = UT_Vector3(0.);
+			else
+				velocity = velocity + dt * external_force;
 			position = position + dt * velocity;
 
 			velhandle.set(offset, velocity);

@@ -25,7 +25,7 @@ const SIM_DopDescription *GravityCollisionSolver::GetDescription()
 	static std::array<PRM_Default, 3> my_gravity_default = {0, -9.8, 0};
 
 	static PRM_Name my_plane_level("my_plane_level", "My Plane Level");
-	static PRM_Default my_plane_level_default(-10);
+	static PRM_Default my_plane_level_default(0);
 
 	static std::array<PRM_Template, 3> PRMS{
 			PRM_Template(PRM_XYZ_J, 3, &my_gravity, my_gravity_default.data()),
