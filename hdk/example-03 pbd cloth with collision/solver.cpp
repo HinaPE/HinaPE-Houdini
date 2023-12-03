@@ -132,7 +132,7 @@ void PBDClothSolver::init(SIM_Object &obj) const
 		}
 	}
 
-	std::cout << "Inited" << '\n';
+//	std::cout << "Inited" << '\n';
 }
 
 void PBDClothSolver::solve(SIM_Object &obj, const SIM_Time &dt) const
@@ -230,5 +230,5 @@ void PBDClothSolver::solve(SIM_Object &obj, const SIM_Time &dt) const
 		}
 	}
 
-	std::cout << "Solved" << '\n';
+//	std::cout << "Solved" << '\n';
 }
