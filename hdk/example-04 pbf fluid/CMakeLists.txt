@@ -18,8 +18,6 @@ add_library(
         SIM_Interface.h
         solver.cpp
         solver.h
-        data.cpp
-        data.h
 )
 
 # Link Houdini Toolkit

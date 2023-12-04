@@ -33,11 +33,11 @@ struct IParam
 
 struct ISolver
 {
-	virtual void InitGeometry(SIM_Geometry *) = 0;
-	virtual void SolveGeometry(SIM_Geometry *, const SIM_Time &) = 0;
+	virtual void InitGeometry(SIM_Geometry *) {}
+	virtual void SolveGeometry(SIM_Geometry *, const SIM_Time &) {}
 
-	virtual void InitPosition(SIM_Position *) = 0;
-	virtual void SolvePosition(SIM_Position *, const SIM_Time &) = 0;
+	virtual void InitPosition(SIM_Position *) {}
+	virtual void SolvePosition(SIM_Position *, const SIM_Time &) {}
 
 	virtual ~ISolver() = default;
 

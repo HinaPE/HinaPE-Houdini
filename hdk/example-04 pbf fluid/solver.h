@@ -5,13 +5,10 @@
 
 namespace HinaPE
 {
-struct PBFSolver : ISolver
+struct PBFSolver final: ISolver
 {
-	void InitGeometry(SIM_Geometry *geometry) override;
-	void SolveGeometry(SIM_Geometry *geometry, const SIM_Time &time) override;
-
-	void InitPosition(SIM_Position *position) override;
-	void SolvePosition(SIM_Position *position, const SIM_Time &time) override;
+	void InitGeometry(SIM_Geometry *geometry) final;
+	void SolveGeometry(SIM_Geometry *geometry, const SIM_Time &time) final;
 };
 }
 
