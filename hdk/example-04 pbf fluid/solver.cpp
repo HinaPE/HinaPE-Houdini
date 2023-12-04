@@ -26,4 +26,3 @@ void HinaPE::PBFSolver::SolveGeometry(SIM_Geometry *geometry, const SIM_Time &ti
 	fpreal viscosity = Param.RealParams["viscosity"];
 	fpreal vorticity = Param.RealParams["vorticity"];
 }
-

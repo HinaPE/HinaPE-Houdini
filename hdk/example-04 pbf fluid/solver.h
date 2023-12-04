@@ -3,6 +3,8 @@
 
 #include "SIM_Interface.h"
 
+#include "GAS/GAS_PBDSolve.h"
+
 namespace HinaPE
 {
 struct PBFSolver final: ISolver

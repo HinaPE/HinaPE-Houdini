@@ -17,11 +17,8 @@ GETSET_DATA_FUNCS_V3("gravity", Gravity); \
 
 
 ImplementNewSolverHeader(SIM_PBFSolver)
-
 ImplementNewSolverImpl(SIM_PBFSolver)
-
 ImplementInnerSolverRequired(HinaPE::PBFSolver)
-
 void initializeSIM(void *)
 {
 	IMPLEMENT_DATAFACTORY(SIM_PBFSolver)
