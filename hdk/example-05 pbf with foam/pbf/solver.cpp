@@ -2,6 +2,8 @@
 
 #include "data.h"
 
+#include <GEO/GEO_Detail.h>
+
 #include <iostream>
 #include <cmath>
 
@@ -165,6 +167,14 @@ void HinaPE::BuildDeltaP(const GU_Detail &gdp, const GA_RWHandleV3D &DELTA_P, co
 
 		DELTA_P.set(offset, delta_p);
 	}
+}
+
+void ParticleCollision(const GU_Detail &fluid, const GU_Detail &collider)
+{
+	GU_Detail fluid_with_collider;
+	fluid_with_collider.copy(fluid);
+	fluid_with_collider.copy(fluid);
+	fluid_with_collider.merge(collider);
 }
 
 void HinaPE::IntegrateSemiEuler(GA_Offset offset, const GA_RWHandleV3D &pos, const GA_RWHandleV3D &vel, const GA_ROHandleV3 &force, const GA_ROHandleR &inv_mass, const fpreal dt)

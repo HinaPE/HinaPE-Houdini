@@ -64,4 +64,6 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &, SI
 	{
 //		solve(object, timestep);
 	}
+
+	return SIM_Solver::SIM_SOLVER_SUCCESS;
 }

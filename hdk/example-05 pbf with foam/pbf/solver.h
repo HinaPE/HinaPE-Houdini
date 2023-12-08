@@ -4,6 +4,8 @@
 #include <GU/GU_Detail.h>
 #include <GU/GU_NeighbourList.h>
 
+#include <GEO/GEO_Mirror.h>
+
 class GU_Detail;
 
 namespace HinaPE
@@ -28,6 +30,9 @@ void BuildLambda(const GU_Detail &gdp, const GA_RWHandleD &LAMBDA, const GA_ROHa
 
 // DeltaP
 void BuildDeltaP(const GU_Detail &gdp, const GA_RWHandleV3D &DELTA_P, const GA_ROHandleD &lambda, const GU_NeighbourList &neighbor_list, const GA_ROHandleV3D &pos);
+
+// Collision
+void ParticleCollision();
 
 // Integrate
 void IntegrateSemiEuler(GA_Offset offset, const GA_RWHandleV3D &POS, const GA_RWHandleV3D &VEL, const GA_ROHandleV3 &force, const GA_ROHandleR &inv_mass, const fpreal dt);
