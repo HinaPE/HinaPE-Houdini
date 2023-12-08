@@ -7,32 +7,32 @@
 #include <iostream>
 #include <cmath>
 
-constexpr SYS_FORCE_INLINE fpreal
-HinaPE::WPoly6(const UT_Vector3D &pi, const UT_Vector3D &pj, fpreal radius, fpreal KPOLY)
+constexpr SYS_FORCE_INLINE float
+HinaPE::WPoly6(const UT_Vector3F &pi, const UT_Vector3F &pj, float radius, float KPOLY)
 {
-	UT_Vector3D r = pi - pj;
+	UT_Vector3F r = pi - pj;
 	float rLen = r.length();
 	if (rLen > radius || rLen == 0) return 0;
 	return KPOLY * std::pow((radius * radius - pow(rLen, 2)), 3);
 }
 
-constexpr SYS_FORCE_INLINE UT_Vector3D
-HinaPE::gradWPoly6(const UT_Vector3D &pi, const UT_Vector3D &pj, fpreal radius, fpreal k_poly)
+constexpr SYS_FORCE_INLINE UT_Vector3F
+HinaPE::gradWPoly6(const UT_Vector3F &pi, const UT_Vector3F &pj, float radius, float k_poly)
 {
-	UT_Vector3D r = pi - pj;
+	UT_Vector3F r = pi - pj;
 	float rLen = r.length();
-	if (rLen > radius || rLen == 0) { return UT_Vector3D(0.0); }
+	if (rLen > radius || rLen == 0) { return UT_Vector3F(0.0); }
 
 	float coeff = std::pow((radius * radius) - (rLen * rLen), 2);
 	coeff *= -6 * k_poly;
 	return r * coeff;
 }
-constexpr SYS_FORCE_INLINE UT_Vector3D
-HinaPE::WSpiky(const UT_Vector3D &pi, const UT_Vector3D &pj, fpreal radius, fpreal spiky)
+constexpr SYS_FORCE_INLINE UT_Vector3F
+HinaPE::WSpiky(const UT_Vector3F &pi, const UT_Vector3F &pj, float radius, float spiky)
 {
-	UT_Vector3D r = pi - pj;
+	UT_Vector3F r = pi - pj;
 	float rLen = r.length();
-	if (rLen > radius || rLen == 0) { return UT_Vector3D(0.0); }
+	if (rLen > radius || rLen == 0) { return UT_Vector3F(0.0); }
 
 	float coeff = (radius - rLen) * (radius - rLen);
 	coeff *= spiky;
@@ -86,22 +86,22 @@ void HinaPE::BuildNeighbor(const GU_Detail &gdp, GU_NeighbourList &NeighborList)
 	NeighborList.build(&gdp, params);
 }
 
-void HinaPE::BuildDensity(const GU_Detail &gdp, const GA_RWHandleD &DENSITY, const GU_NeighbourList &neighbor_list, const GA_ROHandleV3D &pos, const GA_ROHandleD &mass)
+void HinaPE::BuildDensity(const GU_Detail &gdp, const GA_RWHandleF &DENSITY, const GU_NeighbourList &neighbor_list, const GA_ROHandleV3 &pos, const GA_ROHandleF &mass)
 {
 	for (GA_Size i = 0; i < gdp.getNumPoints(); ++i)
 	{
 		GA_Offset offset = gdp.pointOffset(i);
 
-		UT_Vector3D pos_i = pos.get(offset);
-		fpreal mass_i = mass.get(offset);
+		UT_Vector3F pos_i = pos.get(offset);
+		float mass_i = mass.get(offset);
 
 		UT_Array<GA_Offset> ptlist;
 		neighbor_list.getNeighbours(i, &gdp, ptlist);
 
-		fpreal density_sum = 0;
+		float density_sum = 0;
 		for (const GA_Offset &neighbor_point_offset: ptlist)
 		{
-			UT_Vector3D pos_j = pos.get(neighbor_point_offset);
+			UT_Vector3F pos_j = pos.get(neighbor_point_offset);
 			density_sum += mass_i * WPoly6(pos_i, pos_j, PRM.RADIUS, PRM.KPOLY);
 		}
 
@@ -109,56 +109,56 @@ void HinaPE::BuildDensity(const GU_Detail &gdp, const GA_RWHandleD &DENSITY, con
 	}
 }
 
-void HinaPE::BuildLambda(const GU_Detail &gdp, const GA_RWHandleD &LAMBDA, const GA_ROHandleD &density, const fpreal eps, const GU_NeighbourList &neighbor_list, const GA_ROHandleV3D &pos)
+void HinaPE::BuildLambda(const GU_Detail &gdp, const GA_RWHandleF &LAMBDA, const GA_ROHandleF &density, float eps, const GU_NeighbourList &neighbor_list, const GA_ROHandleV3 &pos)
 {
 	for (GA_Size i = 0; i < gdp.getNumPoints(); ++i)
 	{
 		GA_Offset offset = gdp.pointOffset(i);
 
-		UT_Vector3D pos_i = pos.get(i);
-		fpreal density_i = density.get(i);
+		UT_Vector3F pos_i = pos.get(i);
+		float density_i = density.get(i);
 
 		UT_Array<GA_Offset> ptlist;
 		neighbor_list.getNeighbours(i, &gdp, ptlist);
 
-		fpreal densityC = density_i / PRM.REST_DENSITY - 1;
-		UT_Vector3D grad_I = UT_Vector3D(0.0);
-		fpreal sum_density = 0;
+		float densityC = density_i / PRM.REST_DENSITY - 1;
+		UT_Vector3F grad_I = UT_Vector3F(0.0);
+		float sum_density = 0;
 		for (const GA_Offset &neighbor_point_offset: ptlist)
 		{
-			UT_Vector3D pos_j = pos.get(neighbor_point_offset);
-			UT_Vector3D grad_J = WSpiky(pos_i, pos_j, PRM.RADIUS, PRM.SPIKY) / PRM.REST_DENSITY;
+			UT_Vector3F pos_j = pos.get(neighbor_point_offset);
+			UT_Vector3F grad_J = WSpiky(pos_i, pos_j, PRM.RADIUS, PRM.SPIKY) / PRM.REST_DENSITY;
 			sum_density += grad_J.length2();
 			grad_I += grad_J;
 		}
 		sum_density += grad_I.length2();
-		fpreal lambda = -densityC / (sum_density + eps);
+		float lambda = -densityC / (sum_density + eps);
 
 		LAMBDA.set(offset, lambda);
 	}
 }
 
-void HinaPE::BuildDeltaP(const GU_Detail &gdp, const GA_RWHandleV3D &DELTA_P, const GA_ROHandleD &lambda, const GU_NeighbourList &neighbor_list, const GA_ROHandleV3D &pos)
+void HinaPE::BuildDeltaP(const GU_Detail &gdp, const GA_RWHandleV3 &DELTA_P, const GA_ROHandleF &lambda, const GU_NeighbourList &neighbor_list, const GA_ROHandleV3 &pos)
 {
 	for (GA_Size i = 0; i < gdp.getNumPoints(); ++i)
 	{
 		GA_Offset offset = gdp.pointOffset(i);
 
-		UT_Vector3D pos_i = pos.get(i);
-		fpreal lambda_i = lambda.get(i);
+		UT_Vector3F pos_i = pos.get(i);
+		float lambda_i = lambda.get(i);
 
 		UT_Array<GA_Offset> ptlist;
 		neighbor_list.getNeighbours(i, &gdp, ptlist);
 
-		UT_Vector3D delta_p = UT_Vector3D(0.0);
+		UT_Vector3F delta_p = UT_Vector3F(0.0);
 		for (const GA_Offset &neighbor_point_offset: ptlist)
 		{
-			UT_Vector3D pos_j = pos.get(neighbor_point_offset);
-			fpreal lambda_sum = lambda_i + lambda.get(neighbor_point_offset);
+			UT_Vector3F pos_j = pos.get(neighbor_point_offset);
+			float lambda_sum = lambda_i + lambda.get(neighbor_point_offset);
 
-			fpreal corr = WPoly6(pos_i, pos_j, PRM.RADIUS, PRM.KPOLY) / PRM.wQH;
+			float corr = WPoly6(pos_i, pos_j, PRM.RADIUS, PRM.KPOLY) / PRM.wQH;
 			corr *= corr * corr * corr;
-			fpreal s_corr = -PRM.K * corr;
+			float s_corr = -PRM.K * corr;
 
 			delta_p += (lambda_sum + s_corr) * WSpiky(pos_i, pos_j, PRM.RADIUS, PRM.SPIKY);
 		}
@@ -177,7 +177,7 @@ void ParticleCollision(const GU_Detail &fluid, const GU_Detail &collider)
 	fluid_with_collider.merge(collider);
 }
 
-void HinaPE::IntegrateSemiEuler(GA_Offset offset, const GA_RWHandleV3D &pos, const GA_RWHandleV3D &vel, const GA_ROHandleV3 &force, const GA_ROHandleR &inv_mass, const fpreal dt)
+void HinaPE::IntegrateSemiEuler(GA_Offset offset, const GA_RWHandleV3 &pos, const GA_RWHandleV3 &vel, const GA_ROHandleV3 &force, const GA_ROHandleF &inv_mass, const float dt)
 {
 	auto p = pos.get(offset);
 	auto v = vel.get(offset);
@@ -193,7 +193,7 @@ void HinaPE::IntegrateSemiEuler(GA_Offset offset, const GA_RWHandleV3D &pos, con
 	pos.set(offset, p);
 }
 
-void HinaPE::SolveDistanceConstraint(GA_Offset p1, GA_Offset p2, const GA_RWHandleV3D &POS, const GA_ROHandleV3 &pos, const GA_ROHandleR &inv_mass, fpreal rest_length, fpreal stiffness)
+void HinaPE::SolveDistanceConstraint(GA_Offset p1, GA_Offset p2, const GA_RWHandleV3 &POS, const GA_ROHandleV3 &pos, const GA_ROHandleF &inv_mass, float rest_length, float stiffness)
 {
 	auto pos1 = pos.get(p1);
 	auto pos2 = pos.get(p2);

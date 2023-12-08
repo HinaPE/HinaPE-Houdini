@@ -21,10 +21,6 @@
 #include <array>
 #include <iostream>
 
-UT_StringHolder EdgeClothGroupName("EdgesForCloth");
-UT_StringHolder IsFixAttributeName("IsFix");
-UT_StringHolder PredictPositionAttributeName("PdP");
-
 const SIM_DopDescription *SIM_PBFSolver::GetDescription()
 {
 	static PRM_Name gravity("gravity", "Gravity");
