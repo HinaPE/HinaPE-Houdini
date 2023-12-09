@@ -1,5 +1,7 @@
 #include "SIM_PBFSolver.h"
 
+#include "pbf/solver.h"
+
 #include <PRM/PRM_Name.h>
 #include <PRM/PRM_Template.h>
 #include <PRM/PRM_Shared.h>
@@ -9,6 +11,9 @@
 #include <SIM/SIM_Object.h>
 #include <SIM/SIM_ObjectArray.h>
 #include <SIM/SIM_GeometryCopy.h>
+#include <SIM/SIM_Collider.h>
+#include <SIM/SIM_ColliderPoint.h>
+#include <SIM/SIM_RelationshipSource.h>
 
 #include <GU/GU_Detail.h>
 #include <GA/GA_Handle.h>
@@ -50,16 +55,61 @@ const SIM_DopDescription *SIM_PBFSolver::GetDescription()
 
 SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject)
 {
-	static bool NeedReBuild = true;
+//	static bool NeedReBuild = true;
+//
+//	if (NeedReBuild || newobject)
+//	{
+////		init(object);
+//		NeedReBuild = false;
+//	} else
+//	{
+////		solve(object, timestep);
+//	}
 
-	if (NeedReBuild || newobject)
+	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
+	SIM_GeometryAutoWriteLock lock(geo);
+	GU_Detail& gdp = lock.getGdp();
+
+	std::cout << "obj points offset: ";
+	for (GA_Size i = 0; i < gdp.getNumPoints(); ++i)
 	{
-//		init(object);
-		NeedReBuild = false;
-	} else
-	{
-//		solve(object, timestep);
+		GA_Offset offset = gdp.pointOffset(i);
+		std::cout << offset << " ";
 	}
+	std::cout << "\n";
 
+	// After Effect
+	SIM_ObjectArray affectors;
+	object.getAffectors(affectors, "SIM_RelationshipCollide");
+	for (GA_Size i = 0; i < affectors.entries(); ++i)
+	{
+		SIM_Object &affector = *affectors(i);
+		if (!affector.getName().equal(object.getName()))
+		{
+			SIM_Geometry *collider_geo = SIM_DATA_GET(affector, "Geometry", SIM_Geometry);
+			SIM_GeometryAutoReadLock lock(collider_geo);
+			const GU_Detail* collider_gdp = lock.getGdp();
+
+			std::cout << "collider points offset: ";
+			for (GA_Size i = 0; i < collider_gdp->getNumPoints(); ++i)
+			{
+				GA_Offset offset = collider_gdp->pointOffset(i);
+				std::cout << offset << " ";
+			}
+			std::cout << "\n";
+
+			GU_Detail *merged_gdp = new GU_Detail();
+			merged_gdp->merge(gdp);
+			merged_gdp->merge(*collider_gdp);
+
+			std::cout << "merged points offset: ";
+			for (GA_Size i = 0; i < merged_gdp->getNumPoints(); ++i)
+			{
+				GA_Offset offset = merged_gdp->pointOffset(i);
+				std::cout << offset << " ";
+			}
+			std::cout << "\n";
+		}
+	}
 	return SIM_Solver::SIM_SOLVER_SUCCESS;
 }

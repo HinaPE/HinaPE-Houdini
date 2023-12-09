@@ -1,12 +1,12 @@
-#ifndef __SIM_PBFSolver_h__
-#define __SIM_PBFSolver_h__
+#ifndef SIM_PBFSolver_h
+#define SIM_PBFSolver_h
 
 #include <SIM/SIM_SingleSolver.h>
 #include <SIM/SIM_OptionsUser.h>
 #include <SIM/SIM_DopDescription.h>
 #include <SIM/SIM_Utils.h>
 
-/// PBD Cloth Example
+/// PBF Example
 class SIM_PBFSolver : public SIM_SingleSolver, public SIM_OptionsUser
 {
 public:
@@ -22,9 +22,6 @@ private:
 
 DECLARE_STANDARD_GETCASTTOTYPE();
 DECLARE_DATAFACTORY(SIM_PBFSolver, SIM_SingleSolver, "PBF Solver Description", GetDescription());
-
-
-// ==================== Custom Field ====================
 };
 
-#endif //__SIM_PBFSolver_h__
+#endif //SIM_PBFSolver_h
