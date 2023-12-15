@@ -42,6 +42,8 @@ add_library(
         pbf/interface.h
         pbf/solver.cpp
         pbf/solver.h
+        pbf/util_fcl.h
+        pbf/util_log.h
 )
 
 # Link Houdini Toolkit

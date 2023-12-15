@@ -1,6 +1,8 @@
 #include "SIM_PBFSolver.h"
 
 #include "pbf/solver.h"
+#include "pbf/util_fcl.h"
+#include "pbf/util_log.h"
 
 #include <PRM/PRM_Name.h>
 #include <PRM/PRM_Template.h>
@@ -31,25 +33,6 @@
 #include <SIM/SIM_SweptCollision.h>
 #include <SIM/SIM_SweptCollisionData.h>
 #include <SIM/SIM_SDFCollision.h>
-
-#include <OP/OP_Director.h>
-#include <MOT/MOT_Director.h>
-#include <filesystem>
-template<typename T>
-void DoLog(GA_ROHandleT<int32> Handle)
-{
-	MOT_Director *mot = dynamic_cast<MOT_Director *>( OPgetDirector());
-	std::filesystem::path file_path(mot->getFileName().c_str());
-	std::string logger_path = file_path.parent_path().string() + "/log.txt";
-	std::ofstream LOGGER(logger_path, std::ios::out | std::ios::app);
-
-	auto data = Handle->getData();
-	data.size();
-	LOGGER << data.size() << "\n";
-
-	LOGGER.flush();
-	LOGGER.close();
-}
 
 const SIM_DopDescription *SIM_PBFSolver::GetDescription()
 {
@@ -148,6 +131,16 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 //		}
 //	}
 
+	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
+	SIM_Position *pos = SIM_DATA_GET(object, "Position", SIM_Position);
+
+	if (!geo || !pos)
+	{
+		// Do Fail Log
+		HinaPE::ErrorLog<std::string>("NULLPTR - Geometry or Position is NULLPTR");
+		return SIM_Solver::SIM_SOLVER_FAIL;
+	}
+
 	SIM_ObjectArray affectors;
 	object.getAffectors(affectors, "SIM_RelationshipCollide");
 	for (GA_Size i = 0; i < affectors.entries(); ++i)
@@ -155,41 +148,21 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 		static SIM_Object &affector = *affectors(i);
 		if (!affector.getName().equal(object.getName()))
 		{
-			SIM_Impacts *impacts_a, *impacts_b;
-			SIMdetectCollisionsAndGenerateImpulses(
-					impacts_a,
-					impacts_b,
-					engine,
-					&object,
-					&affector,
-					SIM_Time(0),
-					SIM_Time(1),
-					1,
-					false);
+			SIM_GeometryCopy *collider_geo = SIM_DATA_GET(affector, "Geometry", SIM_GeometryCopy);
+			SIM_Position *collider_pos = SIM_DATA_GET(affector, "Position", SIM_Position);
+
+			GU_ConstDetailHandle gdh = geo->getGeometry();
+			GU_ConstDetailHandle collider_gdh = collider_geo->getGeometry();
+			auto collider1 = HinaPE::AsFCLCollider(*gdh.gdp(), *pos);
+			auto collider2 = HinaPE::AsFCLCollider(*collider_gdh.gdp(), *collider_pos);
+
+			// set the collision request structure, here we just use the default setting
+			fcl::CollisionRequestf request;
+			// result will be returned via the collision result structure
+			fcl::CollisionResultf result;
+			// perform collision test
+			fcl::collide(collider1.get(), collider2.get(), request, result);
 		}
-	}
-
-	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
-
-	{
-		SIM_GeometryAutoWriteLock lock(geo);
-		GU_Detail &gdp = lock.getGdp();
-		GA_ROHandleI hd = gdp.findPointAttribute("P");
-
-		hd.get(0);
-
-		DoLog<int>(hd);
-
-//		for (int i = 0; i < geo->getNumPoints(); ++i)
-//		{
-//			GA_Offset offset = gdp.pointOffset(i);
-//			LOGGER << gdp.getPos3(offset) << "\n";
-//		}
-
-//		auto data = hd->getData();
-//		hd.getAttribute();
-//
-//		std::cout << data.size() << "\n";
 	}
 
 	return SIM_Solver::SIM_SOLVER_SUCCESS;
