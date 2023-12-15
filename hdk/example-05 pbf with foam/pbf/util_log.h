@@ -10,6 +10,7 @@ namespace HinaPE
 template<typename T>
 void ErrorLog(T V)
 {
+#ifdef HINA_DEBUG
 	MOT_Director *mot = dynamic_cast<MOT_Director *>( OPgetDirector());
 	std::filesystem::path file_path(mot->getFileName().c_str());
 	std::string logger_path = file_path.parent_path().string() + "/log.txt";
@@ -19,11 +20,13 @@ void ErrorLog(T V)
 
 	LOGGER.flush();
 	LOGGER.close();
+#endif
 }
 
 template<typename T>
 void DoLog(GA_ROHandleT<int32> Handle)
 {
+#ifdef HINA_DEBUG
 	MOT_Director *mot = dynamic_cast<MOT_Director *>( OPgetDirector());
 	std::filesystem::path file_path(mot->getFileName().c_str());
 	std::string logger_path = file_path.parent_path().string() + "/log.txt";
@@ -35,7 +38,8 @@ void DoLog(GA_ROHandleT<int32> Handle)
 
 	LOGGER.flush();
 	LOGGER.close();
+#endif
 }
-}
+} // namespace HinaPE
 
 #endif //HINAPE_UTIL_LOG_H

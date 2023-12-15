@@ -63,6 +63,14 @@ target_compile_options(
         PRIVATE
         -D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION
 )
+target_compile_definitions(
+        ${TARGET}
+        PUBLIC
+        $<$<CONFIG:Debug>:HINA_DEBUG>
+        $<$<CONFIG:RelWithDebInfo>:HINA_DEBUG>
+        $<$<CONFIG:Release>:HINA_RELEASE>
+        $<$<CONFIG:MinSizeRel>:HINA_RELEASE>
+)
 if (BuildWithCUDA)
     target_compile_options(
             ${TARGET}

@@ -1,6 +1,8 @@
 ========================================
 NEW LOOP
-NEW AFFECTOR
-
 ========================================
 NEW LOOP
+PASSED NEW AFFECTOR: staticobject1
+Collision Time: 1[ms]
+NEW COLLISION
+NEW CONTACT

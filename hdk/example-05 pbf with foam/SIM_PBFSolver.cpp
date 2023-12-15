@@ -34,6 +34,8 @@
 #include <SIM/SIM_SweptCollisionData.h>
 #include <SIM/SIM_SDFCollision.h>
 
+#include <chrono>
+
 const SIM_DopDescription *SIM_PBFSolver::GetDescription()
 {
 	static PRM_Name gravity("gravity", "Gravity");
@@ -160,7 +162,7 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 				return SIM_Solver::SIM_SOLVER_FAIL;
 			}
 
-			HinaPE::ErrorLog("PASSED NEW AFFECTOR: " + affector.getName().toStdString());、
+			HinaPE::ErrorLog("PASSED NEW AFFECTOR: " + affector.getName().toStdString());
 
 			GU_ConstDetailHandle gdh = geo->getGeometry();
 			GU_ConstDetailHandle collider_gdh = collider_geo->getGeometry();
@@ -172,7 +174,14 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 			// result will be returned via the collision result structure
 			fcl::CollisionResultf result;
 			// perform collision test
+			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			fcl::collide(collider1.get(), collider2.get(), request, result);
+			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+			std::string performance_log = "Collision Time: ";
+			performance_log += std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+			performance_log += "[ms]";
+			HinaPE::ErrorLog(performance_log); // Debug: 47[ms] vs Release: 1[ms]
 
 			if (result.isCollision())
 			{
@@ -182,7 +191,6 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 				for (const fcl::Contact<float> &contact: contacts)
 				{
 					HinaPE::ErrorLog("NEW CONTACT");
-					contact.pos;
 				}
 
 				std::vector<fcl::CostSource<float>> cost_sources;
@@ -190,7 +198,6 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 				for (const fcl::CostSource<float> &cost_source: cost_sources)
 				{
 					HinaPE::ErrorLog("NEW COST SOURCE");
-					cost_source.aabb_max;
 				}
 			}
 		}
