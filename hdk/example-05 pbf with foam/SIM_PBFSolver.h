@@ -6,6 +6,8 @@
 #include <SIM/SIM_DopDescription.h>
 #include <SIM/SIM_Utils.h>
 
+#include "pbf/util_fcl.h"
+
 /// PBF Example
 class SIM_PBFSolver : public SIM_SingleSolver, public SIM_OptionsUser
 {
@@ -29,6 +31,10 @@ protected:
 
 DECLARE_STANDARD_GETCASTTOTYPE();
 DECLARE_DATAFACTORY(SIM_PBFSolver, SIM_SingleSolver, "PBF Solver Description", GetDescription());
+
+private:
+	std::vector<fcl::Contact<float>> cached_contacts;
+	std::vector<fcl::CostSource<float>> cached_cost_sources;
 };
 
 #endif //SIM_PBFSolver_h

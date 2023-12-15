@@ -3,4 +3,5 @@ cmake-build-relwithdebinfo
 cmake-build-debug
 cmake-build-release
 .idea
-log.txt
+log_error.txt
+log_info.txt
