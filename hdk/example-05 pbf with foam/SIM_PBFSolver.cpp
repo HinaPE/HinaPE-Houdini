@@ -166,14 +166,11 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 
 			GU_ConstDetailHandle gdh = geo->getGeometry();
 			GU_ConstDetailHandle collider_gdh = collider_geo->getGeometry();
-			auto collider1 = HinaPE::AsFCLCollider(*gdh.gdp(), *pos);
-			auto collider2 = HinaPE::AsFCLCollider(*collider_gdh.gdp(), *collider_pos);
+			auto collider1 = HinaPE::AsFCLCollider(gdh, pos);
+			auto collider2 = HinaPE::AsFCLCollider(collider_gdh, collider_pos);
 
-			// set the collision request structure, here we just use the default setting
-			fcl::CollisionRequestf request;
-			// result will be returned via the collision result structure
+			fcl::CollisionRequestf request(100, true, 100, true);
 			fcl::CollisionResultf result;
-			// perform collision test
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 			fcl::collide(collider1.get(), collider2.get(), request, result);
 			std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();

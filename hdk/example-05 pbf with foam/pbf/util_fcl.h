@@ -4,6 +4,7 @@
 #include "fcl/fcl.h"
 #include <GU/GU_Detail.h>
 #include <GU/GU_PrimPoly.h>
+#include <GEO/GEO_Macros.h>
 #include <SIM/SIM_Position.h>
 
 namespace HinaPE
@@ -35,10 +36,13 @@ std::shared_ptr<fcl::CollisionObjectf> AsFCLCollider(const GU_Detail &gdp, const
 			int vertex_count = poly->getVertexCount();
 			for (int j = 0; j < vertex_count; ++j)
 			{
-				int v0 = poly->getVertexIndex(j);
-				int v1 = poly->getVertexIndex((j + 1) % vertex_count);
-				int v2 = poly->getVertexIndex((j + 2) % vertex_count);
-				triangles.emplace_back(v0, v1, v2);
+				int v0 = poly->getVertexOffset(j);
+				int v1 = poly->getVertexOffset((j + 1) % vertex_count);
+				int v2 = poly->getVertexOffset((j + 2) % vertex_count);
+				GA_Offset p0 = gdp.vertexPoint(v0);
+				GA_Offset p1 = gdp.vertexPoint(v1);
+				GA_Offset p2 = gdp.vertexPoint(v2);
+				triangles.emplace_back(p0, p1, p2);
 			}
 		}
 	}
@@ -52,24 +56,26 @@ std::shared_ptr<fcl::CollisionObjectf> AsFCLCollider(const GU_Detail &gdp, const
 	geom->addSubModel(vertices, triangles);
 	geom->endModel();
 
-	fcl::Transform3f tf;
-	tf.linear() = fcl::Matrix3f::Identity();
+	fcl::Transform3f tf = fcl::Transform3f::Identity();
 	{
-		UT_Vector3 pos;
-		position.getPosition(pos);
-		tf.translation() = fcl::Vector3f(pos.x(), pos.y(), pos.z());
-
 		UT_Matrix4D mat;
 		position.getTransform(mat);
 		fcl::Matrix3f linear;
 		linear << mat[0][0], mat[0][1], mat[0][2],
 				mat[1][0], mat[1][1], mat[1][2],
 				mat[2][0], mat[2][1], mat[2][2];
+		linear.transpose();
 		tf.linear() = linear;
+
+		UT_Vector3 pos;
+		position.getPosition(pos);
+		tf.translation() = fcl::Vector3f(pos.x(), pos.y(), pos.z());
 	}
 
 	return std::make_shared<fcl::CollisionObjectf>(geom, tf);
 }
+std::shared_ptr<fcl::CollisionObjectf> AsFCLCollider(const GU_Detail *gdp, const SIM_Position *position) { return AsFCLCollider(*gdp, *position); }
+std::shared_ptr<fcl::CollisionObjectf> AsFCLCollider(const GU_ConstDetailHandle gdh, const SIM_Position *position) { return AsFCLCollider(*gdh.gdp(), *position); }
 }
 
 #endif //HINAPE_UTIL_FCL_H
