@@ -74,16 +74,6 @@ const SIM_DopDescription *SIM_PBFSolver::GetDescription()
 
 SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject)
 {
-//	static bool NeedReBuild = true;
-//
-//	if (NeedReBuild || newobject)
-//	{
-////		init(object);
-//		NeedReBuild = false;
-//	} else
-//	{
-////		solve(object, timestep);
-//	}
 
 //	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
 //	SIM_GeometryAutoWriteLock lock(geo);
@@ -131,6 +121,14 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 //		}
 //	}
 
+	static bool NeedReBuild = true;
+	if (NeedReBuild || newobject)
+	{
+		NeedReBuild = false;
+		return SIM_Solver::SIM_SOLVER_SUCCESS;
+	}
+
+
 	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
 	SIM_Position *pos = SIM_DATA_GET(object, "Position", SIM_Position);
 
@@ -148,8 +146,15 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 		static SIM_Object &affector = *affectors(i);
 		if (!affector.getName().equal(object.getName()))
 		{
-			SIM_GeometryCopy *collider_geo = SIM_DATA_GET(affector, "Geometry", SIM_GeometryCopy);
+			SIM_Geometry *collider_geo = SIM_DATA_GET(affector, "Geometry", SIM_Geometry);
 			SIM_Position *collider_pos = SIM_DATA_GET(affector, "Position", SIM_Position);
+
+			if (!collider_geo || !collider_pos)
+			{
+				// Do Fail Log
+				HinaPE::ErrorLog<std::string>("NULLPTR - Collider Geometry or Position is NULLPTR");
+				return SIM_Solver::SIM_SOLVER_FAIL;
+			}
 
 			GU_ConstDetailHandle gdh = geo->getGeometry();
 			GU_ConstDetailHandle collider_gdh = collider_geo->getGeometry();
@@ -162,6 +167,23 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 			fcl::CollisionResultf result;
 			// perform collision test
 			fcl::collide(collider1.get(), collider2.get(), request, result);
+
+			if (result.isCollision())
+			{
+				std::vector<fcl::Contact<float>> contacts;
+				result.getContacts(contacts);
+				for (const fcl::Contact<float> &contact: contacts)
+				{
+					contact.pos;
+				}
+
+				std::vector<fcl::CostSource<float>> cost_sources;
+				result.getCostSources(cost_sources);
+				for (const fcl::CostSource<float> &cost_source: cost_sources)
+				{
+					cost_source.aabb_max;
+				}
+			}
 		}
 	}
 
