@@ -71,7 +71,7 @@ const SIM_DopDescription *SIM_PBFSolver::GetDescription()
 	DESC.setGuideTemplates(GuidePRMS.data());
 	return &DESC;
 }
-
+#include <iostream>
 SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject)
 {
 
@@ -121,13 +121,15 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 //		}
 //	}
 
+	HinaPE::ErrorLog("========================================");
+	HinaPE::ErrorLog("NEW LOOP");
+
 	static bool NeedReBuild = true;
 	if (NeedReBuild || newobject)
 	{
 		NeedReBuild = false;
 		return SIM_Solver::SIM_SOLVER_SUCCESS;
 	}
-
 
 	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
 	SIM_Position *pos = SIM_DATA_GET(object, "Position", SIM_Position);
@@ -141,9 +143,11 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 
 	SIM_ObjectArray affectors;
 	object.getAffectors(affectors, "SIM_RelationshipCollide");
-	for (GA_Size i = 0; i < affectors.entries(); ++i)
+	exint num_affectors = affectors.entries();
+	for (exint i = 0; i < num_affectors; ++i)
 	{
-		static SIM_Object &affector = *affectors(i);
+		SIM_Object &affector = *affectors(i);
+
 		if (!affector.getName().equal(object.getName()))
 		{
 			SIM_Geometry *collider_geo = SIM_DATA_GET(affector, "Geometry", SIM_Geometry);
@@ -155,6 +159,8 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 				HinaPE::ErrorLog<std::string>("NULLPTR - Collider Geometry or Position is NULLPTR");
 				return SIM_Solver::SIM_SOLVER_FAIL;
 			}
+
+			HinaPE::ErrorLog("PASSED NEW AFFECTOR: " + affector.getName().toStdString());、
 
 			GU_ConstDetailHandle gdh = geo->getGeometry();
 			GU_ConstDetailHandle collider_gdh = collider_geo->getGeometry();
@@ -170,10 +176,12 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 
 			if (result.isCollision())
 			{
+				HinaPE::ErrorLog("NEW COLLISION");
 				std::vector<fcl::Contact<float>> contacts;
 				result.getContacts(contacts);
 				for (const fcl::Contact<float> &contact: contacts)
 				{
+					HinaPE::ErrorLog("NEW CONTACT");
 					contact.pos;
 				}
 
@@ -181,6 +189,7 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 				result.getCostSources(cost_sources);
 				for (const fcl::CostSource<float> &cost_source: cost_sources)
 				{
+					HinaPE::ErrorLog("NEW COST SOURCE");
 					cost_source.aabb_max;
 				}
 			}
