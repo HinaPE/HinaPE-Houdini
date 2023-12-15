@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 
-option(BuildWithEigen "Build with Eigen" OFF)
+option(BuildWithEigen "Build with Eigen" ON)
+option(BuildWithFCL "Build with FCL" ON)
 option(BuildWithCUDA "Build with CUDA" OFF)
 set(TARGET PBFSolver)
 set(CMAKE_CXX_STANDARD 17)
@@ -26,6 +27,7 @@ endif ()
 set(Houdini_DIR ${Houdini_PATH}/toolkit/cmake)
 find_package(Houdini REQUIRED)
 
+
 # Load Source
 add_library(
         ${TARGET}
@@ -33,6 +35,8 @@ add_library(
         Entrance.cpp
         SIM_PBFSolver.cpp
         SIM_PBFSolver.h
+        SIM_PBFObject.cpp
+        SIM_PBFObject.h
 
         pbf/data.h
         pbf/interface.h
@@ -70,14 +74,25 @@ if (BuildWithCUDA)
     set_target_properties(${TARGET} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 endif ()
 
+houdini_configure_target(${TARGET})
+
 if (BuildWithEigen)
     find_package(Eigen3 REQUIRED)
     target_link_libraries(${TARGET} PUBLIC Eigen3::Eigen)
     add_definitions(-DUSE_EIGEN)
 endif ()
 
-houdini_configure_target(${TARGET})
 
+# Find FCL
+if (BuildWithFCL)
+    set(ccd_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libccd/lib/ccd")
+    set(fcl_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libfcl/lib/cmake/fcl")
+    find_package(ccd REQUIRED)
+    find_package(fcl REQUIRED)
+    target_link_libraries(${TARGET} PUBLIC ${CCD_LIBRARIES} ${FCL_LIBRARIES})
+    target_include_directories(${TARGET} PUBLIC ${CCD_INCLUDE_DIRS} ${FCL_INCLUDE_DIRS})
+    add_definitions(-DUSE_FCL)
+endif ()
 
 if (BuildWithCUDA)
 # CUDA Test

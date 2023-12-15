@@ -13,6 +13,7 @@
 #include <SIM/SIM_GeometryCopy.h>
 #include <SIM/SIM_Collider.h>
 #include <SIM/SIM_ColliderPoint.h>
+#include <SIM/SIM_ColliderBFA.h>
 #include <SIM/SIM_RelationshipSource.h>
 #include <SIM/SIM_PRMShared.h>
 #include <SIM/SIM_GuideShared.h>
@@ -25,8 +26,30 @@
 #include <UT/UT_ParallelUtil.h>
 #include <UT/UT_ParallelPipeline.h>
 
-#include <array>
-#include <iostream>
+#include <SIM/SIM_Impacts.h>
+#include <SIM/SIM_SweptCollisionUtility.h>
+#include <SIM/SIM_SweptCollision.h>
+#include <SIM/SIM_SweptCollisionData.h>
+#include <SIM/SIM_SDFCollision.h>
+
+#include <OP/OP_Director.h>
+#include <MOT/MOT_Director.h>
+#include <filesystem>
+template<typename T>
+void DoLog(GA_ROHandleT<int32> Handle)
+{
+	MOT_Director *mot = dynamic_cast<MOT_Director *>( OPgetDirector());
+	std::filesystem::path file_path(mot->getFileName().c_str());
+	std::string logger_path = file_path.parent_path().string() + "/log.txt";
+	std::ofstream LOGGER(logger_path, std::ios::out | std::ios::app);
+
+	auto data = Handle->getData();
+	data.size();
+	LOGGER << data.size() << "\n";
+
+	LOGGER.flush();
+	LOGGER.close();
+}
 
 const SIM_DopDescription *SIM_PBFSolver::GetDescription()
 {
@@ -66,7 +89,7 @@ const SIM_DopDescription *SIM_PBFSolver::GetDescription()
 	return &DESC;
 }
 
-SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject)
+SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep, bool newobject)
 {
 //	static bool NeedReBuild = true;
 //
@@ -79,51 +102,96 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &, SI
 ////		solve(object, timestep);
 //	}
 
-	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
-	SIM_GeometryAutoWriteLock lock(geo);
-	GU_Detail &gdp = lock.getGdp();
+//	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
+//	SIM_GeometryAutoWriteLock lock(geo);
+//	GU_Detail &gdp = lock.getGdp();
 
-	std::cout << "obj points offset: ";
-	for (GA_Size i = 0; i < gdp.getNumPoints(); ++i)
-	{
-		GA_Offset offset = gdp.pointOffset(i);
-		std::cout << offset << " ";
-	}
-	std::cout << "\n";
+//	std::cout << "obj points offset: ";
+//	for (GA_Size i = 0; i < gdp.getNumPoints(); ++i)
+//	{
+//		GA_Offset offset = gdp.pointOffset(i);
+//		std::cout << offset << " ";
+//	}
+//	std::cout << "\n";
+//
+//	// After Effect
+//	SIM_ObjectArray affectors;
+//	object.getAffectors(affectors, "SIM_RelationshipCollide");
+//	for (GA_Size i = 0; i < affectors.entries(); ++i)
+//	{
+//		SIM_Object &affector = *affectors(i);
+//		if (!affector.getName().equal(object.getName()))
+//		{
+//			SIM_Geometry *collider_geo = SIM_DATA_GET(affector, "Geometry", SIM_Geometry);
+//			SIM_GeometryAutoReadLock collider_lock(collider_geo);
+//			const GU_Detail *collider_gdp = collider_lock.getGdp();
+//
+//			std::cout << "collider points offset: ";
+//			for (GA_Size i = 0; i < collider_gdp->getNumPoints(); ++i)
+//			{
+//				GA_Offset offset = collider_gdp->pointOffset(i);
+//				std::cout << offset << " ";
+//			}
+//			std::cout << "\n";
+//
+//			GU_Detail *merged_gdp = new GU_Detail();
+//			merged_gdp->merge(gdp); // Track offsets By yourself
+//			merged_gdp->merge(*collider_gdp);
+//
+//			std::cout << "merged points offset: ";
+//			for (GA_Size i = 0; i < merged_gdp->getNumPoints(); ++i)
+//			{
+//				GA_Offset offset = merged_gdp->pointOffset(i);
+//				std::cout << offset << " ";
+//			}
+//			std::cout << "\n";
+//		}
+//	}
 
-	// After Effect
 	SIM_ObjectArray affectors;
 	object.getAffectors(affectors, "SIM_RelationshipCollide");
 	for (GA_Size i = 0; i < affectors.entries(); ++i)
 	{
-		SIM_Object &affector = *affectors(i);
+		static SIM_Object &affector = *affectors(i);
 		if (!affector.getName().equal(object.getName()))
 		{
-			SIM_Geometry *collider_geo = SIM_DATA_GET(affector, "Geometry", SIM_Geometry);
-			SIM_GeometryAutoReadLock collider_lock(collider_geo);
-			const GU_Detail *collider_gdp = collider_lock.getGdp();
-
-			std::cout << "collider points offset: ";
-			for (GA_Size i = 0; i < collider_gdp->getNumPoints(); ++i)
-			{
-				GA_Offset offset = collider_gdp->pointOffset(i);
-				std::cout << offset << " ";
-			}
-			std::cout << "\n";
-
-			GU_Detail *merged_gdp = new GU_Detail();
-			merged_gdp->merge(gdp); // Track offsets By yourself
-			merged_gdp->merge(*collider_gdp);
-
-			std::cout << "merged points offset: ";
-			for (GA_Size i = 0; i < merged_gdp->getNumPoints(); ++i)
-			{
-				GA_Offset offset = merged_gdp->pointOffset(i);
-				std::cout << offset << " ";
-			}
-			std::cout << "\n";
+			SIM_Impacts *impacts_a, *impacts_b;
+			SIMdetectCollisionsAndGenerateImpulses(
+					impacts_a,
+					impacts_b,
+					engine,
+					&object,
+					&affector,
+					SIM_Time(0),
+					SIM_Time(1),
+					1,
+					false);
 		}
 	}
+
+	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
+
+	{
+		SIM_GeometryAutoWriteLock lock(geo);
+		GU_Detail &gdp = lock.getGdp();
+		GA_ROHandleI hd = gdp.findPointAttribute("P");
+
+		hd.get(0);
+
+		DoLog<int>(hd);
+
+//		for (int i = 0; i < geo->getNumPoints(); ++i)
+//		{
+//			GA_Offset offset = gdp.pointOffset(i);
+//			LOGGER << gdp.getPos3(offset) << "\n";
+//		}
+
+//		auto data = hd->getData();
+//		hd.getAttribute();
+//
+//		std::cout << data.size() << "\n";
+	}
+
 	return SIM_Solver::SIM_SOLVER_SUCCESS;
 }
 

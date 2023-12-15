@@ -4,8 +4,6 @@
 #include <GU/GU_Detail.h>
 #include <GU/GU_NeighbourList.h>
 
-#include <GEO/GEO_Mirror.h>
-
 class GU_Detail;
 
 namespace HinaPE
