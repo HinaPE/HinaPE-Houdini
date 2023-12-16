@@ -8,7 +8,7 @@
 
 namespace HinaPE
 {
-template<typename T, int Size = 1>
+template<typename T = std::string, int Size = 1>
 void DoLog(T log, const std::string &file_name)
 {
 	MOT_Director *mot = dynamic_cast<MOT_Director *>(OPgetDirector());
@@ -78,7 +78,7 @@ void DoLog(GA_ROHandleT<int32> Handle, const std::string &file_name)
 #endif
 }
 
-template<typename T, int Size = 1>
+template<typename T = std::string, int Size = 1>
 void InfoLog(T Log, const std::string &Prefix = "")
 {
 #ifdef HINA_DEBUG
@@ -95,7 +95,7 @@ void InfoLog(T Log, const std::string &Prefix = "")
 #endif
 }
 
-template<typename T, int Size = 1>
+template<typename T = std::string, int Size = 1>
 void MathLog(T Log, const std::string &Prefix = "")
 {
 #ifdef HINA_DEBUG
@@ -106,7 +106,7 @@ void MathLog(T Log, const std::string &Prefix = "")
 #endif
 }
 
-template<typename T, int Size = 1>
+template<typename T = std::string, int Size = 1>
 void ErrorLog(T Log, const std::string &Prefix = "")
 {
 #ifdef HINA_DEBUG

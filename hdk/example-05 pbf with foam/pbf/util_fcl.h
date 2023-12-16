@@ -7,6 +7,9 @@
 #include <GEO/GEO_Macros.h>
 #include <SIM/SIM_Position.h>
 
+// FCL: https://github.com/flexible-collision-library/fcl
+// CCD: https://github.com/danfis/libccd
+
 namespace HinaPE
 {
 // Note: Make sure Primitive is Triangle

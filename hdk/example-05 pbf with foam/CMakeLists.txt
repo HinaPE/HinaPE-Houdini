@@ -95,6 +95,8 @@ endif ()
 
 
 # Find FCL
+# FCL: https://github.com/flexible-collision-library/fcl
+# CCD: https://github.com/danfis/libccd
 if (BuildWithFCL)
     set(ccd_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libccd/lib/ccd")
     set(fcl_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libfcl/lib/cmake/fcl")

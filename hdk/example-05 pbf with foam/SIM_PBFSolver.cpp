@@ -79,17 +79,32 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 {
 	HinaPE::InfoLog("========== NEW FRAME ==========");
 
+	SIM_ObjectArray affectors;
+	object.getAffectors(affectors, "SIM_RelationshipCollide");
+	exint num_affectors = affectors.entries();
+
 	static bool NeedReBuild = true;
 	if (NeedReBuild || newobject)
 	{
 		// TODO: Build/Init Your Data
 		// Note, the first frame is always for initialization
+
+		HinaPE::InfoLog("Num Affectors: " + num_affectors);
+
+		SIM_Impacts *impacts = SIM_DATA_CREATE(object, "Impacts", SIM_Impacts, SIM_DATA_RETURN_EXISTING | SIM_DATA_ADOPT_EXISTING_ON_DELETE);
+		for (exint i = 0; i < num_affectors; ++i)
+		{
+			SIM_Object &affector = *affectors(i);
+			if (!affector.getName().equal(object.getName()))
+				SIM_Impacts *collider_impacts = SIM_DATA_CREATE(affector, "Impacts", SIM_Impacts, SIM_DATA_RETURN_EXISTING | SIM_DATA_ADOPT_EXISTING_ON_DELETE);
+		}
 		NeedReBuild = false;
 		return SIM_Solver::SIM_SOLVER_SUCCESS;
 	}
 
 	SIM_GeometryCopy *geo = SIM_DATA_GET(object, "Geometry", SIM_GeometryCopy);
 	SIM_PositionSimple *pos = SIM_DATA_GET(object, "Position", SIM_PositionSimple);
+	SIM_Impacts *impacts = SIM_DATA_GET(object, "Impacts", SIM_Impacts);
 
 	if (!geo || !pos)
 	{
@@ -98,9 +113,6 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 		return SIM_Solver::SIM_SOLVER_FAIL;
 	}
 
-	SIM_ObjectArray affectors;
-	object.getAffectors(affectors, "SIM_RelationshipCollide");
-	exint num_affectors = affectors.entries();
 	for (exint i = 0; i < num_affectors; ++i)
 	{
 		SIM_Object &affector = *affectors(i);
@@ -119,6 +131,7 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 
 			HinaPE::InfoLog("PASSED NEW AFFECTOR: " + affector.getName().toStdString());
 
+			// ==================== USE FCL Collision ====================
 			GU_ConstDetailHandle gdh = geo->getGeometry();
 			GU_ConstDetailHandle collider_gdh = collider_geo->getGeometry();
 			auto collider1 = HinaPE::AsFCLCollider(gdh, pos);
@@ -140,29 +153,55 @@ SIM_Solver::SIM_Result SIM_PBFSolver::solveSingleObjectSubclass(SIM_Engine &engi
 			{
 				result.getContacts(cached_contacts);
 				HinaPE::InfoLog("Contacts Size: " + cached_contacts.size());
-				for (const fcl::Contact<float> &contact: cached_contacts)
-				{
-					HinaPE::InfoLog(contact.b1, "info");
-					HinaPE::InfoLog(contact.b2, "info");
-					HinaPE::InfoLog<fcl::Vector3<float>, 3>(contact.normal, "info");
-					HinaPE::InfoLog<fcl::Vector3<float>, 3>(contact.pos, "info");
-					HinaPE::InfoLog(contact.penetration_depth, "info");
-					HinaPE::InfoLog(contact.NONE, "info");
-
-					UT_Vector3F current_pos = pos->getPosition();
-					UT_Vector3F collision_normal = {contact.normal.x(), contact.normal.y(), contact.normal.z()};
-					fpreal32 collision_depth = contact.penetration_depth;
-					current_pos += collision_normal * collision_depth;
-					pos->setPosition(current_pos);
-				}
-
-				result.getCostSources(cached_cost_sources);
-				HinaPE::InfoLog("Contacts Size: " + cached_cost_sources.size());
-				for (const fcl::CostSource<float> &cost_source: cached_cost_sources)
-				{
-					HinaPE::InfoLog("MY COST SOURCE");
-				}
+//				for (const fcl::Contact<float> &contact: cached_contacts)
+//				{
+//					HinaPE::InfoLog(contact.b1, "info");
+//					HinaPE::InfoLog(contact.b2, "info");
+//					HinaPE::InfoLog<fcl::Vector3<float>, 3>(contact.normal, "info");
+//					HinaPE::InfoLog<fcl::Vector3<float>, 3>(contact.pos, "info");
+//					HinaPE::InfoLog(contact.penetration_depth, "info");
+//					HinaPE::InfoLog(contact.NONE, "info");
+//
+//					UT_Vector3F current_pos = pos->getPosition();
+//					UT_Vector3F collision_normal = {contact.normal.x(), contact.normal.y(), contact.normal.z()};
+//					fpreal32 collision_depth = contact.penetration_depth;
+//					current_pos += collision_normal * collision_depth;
+//					pos->setPosition(current_pos);
+//				}
+//
+//				result.getCostSources(cached_cost_sources);
+//				HinaPE::InfoLog("Contacts Size: " + cached_cost_sources.size());
+//				for (const fcl::CostSource<float> &cost_source: cached_cost_sources)
+//				{
+//					HinaPE::InfoLog("MY COST SOURCE");
+//				}
 			}
+			// ==================== USE FCL Collision ====================
+
+
+
+			// ==================== USE HDK Built In Collision ====================
+			SIM_Impacts *collider_impacts = SIM_DATA_GET(affector, "Impacts", SIM_Impacts);
+
+			if (!impacts || !collider_impacts)
+			{
+				// Do Fail Log
+				HinaPE::ErrorLog<std::string>("NULLPTR - Impacts is NULLPTR");
+				return SIM_Solver::SIM_SOLVER_FAIL;
+			}
+
+			SIMdetectCollisionsAndGenerateImpulses(
+					impacts,
+					collider_impacts,
+					engine,
+					&object,
+					&affector,
+					engine.getSimulationTime(),
+					timestep,
+					0,
+					true);
+			int num_impacts = impacts->getNumImpacts();
+			HinaPE::InfoLog("NUM IMPACTS: " + num_impacts);
 		}
 	}
 
