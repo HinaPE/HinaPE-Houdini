@@ -6,6 +6,10 @@ option(BuildWithCUDA "Build with CUDA" OFF)
 set(TARGET PBFSolver)
 set(CMAKE_CXX_STANDARD 17)
 
+if (APPLE)
+    set(BuildWithCUDA OFF)
+endif ()
+
 # Build With CUDA
 if (BuildWithCUDA)
     project(example_04_PBF LANGUAGES CXX CUDA)
@@ -20,7 +24,7 @@ endif ()
 
 
 # Find Houdini
-set(Houdini_PATH "C:/Program Files/Side Effects Software/Houdini 20.0.506")
+set(Houdini_PATH "C:/Program Files/Side Effects Software/Houdini 20.0.547")
 if (APPLE)
     set(Houdini_PATH "/Applications/Houdini/Houdini20.0.547/Frameworks/Houdini.framework/Versions/20.0/Resources")
 endif ()
@@ -98,33 +102,32 @@ endif ()
 # FCL: https://github.com/flexible-collision-library/fcl
 # CCD: https://github.com/danfis/libccd
 if (BuildWithFCL)
-    set(ccd_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libccd/lib/ccd")
-    set(fcl_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libfcl/lib/cmake/fcl")
     find_package(ccd REQUIRED)
     find_package(fcl REQUIRED)
     target_link_libraries(${TARGET} PUBLIC ${CCD_LIBRARIES} ${FCL_LIBRARIES})
     target_include_directories(${TARGET} PUBLIC ${CCD_INCLUDE_DIRS} ${FCL_INCLUDE_DIRS})
+    target_link_directories(${TARGET} PUBLIC ${CCD_LIBRARY_DIRS} ${FCL_LIBRARY_DIRS})
     add_definitions(-DUSE_FCL)
 endif ()
 
 if (BuildWithCUDA)
-# CUDA Test
-add_executable(CUDA_TEST pbf_gpu/main.cu)
-target_include_directories(
-        CUDA_TEST
-        INTERFACE
-        ${CMAKE_CURRENT_BINARY_DIR}
-        pbf_gpu
-)
-target_compile_options(
-        CUDA_TEST
-        INTERFACE
-        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
-        $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
-        $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>
-        --use_fast_math
-)
-target_link_libraries(CUDA_TEST INTERFACE ${CUDA_LIBRARIES})
-target_include_directories(CUDA_TEST INTERFACE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-set_target_properties(CUDA_TEST PROPERTIES CUDA_SEPARABLE_COMPILATION ON) # not recommended
+    # CUDA Test
+    add_executable(CUDA_TEST pbf_gpu/main.cu)
+    target_include_directories(
+            CUDA_TEST
+            INTERFACE
+            ${CMAKE_CURRENT_BINARY_DIR}
+            pbf_gpu
+    )
+    target_compile_options(
+            CUDA_TEST
+            INTERFACE
+            $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+            $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
+            $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>
+            --use_fast_math
+    )
+    target_link_libraries(CUDA_TEST INTERFACE ${CUDA_LIBRARIES})
+    target_include_directories(CUDA_TEST INTERFACE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+    set_target_properties(CUDA_TEST PROPERTIES CUDA_SEPARABLE_COMPILATION ON) # not recommended
 endif ()
