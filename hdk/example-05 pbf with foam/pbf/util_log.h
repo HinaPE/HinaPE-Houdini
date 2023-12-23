@@ -32,7 +32,7 @@ void DoLog(T log, const std::string &file_name)
 template<typename T, int Size = 1>
 void DoLog(std::vector<T> vec, const std::string &file_name)
 {
-#ifdef HINA_DEBUG
+//#ifdef HINA_DEBUG
 	MOT_Director *mot = dynamic_cast<MOT_Director *>(OPgetDirector());
 	std::filesystem::path file_path(mot->getFileName().c_str());
 	std::string logger_path = file_path.parent_path().string() + "/log_" + file_name + ".txt";
@@ -57,13 +57,13 @@ void DoLog(std::vector<T> vec, const std::string &file_name)
 
 	LOGGER.flush();
 	LOGGER.close();
-#endif
+//#endif
 }
 
 template<typename T>
 void DoLog(GA_ROHandleT<int32> Handle, const std::string &file_name)
 {
-#ifdef HINA_DEBUG
+//#ifdef HINA_DEBUG
 	MOT_Director *mot = dynamic_cast<MOT_Director *>( OPgetDirector());
 	std::filesystem::path file_path(mot->getFileName().c_str());
 	std::string logger_path = file_path.parent_path().string() + "/log_" + file_name + ".txt";
@@ -75,13 +75,13 @@ void DoLog(GA_ROHandleT<int32> Handle, const std::string &file_name)
 
 	LOGGER.flush();
 	LOGGER.close();
-#endif
+//#endif
 }
 
 template<typename T = std::string, int Size = 1>
 void InfoLog(T Log, const std::string &Prefix = "")
 {
-#ifdef HINA_DEBUG
+//#ifdef HINA_DEBUG
 	std::string total("Info: ");
 	total += Prefix;
 	if constexpr (Size == 1)
@@ -92,29 +92,29 @@ void InfoLog(T Log, const std::string &Prefix = "")
 			total += Log[i];
 	}
 	DoLog<std::string, Size>(total, "info");
-#endif
+//#endif
 }
 
 template<typename T = std::string, int Size = 1>
 void MathLog(T Log, const std::string &Prefix = "")
 {
-#ifdef HINA_DEBUG
+//#ifdef HINA_DEBUG
 	std::string total("Math: ");
 	total += Prefix;
 	total += Log;
 	DoLog<std::string, Size>(total, "math");
-#endif
+//#endif
 }
 
 template<typename T = std::string, int Size = 1>
 void ErrorLog(T Log, const std::string &Prefix = "")
 {
-#ifdef HINA_DEBUG
+//#ifdef HINA_DEBUG
 	std::string total("Error: ");
 	total += Prefix;
 	total += Log;
 	DoLog<std::string, Size>(total, "error");
-#endif
+//#endif
 }
 } // namespace HinaPE
 
