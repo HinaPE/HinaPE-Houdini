@@ -44,3 +44,27 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 houdini_configure_target(${TARGET})
+
+set(TEST_TARGET test)
+add_executable(
+        ${TEST_TARGET}
+        test.cpp
+)
+# Link Houdini Toolkit
+target_link_libraries(
+        ${TEST_TARGET}
+        PUBLIC
+        ${TARGET}
+        Houdini
+)
+target_link_directories(
+        ${TEST_TARGET}
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_include_directories(
+        ${TEST_TARGET}
+        PUBLIC
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)

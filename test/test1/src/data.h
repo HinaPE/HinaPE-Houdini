@@ -1,12 +1,8 @@
 #ifndef SIM_PBF_DATA_H
 #define SIM_PBF_DATA_H
 
+#include "utils.h"
 #include <vector>
-
-namespace HinaPE_PBF
-{
-using real = float;
-using size = int32_t;
 
 struct PBF_DATA
 {
@@ -23,6 +19,5 @@ struct PBF_DATA
 	std::vector<real> lambdas;
 	std::vector<real> delta_p;
 };
-}
 
 #endif //SIM_PBF_DATA_H

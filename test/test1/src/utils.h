@@ -1,54 +1,103 @@
 #ifndef SIM_PBF_UTILS_H
 #define SIM_PBF_UTILS_H
 
-#include "data.h"
 #include <GU/GU_Detail.h>
 
-namespace HinaPE_PBF
-{
-template<typename T, typename Prim>
-struct ArrayHandle
-{
-	ArrayHandle(T *_internal) : internal(_internal) {}
-	~ArrayHandle() = default;
+#include <numeric>
 
-	virtual Prim get(int off) const = 0;
-	virtual void set(int off, Prim p) = 0;
+using real = float;
+using sz = int32;
 
-	T *internal;
+template<typename SRC>
+struct UT_Vector3TArrayHandle
+{
+	explicit UT_Vector3TArrayHandle(SRC *_internal, std::function<sz(sz)> &&ito = [](sz i) { return i; })
+			: internal(_internal), index_to_offset(std::move(ito)) {}
+	virtual ~UT_Vector3TArrayHandle() = default;
+
+	virtual UT_Vector3T<real> geti(int idx) const { return geto(index_to_offset(idx)); }
+	virtual void seti(int idx, UT_Vector3T<real> p) { seto(index_to_offset(idx), p); }
+
+	virtual UT_Vector3T<real> geto(int off) const = 0;
+	virtual void seto(int off, UT_Vector3T<real> p) = 0;
+
+	std::function<sz(sz)> index_to_offset;
+
+protected:
+	SRC *internal;
 };
 
-template<typename T, typename Prim>
-struct ConstArrayHandle
+template<typename SRC>
+struct MultipleUT_Vector3TArrayHandle
 {
-	ConstArrayHandle(ArrayHandle<T, Prim> *_internal) : internal(_internal) {}
-	~ConstArrayHandle() = default;
+	explicit MultipleUT_Vector3TArrayHandle(std::vector<std::pair<UT_Vector3TArrayHandle<SRC> *, sz>> *InArrays)
+			: Arrays(InArrays) {}
+	~MultipleUT_Vector3TArrayHandle() = default;
 
-	Prim get(int off) const { return internal->get(off); }
+	virtual UT_Vector3T<real> geti(int idx) const
+	{
+		int sum = 0;
+		int last_sum = 0;
+		int iter = -1;
+		while (sum <= idx)
+		{
+			iter++;
+			last_sum = sum;
+			sum += (*Arrays)[iter].second;
+		}
+		if (iter >= Arrays->size() || iter < 0)
+			return UT_Vector3T<real>();
+		int real_idx = idx - last_sum;
+		return (*Arrays)[iter].first->geti(real_idx);
+	}
+	virtual void seti(int idx, UT_Vector3T<real> p)
+	{
+		int sum = 0;
+		int last_sum = 0;
+		int iter = -1;
+		while (sum <= idx)
+		{
+			iter++;
+			last_sum = sum;
+			sum += (*Arrays)[iter].second;
+		}
+		if (iter >= Arrays->size() || iter < 0)
+			return;
+		int real_idx = idx - last_sum;
+		(*Arrays)[iter].first->seti(real_idx, p);
+	}
+	virtual sz value_size()
+	{
+		return std::accumulate(Arrays->begin(), Arrays->end(), 0, [](sz acc, const std::pair<UT_Vector3TArrayHandle<SRC> *, sz> &p)
+		{
+			return acc + p.second;
+		});
+	}
+	sz size()
+	{
+		return Arrays->size();
+	}
 
-	ArrayHandle<T, Prim> *internal;
+protected:
+	std::vector<std::pair<UT_Vector3TArrayHandle<SRC> *, sz>> *Arrays;
 };
 
-struct NativeVector3Handle : public ArrayHandle<std::vector<real>, UT_Vector3T<real>>
+struct NativeArrayHandle : public UT_Vector3TArrayHandle<std::vector<real>>
 {
-	NativeVector3Handle(std::vector<real> *_internal) : ArrayHandle(_internal) {}
-	~NativeVector3Handle() = default;
+	NativeArrayHandle(std::vector<real> *_internal) : UT_Vector3TArrayHandle(_internal) {}
+	~NativeArrayHandle() override = default;
 
-	UT_Vector3T<real> get(int off) const override { return UT_Vector3T<real>(internal->data() + off * 3); }
-	void set(int off, UT_Vector3T<real> p) override { memcpy(internal->data() + off * 3, p.data(), sizeof(real) * 3); }
+	UT_Vector3T<real> geto(int off) const override { return UT_Vector3T<real>(internal->data() + off * 3); }
+	void seto(int off, UT_Vector3T<real> p) override { memcpy(internal->data() + off * 3, p.data(), sizeof(real) * 3); }
 };
 
-struct GDPVector3Handle : public ArrayHandle<GU_Detail, UT_Vector3T<real>>
+struct GA_ArrayHandle : public UT_Vector3TArrayHandle<GA_RWHandleT<UT_Vector3T<real>>>
 {
-	GDPVector3Handle(GU_Detail *gdp) : ArrayHandle(gdp) {}
-	~GDPVector3Handle() = default;
+	GA_ArrayHandle(GA_RWHandleT<UT_Vector3T<real>> *handle) : UT_Vector3TArrayHandle(handle) {}
+	~GA_ArrayHandle() override = default;
 
-	UT_Vector3T<real> get(int off) const override { return internal->getPos3(off); }
-	void set(int off, UT_Vector3T<real> p) override { internal->setPos3(off, p); }
+	UT_Vector3T<real> geto(int off) const override { return internal->get(off); }
+	void seto(int off, UT_Vector3T<real> p) override { internal->set(off, p); }
 };
-}
-
-void SyncParticlePositionFromGDP(HinaPE_PBF::PBF_DATA &data, const GU_Detail &gdp);
-void SyncGDPFromParticlePosition(GU_Detail &gdp, const HinaPE_PBF::PBF_DATA &data);
 
 #endif //SIM_PBF_UTILS_H

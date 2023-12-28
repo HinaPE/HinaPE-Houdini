@@ -6,6 +6,8 @@
 #include <SIM/SIM_DopDescription.h>
 #include <SIM/SIM_Utils.h>
 
+#include <UT/UT_ParallelUtil.h>
+
 /// Very Simple Gravity and Collision With Plane Example
 class NeighborSearchSolver : public SIM_SingleSolver, public SIM_OptionsUser
 {
