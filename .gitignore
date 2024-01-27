@@ -1,7 +1,6 @@
-backup
-cmake-build-relwithdebinfo
-cmake-build-debug
-cmake-build-release
+.DS_Store
 .idea
-log_error.txt
-log_info.txt
+cmake-build-*
+backup
+sim
+CubbyFlow.lib

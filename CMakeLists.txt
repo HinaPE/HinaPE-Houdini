@@ -1,38 +1,22 @@
 cmake_minimum_required(VERSION 3.26)
-project(example_03)
+project(HinaPE-Houdini)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(TARGET PBDClothSolver)
-
 # Find Houdini
-set(Houdini_PATH "/Applications/Houdini/Houdini20.0.547/Frameworks/Houdini.framework/Versions/20.0/Resources")
+if (MSVC)
+    set(Houdini_PATH "C:/Program Files/Side Effects Software/Houdini 20.0.590")
+elseif (APPLE)
+    set(Houdini_PATH "/Applications/Houdini/Houdini20.0.590/Frameworks/Houdini.framework/Versions/20.0/Resources")
+endif ()
 set(Houdini_DIR ${Houdini_PATH}/toolkit/cmake)
 find_package(Houdini REQUIRED)
 
-# Load Source
-add_library(
-        ${TARGET}
-        SHARED
-        Entrance.cpp
-        solver.cpp
-        solver.h
-)
+# Config TBB only for Windows
+if (MSVC)
+    include(install/cmake/FindTBB.cmake)
+    include(install/cmake/TaskingSystemOptions.cmake)
+    include(install/cmake/CompileOptions.cmake)
+endif ()
 
-# Link Houdini Toolkit
-target_link_libraries(
-        ${TARGET}
-        PUBLIC
-        Houdini
-)
-target_include_directories(
-        ${TARGET}
-        PRIVATE
-        ${CMAKE_CURRENT_BINARY_DIR}
-)
-target_compile_options(
-        ${TARGET}
-        PRIVATE
-        -D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION
-)
-houdini_configure_target(${TARGET})
+add_subdirectory(hdk)
