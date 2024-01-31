@@ -17,7 +17,6 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 
 	SIM_GeometryAutoWriteLock lock(particles);
 	GU_Detail &gdp = lock.getGdp();
-	gdp.appendPoint();
 
 	return true;
 }

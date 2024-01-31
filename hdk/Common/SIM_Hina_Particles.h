@@ -19,6 +19,9 @@ SIM_HINA_GEOMETRY_CLASS(
 
 GAS_HINA_SUBSOLVER_CLASS(
 		CommitCache,
+
+		SIM_Guide *createGuideObjectSubclass() const override;
+		void buildGuideGeometrySubclass(const SIM_RootData &root, const SIM_Options &options, const GU_DetailHandle &gdh, UT_DMatrix4 *xform, const SIM_Time &t) const override;
 )
 
 #endif //HINAPE_SIM_HINA_PARTICLES_H

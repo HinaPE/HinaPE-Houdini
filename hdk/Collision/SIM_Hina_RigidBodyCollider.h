@@ -2,11 +2,17 @@
 #define HINAPE_SIM_HINA_RIGIDBODYCOLLIDER_H
 
 #include <Common/SIM_Hina_Generator.h>
-#include "CubbyFlow/Core/Geometry/RigidBodyCollider.hpp"
+
+namespace CubbyFlow
+{
+template<size_t N>
+class RigidBodyCollider;
+}
 
 SIM_HINA_COLLIDER_CLASS(
 		RigidBodyCollider,
-		CubbyFlow::RigidBodyCollider3Ptr InnerPtr;
+		std::shared_ptr<CubbyFlow::RigidBodyCollider<3>> InnerPtr;
+		HINA_GETSET_PARAMETER(RestitutionCoefficient, GETSET_DATA_FUNCS_F)
 )
 
 #endif //HINAPE_SIM_HINA_RIGIDBODYCOLLIDER_H

@@ -53,8 +53,6 @@ public: \
     mutable GU_DetailHandle my_detail_handle; \
     mutable UT_WorkBuffer error_msg; \
     __VA_ARGS__ \
-    GET_GUIDE_FUNC_B(SIM_NAME_SHOWGUIDE, ShowGuideGeometry, true); \
-    GET_GUIDE_FUNC_V3("DomainColor", DomainColor, (.0156356, 0, .5)) \
 protected: \
     explicit SIM_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
     ~SIM_Hina_##NAME() override = default; \
@@ -112,15 +110,6 @@ static SIM_DopDescription DESC(GEN_NODE, \
                                DATANAME, \
                                classname(), \
                                PRMS.data()); \
-static PRM_Name ShowGuideGeometry(SIM_NAME_SHOWGUIDE, "ShowGuideGeometry"); \
-static PRM_Name DomainColor("DomainColor", "DomainColor"); \
-static std::array<PRM_Default, 3> DomainColorDefault{.0156356, 0, .5}; \
-static std::array<PRM_Template, 3> PRMS_GUIDE{ \
-PRM_Template(PRM_TOGGLE, 1, &ShowGuideGeometry, PRMoneDefaults), \
-PRM_Template(PRM_RGBA, 3, &DomainColor, DomainColorDefault.data()), \
-PRM_Template() \
-}; \
-DESC.setGuideTemplates(PRMS_GUIDE.data()); \
 DESC.setDefaultUniqueDataName(false); \
 return &DESC; \
 }
@@ -176,15 +165,6 @@ const SIM_DopDescription *SIM_Hina_##DERIVED_NAME::getDopDescription() \
                                DATANAME, \
                                classname(), \
                                PRMS.data()); \
-    static PRM_Name ShowGuideGeometry(SIM_NAME_SHOWGUIDE, "ShowGuideGeometry"); \
-    static PRM_Name DomainColor("DomainColor", "DomainColor"); \
-    static std::array<PRM_Default, 3> DomainColorDefault{.0156356, 0, .5}; \
-    static std::array<PRM_Template, 3> PRMS_GUIDE{ \
-    PRM_Template(PRM_TOGGLE, 1, &ShowGuideGeometry, PRMoneDefaults), \
-    PRM_Template(PRM_RGBA, 3, &DomainColor, DomainColorDefault.data()), \
-    PRM_Template() \
-    }; \
-    DESC.setGuideTemplates(PRMS_GUIDE.data()); \
     DESC.setDefaultUniqueDataName(false); \
     return &DESC; \
 }
@@ -196,6 +176,8 @@ public: \
 static const char *DATANAME; \
 mutable UT_WorkBuffer error_msg; \
 __VA_ARGS__ \
+GET_GUIDE_FUNC_B(SIM_NAME_SHOWGUIDE, ShowGuideGeometry, true); \
+GET_GUIDE_FUNC_V3("DomainColor", DomainColor, (.0156356, 0, .5)) \
 protected: \
 GAS_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
 ~GAS_Hina_##NAME() override = default; \
@@ -248,6 +230,15 @@ static SIM_DopDescription DESC(GEN_NODE, \
                                DATANAME, \
                                classname(), \
                                PRMS.data()); \
+static PRM_Name ShowGuideGeometry(SIM_NAME_SHOWGUIDE, "ShowGuideGeometry"); \
+static PRM_Name DomainColor("DomainColor", "DomainColor"); \
+static std::array<PRM_Default, 3> DomainColorDefault{.0156356, 0, .5}; \
+static std::array<PRM_Template, 3> PRMS_GUIDE{ \
+PRM_Template(PRM_TOGGLE, 1, &ShowGuideGeometry, PRMoneDefaults), \
+PRM_Template(PRM_RGBA, 3, &DomainColor, DomainColorDefault.data()), \
+PRM_Template() \
+}; \
+DESC.setGuideTemplates(PRMS_GUIDE.data()); \
 DESC.setDefaultUniqueDataName(UNIQUE); \
 setGasDescription(DESC); \
 return &DESC; \
@@ -291,6 +282,7 @@ static PRM_Name NAME(#NAME, #NAME); \
 static std::array<PRM_Default, SIZE> Default##NAME{__VA_ARGS__};  \
 PRMS.emplace_back(PRM_FLT, SIZE, &NAME, Default##NAME.data());
 
+#define HINA_GEOMETRY_ATTRIBUTE_COLOR "Cd"
 #define HINA_GEOMETRY_ATTRIBUTE_VELOCITY "vel"
 #define HINA_GEOMETRY_ATTRIBUTE_FORCE "force"
 #define HINA_GEOMETRY_ATTRIBUTE_MASS "mass"

@@ -1,7 +1,7 @@
 #include "GAS_Hina_BuildNeighborLists.h"
 #include <Common/SIM_Hina_Particles.h>
 
-#include "cuNSearch/cuNSearch.h"
+#include "cuNSearch.h"
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		BuildNeighborLists,
