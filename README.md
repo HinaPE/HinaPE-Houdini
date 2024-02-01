@@ -9,5 +9,6 @@ HinaPE is a recursive acronym for "HinaPE is not a Physics Engine".
 ## Build Instruction
 
 Dependencies:
+- Houdini (latest)
 - tbb (already included)
 - CUDA (>=12.1)

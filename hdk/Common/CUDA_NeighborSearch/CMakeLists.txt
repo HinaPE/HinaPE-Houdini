@@ -1,9 +1,3 @@
-find_package(CUDAToolkit REQUIRED)
-enable_language(CUDA)
-if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES 75)
-endif ()
-
 file(GLOB_RECURSE CUDA_NEIGHBOR_SEARCH_SOURCE *.h *.cpp *.cu)
 add_library(CUDA_NeighborSearch STATIC ${CUDA_NEIGHBOR_SEARCH_SOURCE})
 include(GenerateExportHeader)

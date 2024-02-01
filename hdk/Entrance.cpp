@@ -1,5 +1,7 @@
 #include <UT/UT_DSOVersion.h> // Very Important!!! Include this!!!
 
+#include <Akinci2012/SIM_Hina_Akinci2012BoundaryParticles.h>
+
 #include <Collision/GAS_Hina_CollisionSolve.h>
 #include <Collision/SIM_Hina_RigidBodyCollider.h>
 
@@ -19,6 +21,9 @@
 
 void initializeSIM(void *)
 {
+	// Akinci2012
+	IMPLEMENT_DATAFACTORY(SIM_Hina_Akinci2012BoundaryParticles)
+
 	// Collision
 	IMPLEMENT_DATAFACTORY(GAS_Hina_CollisionSolve);
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBodyCollider);

@@ -2,6 +2,7 @@
 #define HINAPE_SIM_HINA_GENERATOR_H
 
 #include <GAS/GAS_SubSolver.h>
+#include <GAS/GAS_Utils.h>
 
 #include <SIM/SIM_Engine.h>
 #include <SIM/SIM_Data.h>
@@ -33,6 +34,7 @@
 
 #include <UT/UT_WorkBuffer.h>
 #include <UT/UT_NetMessage.h>
+#include <UT/UT_ThreadedAlgorithm.h>
 
 #define AS_UTVector3D(Vec3) UT_Vector3D(Vec3.x, Vec3.y, Vec3.z)
 #define AS_CFVector3D(Vec3) CubbyFlow::Vector3D(Vec3.x(), Vec3.y(), Vec3.z())
