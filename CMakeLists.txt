@@ -21,9 +21,9 @@ find_package(Houdini REQUIRED)
 
 # Config TBB only for Windows
 if (MSVC)
-    include(install/cmake/FindTBB.cmake)
-    include(install/cmake/TaskingSystemOptions.cmake)
-    include(install/cmake/CompileOptions.cmake)
+    include(tbb/cmake/FindTBB.cmake)
+    include(tbb/cmake/TaskingSystemOptions.cmake)
+    include(tbb/cmake/CompileOptions.cmake)
 endif ()
 
 add_subdirectory(hdk)

@@ -1,3 +1,4 @@
+add_subdirectory(Common/CUDA_CubbyFlow)
 add_subdirectory(Common/CUDA_NeighborSearch)
 
 set(HINA_TARGET SIM_HinaPE_Fluid)
@@ -17,24 +18,14 @@ target_link_libraries(
         ${HINA_TARGET}
         PUBLIC
         Houdini
-        CubbyFlow
+        CUDA_CubbyFlow
         CUDA_NeighborSearch
-        ${DEFAULT_LINKER_OPTIONS}
-        ${DEFAULT_LIBRARIES}
-)
-target_link_directories(
-        ${HINA_TARGET}
-        PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/install/lib
 )
 target_include_directories(
         ${HINA_TARGET}
         PUBLIC
         ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/install/include
-        ${CMAKE_SOURCE_DIR}/install/include/CubbyFlow
 )
 target_compile_options(
         ${HINA_TARGET}

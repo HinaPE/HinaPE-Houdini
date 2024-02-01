@@ -43,5 +43,8 @@ const SIM_DopDescription *GAS_Hina_SubStep::getDopDescription()
 }
 double GAS_Hina_SubStep::_calculate_substep()
 {
+	// Compute CFL Condition
+	
+
 	return getMAX_SUBSTEP();
 }

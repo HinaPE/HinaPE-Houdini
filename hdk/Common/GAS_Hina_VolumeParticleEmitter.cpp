@@ -1,15 +1,15 @@
 #include "GAS_Hina_VolumeParticleEmitter.h"
 #include <Common/SIM_Hina_Particles.h>
 
-#include <CubbyFlow/Core/Emitter/VolumeParticleEmitter3.hpp>
-#include <CubbyFlow/Core/Geometry/SurfaceToImplicit.hpp>
-#include <CubbyFlow/Core/PointGenerator/BccLatticePointGenerator.hpp>
-#include <CubbyFlow/Core/Searcher/PointHashGridSearcher.hpp>
-#include <CubbyFlow/Core/Searcher/PointParallelHashGridSearcher.hpp>
-#include <CubbyFlow/Core/Utils/Samplers.hpp>
-#include <CubbyFlow/Core/Utils/Logging.hpp>
-#include <CubbyFlow/Core/Geometry/TriangleMesh3.hpp>
-#include <CubbyFlow/Core/Geometry/ImplicitSurfaceSet.hpp>
+#include <Common/CUDA_CubbyFlow/Core/Emitter/VolumeParticleEmitter3.hpp>
+#include <Common/CUDA_CubbyFlow/Core/Geometry/SurfaceToImplicit.hpp>
+#include <Common/CUDA_CubbyFlow/Core/PointGenerator/BccLatticePointGenerator.hpp>
+#include <Common/CUDA_CubbyFlow/Core/Searcher/PointHashGridSearcher.hpp>
+#include <Common/CUDA_CubbyFlow/Core/Searcher/PointParallelHashGridSearcher.hpp>
+#include <Common/CUDA_CubbyFlow/Core/Utils/Samplers.hpp>
+#include <Common/CUDA_CubbyFlow/Core/Utils/Logging.hpp>
+#include <Common/CUDA_CubbyFlow/Core/Geometry/TriangleMesh3.hpp>
+#include <Common/CUDA_CubbyFlow/Core/Geometry/ImplicitSurfaceSet.hpp>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		VolumeParticleEmitter,
