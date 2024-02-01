@@ -6,6 +6,8 @@ Designed for Houdini HDK version
 
 HinaPE is a recursive acronym for "HinaPE is not a Physics Engine". 
 
-## RoadMap v0.1.0
+## Build Instruction
 
-### Main Stream
+Dependencies:
+- tbb (already included)
+- CUDA (>=12.1)
