@@ -19,18 +19,18 @@ endif ()
 set(Houdini_DIR ${Houdini_PATH}/toolkit/cmake)
 find_package(Houdini REQUIRED)
 
-# Find CUDA
-find_package(CUDAToolkit REQUIRED)
-enable_language(CUDA)
-if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES 75)
-endif ()
-set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
-set(CUDA_SEPARABLE_COMPILATION OFF)
-set(CUDA_STANDARD 17)
-
-# Config TBB only for Windows
 if (MSVC)
+    # Find CUDA
+    find_package(CUDAToolkit REQUIRED)
+    enable_language(CUDA)
+    if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES 75)
+    endif ()
+    set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
+    set(CUDA_SEPARABLE_COMPILATION OFF)
+    set(CUDA_STANDARD 17)
+
+    # Config TBB only for Windows
     include(tbb/cmake/FindTBB.cmake)
     include(tbb/cmake/TaskingSystemOptions.cmake)
     include(tbb/cmake/CompileOptions.cmake)
