@@ -4,3 +4,4 @@ cmake-build-*
 backup
 sim
 CubbyFlow.lib
+src/CUDA_NeighborSearch/include/cuNSearch_export.h
