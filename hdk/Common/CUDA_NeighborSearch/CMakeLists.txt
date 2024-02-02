@@ -1,7 +1,4 @@
-if (APPLE)
-    return()
-endif ()
-
+if (MSVC)
 file(GLOB_RECURSE CUDA_NEIGHBOR_SEARCH_SOURCE *.h *.cpp *.cu)
 add_library(CUDA_NeighborSearch STATIC ${CUDA_NEIGHBOR_SEARCH_SOURCE})
 include(GenerateExportHeader)
@@ -26,3 +23,4 @@ target_compile_options(
         PUBLIC
         -DCUNSEARCH_USE_DOUBLE_PRECISION
 )
+endif ()
