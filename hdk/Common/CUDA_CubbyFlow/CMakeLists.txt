@@ -24,13 +24,12 @@ target_include_directories(
 target_compile_definitions(
         CUDA_CubbyFlow
         PUBLIC
-        CUBBYFLOW_USE_CUDA
         CUBBYFLOW_TASKING_TBB
 )
 if (MSVC)
     target_compile_definitions(
             CUDA_CubbyFlow
             PUBLIC
-            CUBBYFLOW_TASKING_TBB
+            CUBBYFLOW_USE_CUDA
     )
 endif ()
