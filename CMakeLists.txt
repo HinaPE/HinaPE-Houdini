@@ -23,11 +23,6 @@ if (MSVC)
     set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
     set(CUDA_SEPARABLE_COMPILATION OFF)
     set(CUDA_STANDARD 17)
-
-    # Config TBB only for Windows
-    include(tbb/cmake/FindTBB.cmake)
-    include(tbb/cmake/TaskingSystemOptions.cmake)
-    include(tbb/cmake/CompileOptions.cmake)
 endif ()
 
 add_subdirectory(hdk)

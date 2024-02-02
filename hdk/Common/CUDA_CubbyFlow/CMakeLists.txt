@@ -1,6 +1,13 @@
 file(GLOB_RECURSE CUDA_CUBBYFLOW_SOURCE *.h *.hpp *.cpp *.cu)
 add_library(CUDA_CubbyFlow STATIC ${CUDA_CUBBYFLOW_SOURCE})
-target_link_libraries(CUDA_CubbyFlow PUBLIC ${CUDA_LIBRARIES})
+target_link_libraries(CUDA_CubbyFlow PUBLIC ${CUDA_LIBRARIES} tbb)
+if (MSVC)
+    target_link_directories(
+            CUDA_CubbyFlow
+            PUBLIC
+            ${Houdini_PATH}/custom/houdini/dsolib
+    )
+endif ()
 target_include_directories(
         CUDA_CubbyFlow
         PUBLIC
@@ -9,12 +16,11 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/Core
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
-        ${DEFAULT_LINKER_OPTIONS}
-        ${DEFAULT_LIBRARIES}
+        ${_houdini_include_dir}
 )
 target_compile_definitions(
         CUDA_CubbyFlow
         PUBLIC
         CUBBYFLOW_USE_CUDA
-        ${DEFAULT_COMPILE_OPTIONS}
+        CUBBYFLOW_TASKING_TBB
 )
