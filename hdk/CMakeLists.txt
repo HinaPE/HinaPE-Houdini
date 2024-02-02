@@ -19,8 +19,14 @@ target_link_libraries(
         PUBLIC
         Houdini
         CUDA_CubbyFlow
-        CUDA_NeighborSearch
 )
+if (MSVC)
+    target_link_libraries(
+            ${HINA_TARGET}
+            PUBLIC
+            CUDA_NeighborSearch
+    )
+endif ()
 target_include_directories(
         ${HINA_TARGET}
         PUBLIC

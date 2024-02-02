@@ -1,7 +1,9 @@
 #include "GAS_Hina_BuildNeighborLists.h"
 #include <Common/SIM_Hina_Particles.h>
 
+#ifdef WIN32
 #include "cuNSearch.h"
+#endif
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		BuildNeighborLists,
@@ -19,6 +21,7 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 	CHECK_NULL_RETURN_BOOL(particles)
 	particles->neighbor_lists_cache.clear();
 
+#ifdef WIN32
 	std::vector<std::array<cuNSearch::Real, 3>> positions;
 	SIM_GeometryAutoWriteLock lock(particles);
 	GU_Detail &gdp = lock.getGdp();
@@ -54,6 +57,7 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 				}
 			}
 	}
+#endif
 
 	return true;
 }

@@ -1,3 +1,7 @@
+if (APPLE)
+    return()
+endif ()
+
 file(GLOB_RECURSE CUDA_NEIGHBOR_SEARCH_SOURCE *.h *.cpp *.cu)
 add_library(CUDA_NeighborSearch STATIC ${CUDA_NEIGHBOR_SEARCH_SOURCE})
 include(GenerateExportHeader)

@@ -1,4 +1,7 @@
 file(GLOB_RECURSE CUDA_CUBBYFLOW_SOURCE *.h *.hpp *.cpp *.cu)
+if (APPLE)
+    list(REMOVE_ITEM CUDA_CUBBYFLOW_SOURCE Core/CUDA/*)
+endif ()
 add_library(CUDA_CubbyFlow STATIC ${CUDA_CUBBYFLOW_SOURCE})
 target_link_libraries(CUDA_CubbyFlow PUBLIC ${CUDA_LIBRARIES} tbb)
 if (MSVC)
