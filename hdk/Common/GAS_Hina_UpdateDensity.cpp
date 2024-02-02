@@ -1,6 +1,6 @@
 #include "GAS_Hina_UpdateDensity.h"
 #include <Common/SIM_Hina_Particles.h>
-#include <Common/CUDA_CubbyFlow/Core/Particle/SPHKernels.hpp>
+#include <CUDA_CubbyFlow/Core/Particle/SPHKernels.hpp>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		UpdateDensity,

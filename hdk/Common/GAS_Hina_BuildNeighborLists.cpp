@@ -1,6 +1,6 @@
 #include "GAS_Hina_BuildNeighborLists.h"
 #include <Common/SIM_Hina_Particles.h>
-#include <Common/CUDA_CubbyFlow/Core/Searcher/PointParallelHashGridSearcher.hpp>
+#include <CUDA_CubbyFlow/Core/Searcher/PointParallelHashGridSearcher.hpp>
 
 #ifdef WIN32
 #include "cuNSearch.h"

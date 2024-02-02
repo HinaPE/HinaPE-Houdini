@@ -1,6 +1,3 @@
-add_subdirectory(Common/CUDA_CubbyFlow)
-add_subdirectory(Common/CUDA_NeighborSearch)
-
 set(HINA_TARGET SIM_HinaPE_Fluid)
 
 file(GLOB_RECURSE HINAPE_HEADER *.h)

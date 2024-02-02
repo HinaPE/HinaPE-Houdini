@@ -1,11 +1,11 @@
 #include "SIM_Hina_Particles.h"
 #include <Collision/SIM_Hina_RigidBodyCollider.h>
 
-#include <Common/CUDA_CubbyFlow/Core/Geometry/BoundingBox.hpp>
-#include <Common/CUDA_CubbyFlow/Core/Particle/SPHKernels.hpp>
-#include <Common/CUDA_CubbyFlow/Core/Particle/SPHSystemData.hpp>
-#include <Common/CUDA_CubbyFlow/Core/PointGenerator/BccLatticePointGenerator.hpp>
-#include <Common/CUDA_CubbyFlow/Core/PointGenerator/TrianglePointGenerator.hpp>
+#include <CUDA_CubbyFlow/Core/Geometry/BoundingBox.hpp>
+#include <CUDA_CubbyFlow/Core/Particle/SPHKernels.hpp>
+#include <CUDA_CubbyFlow/Core/Particle/SPHSystemData.hpp>
+#include <CUDA_CubbyFlow/Core/PointGenerator/BccLatticePointGenerator.hpp>
+#include <CUDA_CubbyFlow/Core/PointGenerator/TrianglePointGenerator.hpp>
 
 SIM_HINA_GEOMETRY_IMPLEMENT(
 		Particles,

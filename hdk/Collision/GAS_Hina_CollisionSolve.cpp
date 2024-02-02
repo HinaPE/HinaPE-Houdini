@@ -2,10 +2,10 @@
 #include <Common/SIM_Hina_Particles.h>
 #include <Collision/SIM_Hina_RigidBodyCollider.h>
 
-#include <Common/CUDA_CubbyFlow/Core/Geometry/RigidBodyCollider.hpp>
-#include <Common/CUDA_CubbyFlow/Core/Geometry/Box.hpp>
-#include <Common/CUDA_CubbyFlow/Core/Array/Array.hpp>
-#include <Common/CUDA_CubbyFlow/Core/Utils/Parallel.hpp>
+#include <CUDA_CubbyFlow/Core/Geometry/RigidBodyCollider.hpp>
+#include <CUDA_CubbyFlow/Core/Geometry/Box.hpp>
+#include <CUDA_CubbyFlow/Core/Array/Array.hpp>
+#include <CUDA_CubbyFlow/Core/Utils/Parallel.hpp>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		CollisionSolve,

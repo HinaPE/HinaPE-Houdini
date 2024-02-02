@@ -15,6 +15,7 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/Utils
         ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../
 )
 file(COPY ${CMAKE_CURRENT_BINARY_DIR}/cuNSearch/cuNSearch_export.h DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
