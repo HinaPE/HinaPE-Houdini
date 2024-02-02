@@ -22,7 +22,7 @@
 #endif
 
 #ifndef CUNSEARCH_DEPRECATED
-#  define CUNSEARCH_DEPRECATED __attribute__ ((__deprecated__))
+#  define CUNSEARCH_DEPRECATED __declspec(deprecated)
 #endif
 
 #ifndef CUNSEARCH_DEPRECATED_EXPORT
