@@ -25,6 +25,7 @@ if (MSVC)
     set(CUDA_STANDARD 17)
 endif ()
 
+add_subdirectory(src/CUDA_HinaPE)
 add_subdirectory(src/CUDA_CubbyFlow)
 add_subdirectory(src/CUDA_NeighborSearch)
 add_subdirectory(hdk)

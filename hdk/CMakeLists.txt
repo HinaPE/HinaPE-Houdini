@@ -16,6 +16,7 @@ target_link_libraries(
         PUBLIC
         Houdini
         CUDA_CubbyFlow
+        CUDA_HinaPE
 )
 if (MSVC)
     target_link_libraries(
