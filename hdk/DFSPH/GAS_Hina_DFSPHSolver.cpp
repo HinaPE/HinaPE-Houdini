@@ -24,13 +24,17 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
-			const std::vector<GA_Offset> &neighbors = fluid_particles->neighbor_lists_cache[pt_off];
-
-			UT_Vector3 pos_i = gdp.getPos3(pt_off);
-			for (const GA_Offset &n_off: neighbors)
+			fpreal alpha = 0;
+			fpreal kappa = 0;
+			fluid_particles->for_all_neighbors(pt_off, [&](const GA_Offset &neighbor)
 			{
-				UT_Vector3 pos_j = gdp.getPos3(n_off);
-			}
+				const UT_Vector3 r = gdp.getPos3(neighbor) - gdp.getPos3(pt_off);
+				const fpreal r_l = r.length();
+				alpha += kernel.kernel(r_l);
+				kappa += kernel.derivative(r_l);
+			});
+			fluid_particles->alpha_cache[pt_off] = alpha;
+			fluid_particles->kappa_cache[pt_off] = kappa;
 		}
 
 	return true;

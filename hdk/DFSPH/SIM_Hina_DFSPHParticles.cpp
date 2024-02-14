@@ -15,3 +15,9 @@ void SIM_Hina_DFSPHParticles::Commit()
 {
 	SIM_Hina_Particles::Commit();
 }
+void SIM_Hina_DFSPHParticles::for_all_neighbors(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func)
+{
+	std::vector<GA_Offset> &neighbors = neighbor_lists_cache[pt_off];
+	for (const GA_Offset &n_off: neighbors)
+		func(n_off);
+}
