@@ -15,12 +15,12 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
         HINA_FLOAT_PARAMETER(KernelRadiusOverTargetSpacing, 1.8) \
         HINA_FLOAT_PARAMETER(TargetDensity, 1000.) \
 
-		static std::array<PRM_Name, 4> Kernels = {\
-			PRM_Name("0", "Poly64"), \
-			PRM_Name("1", "Spiky"), \
-			PRM_Name("2", "CubicSpline"), \
-			PRM_Name(nullptr), \
-		}; \
+				static std::array<PRM_Name, 4> Kernels = {\
+            PRM_Name("0", "Poly64"), \
+            PRM_Name("1", "Spiky"), \
+            PRM_Name("2", "CubicSpline"), \
+            PRM_Name(nullptr), \
+}; \
         static PRM_Name KernelName("Kernel", "Kernel"); \
         static PRM_Default KernelNameDefault(2, "CubicSpline"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Kernels.data()); \
@@ -30,6 +30,7 @@ void SIM_Hina_Particles::_init_Particles()
 {
 	this->Mass = 1;
 	this->neighbor_lists_cache.clear();
+	this->other_neighbor_lists_cache.clear();
 	this->positions_cache.clear();
 	this->velocity_cache.clear();
 }
@@ -37,6 +38,7 @@ void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 {
 	this->Mass = src->Mass;
 	this->neighbor_lists_cache = src->neighbor_lists_cache;
+	this->other_neighbor_lists_cache = src->other_neighbor_lists_cache;
 	this->positions_cache = src->positions_cache;
 	this->velocity_cache = src->velocity_cache;
 }
@@ -48,12 +50,13 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_MASS, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_DENSITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_PRESSURE, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
-	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
+	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
+	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 
 	fpreal TargetSpacing = getTargetSpacing();
 	fpreal TargetDensity = getTargetDensity();
 	fpreal KernelRadius = getKernelRadiusOverTargetSpacing() * getTargetSpacing();
-	// Compute Mass
+	// Compute Initial Mass
 	{
 		using namespace CubbyFlow;
 
@@ -92,17 +95,22 @@ void SIM_Hina_Particles::Commit()
 	GU_Detail &gdp = lock.getGdp();
 	GA_RWHandleV3 pos_handle = gdp.getP();
 	GA_RWHandleV3 vel_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
-	GA_RWHandleI n_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM);
+	GA_RWHandleI fn_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID);
+	GA_RWHandleI bn_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY);
 	GA_RWHandleV3 cd_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_COLOR);
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
 			UT_Vector3 pos = positions_cache[pt_off];
 			UT_Vector3 vel = velocity_cache[pt_off];
-			int n_sum = neighbor_lists_cache[pt_off].size();
+			int fn_sum = neighbor_lists_cache[pt_off].size();
+			int bn_sum = 0;
+			for (auto &pair: other_neighbor_lists_cache)
+				bn_sum += pair.second[pt_off].size();
 			pos_handle.set(pt_off, pos);
 			vel_handle.set(pt_off, vel);
-			n_sum_handle.set(pt_off, n_sum);
+			fn_sum_handle.set(pt_off, fn_sum);
+			bn_sum_handle.set(pt_off, bn_sum);
 
 			fpreal v_l = vel.length();
 			fpreal c = std::clamp(v_l / 10, 0., 1.);
