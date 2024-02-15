@@ -44,5 +44,5 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_DFSPHSolver)
 
 	// Visualizer
-//	IMPLEMENT_DATAFACTORY(SIM_Hina_ParticlesVisualizer)
+	IMPLEMENT_DATAFACTORY(SIM_Hina_ParticlesVisualizer)
 }

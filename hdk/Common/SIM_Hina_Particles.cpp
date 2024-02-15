@@ -14,13 +14,12 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
         HINA_FLOAT_PARAMETER(TargetSpacing, .02) \
         HINA_FLOAT_PARAMETER(KernelRadiusOverTargetSpacing, 1.8) \
         HINA_FLOAT_PARAMETER(TargetDensity, 1000.) \
-
-				static std::array<PRM_Name, 4> Kernels = {\
+		static std::array<PRM_Name, 4> Kernels = { \
             PRM_Name("0", "Poly64"), \
             PRM_Name("1", "Spiky"), \
             PRM_Name("2", "CubicSpline"), \
             PRM_Name(nullptr), \
-}; \
+		}; \
         static PRM_Name KernelName("Kernel", "Kernel"); \
         static PRM_Default KernelNameDefault(2, "CubicSpline"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Kernels.data()); \
@@ -52,6 +51,9 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_PRESSURE, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
+
+	GA_RWAttributeRef neighbor_list_ref = gdp->addIntArray(GA_ATTRIB_POINT, HINA_GEOMETRY_ATTRIBUTE_NEIGHBORS);
+	neighbor_list_ref.setTypeInfo(GA_TYPE_VOID);
 
 	fpreal TargetSpacing = getTargetSpacing();
 	fpreal TargetDensity = getTargetDensity();
