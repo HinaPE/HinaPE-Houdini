@@ -23,6 +23,7 @@ if (MSVC)
     set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
     set(CUDA_SEPARABLE_COMPILATION OFF)
     set(CUDA_STANDARD 17)
+    set(CUDASAMPLESROOT "C:/Users/xayah/Desktop/cuda-samples")
 endif ()
 
 add_subdirectory(src/CUDA_HinaPE)

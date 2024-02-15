@@ -9,9 +9,10 @@ SIM_HINA_GEOMETRY_CLASS(
 		HINA_GETSET_PARAMETER(TargetSpacing, GETSET_DATA_FUNCS_F)
 		HINA_GETSET_PARAMETER(KernelRadiusOverTargetSpacing, GETSET_DATA_FUNCS_F)
 		HINA_GETSET_PARAMETER(TargetDensity, GETSET_DATA_FUNCS_F)
+		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
 
 		virtual void Commit();
-		mutable fpreal Mass;
+		mutable fpreal Mass; // TODO: make no-mutable
 		std::map<GA_Offset, std::vector<GA_Offset>> neighbor_lists_cache;
 		std::map<GA_Offset, UT_Vector3> positions_cache;
 		std::map<GA_Offset, UT_Vector3> velocity_cache;

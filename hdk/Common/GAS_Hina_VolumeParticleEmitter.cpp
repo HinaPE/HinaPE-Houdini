@@ -141,7 +141,7 @@ bool GAS_Hina_VolumeParticleEmitter::_solve(SIM_Engine &engine, SIM_Object *obj,
 				Vector3UZ(DEFAULT_HASH_GRID_RESOLUTION,
 						  DEFAULT_HASH_GRID_RESOLUTION,
 						  DEFAULT_HASH_GRID_RESOLUTION),
-				2.0 * TargetSpacing);
+				TargetSpacing);
 
 		Array1<Vector3D> pos_array;
 		for (int i = 0; i < exist_positions.size(); ++i)
@@ -150,12 +150,14 @@ bool GAS_Hina_VolumeParticleEmitter::_solve(SIM_Engine &engine, SIM_Object *obj,
 
 		// Point Generator
 		auto points_gen = std::make_shared<BccLatticePointGenerator>();
-		std::uniform_real_distribution<> d{0.0, 1.0};
-		std::mt19937 m_rng;
+
+		std::mt19937 m_rng(0);
 		points_gen->ForEachPoint(region, TargetSpacing, [&](const Vector3D &point)
 		{
+			std::uniform_real_distribution<> d1{0.0, 1.0};
+			std::uniform_real_distribution<> d2{0.0, 1.0};
 			const Vector3D randomDir =
-					UniformSampleSphere(d(m_rng), d(m_rng));
+					UniformSampleSphere(d1(m_rng), d2(m_rng));
 			const Vector3D offset = maxJitterDist * randomDir;
 			const Vector3D candidate = point + offset;
 
