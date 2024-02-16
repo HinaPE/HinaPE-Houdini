@@ -1,7 +1,7 @@
 #ifndef HINAPE_HOUDINI_GAS_HINA_UPDATEDENSITY_H
 #define HINAPE_HOUDINI_GAS_HINA_UPDATEDENSITY_H
 
-#include <Common/SIM_Hina_Generator.h>
+#include <SIM_Hina_Generator.h>
 
 GAS_HINA_SUBSOLVER_CLASS(
 		UpdateDensity,

@@ -1,7 +1,7 @@
 #ifndef HINAPE_SIM_HINA_PARTICLESVISUALIZER_H
 #define HINAPE_SIM_HINA_PARTICLESVISUALIZER_H
 
-#include <Common/SIM_Hina_Generator.h>
+#include <SIM_Hina_Generator.h>
 
 #include <iostream>
 

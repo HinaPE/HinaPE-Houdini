@@ -141,7 +141,7 @@ bool GAS_Hina_VolumeParticleEmitter::_solve(SIM_Engine &engine, SIM_Object *obj,
 				Vector3UZ(DEFAULT_HASH_GRID_RESOLUTION,
 						  DEFAULT_HASH_GRID_RESOLUTION,
 						  DEFAULT_HASH_GRID_RESOLUTION),
-				TargetSpacing);
+				2. * TargetSpacing);
 
 		Array1<Vector3D> pos_array;
 		for (int i = 0; i < exist_positions.size(); ++i)

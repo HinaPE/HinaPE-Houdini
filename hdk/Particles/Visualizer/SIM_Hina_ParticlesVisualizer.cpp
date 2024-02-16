@@ -40,14 +40,42 @@ void SIM_Hina_ParticlesVisualizer::buildGuideGeometrySubclass(const SIM_RootData
 	if (fluid_particles->neighbor_lists_cache.empty())
 		return;
 
+	fpreal spacing = fluid_particles->getTargetSpacing();
+	fpreal kernel_radius = fluid_particles->getKernelRadiusOverTargetSpacing() * spacing;
+	spacing /= 2;
 	GU_DetailHandleAutoWriteLock gdl(gdh);
 	GU_Detail *gdp = gdl.getGdp();
 	gdp->clearAndDestroy();
+	GA_RWHandleV3 cd_handle(gdp->findPointAttribute("Cd"));
+	if (!cd_handle.isValid())
+		cd_handle = GA_RWHandleV3(gdp->addFloatTuple(GA_ATTRIB_POINT, "Cd", 3, GA_Defaults(0.0)));
+	GA_RWHandleF alpha_handle(gdp->findPointAttribute("Alpha"));
+	if (!alpha_handle.isValid())
+		alpha_handle = GA_RWHandleF(gdp->addFloatTuple(GA_ATTRIB_POINT, "Alpha", 1, GA_Defaults(0.0)));
 
 	GA_Offset inspect = getInspectOffset(options);
 	{
 		SIM_GeometryAutoReadLock lock(fluid_particles);
 		const GU_Detail *f_gdp = lock.getGdp();
+		{
+			GA_Offset new_pt_off = gdp->appendPoint();
+			gdp->setPos3(new_pt_off, f_gdp->getPos3(inspect));
+			GU_PrimSphereParms params;
+			params.gdp = gdp;
+			params.ptoff = new_pt_off;
+			params.xform.scale(kernel_radius, kernel_radius, kernel_radius);
+			params.xform.translate(UT_Vector3(0.));
+			GEO_PrimSphere *sphere_prim = (GEO_PrimSphere *) GU_PrimSphere::build(params);
+
+			UT_Vector3 color = {1, 1, 1};
+			GA_Offset start, end;
+			for (GA_Iterator it(sphere_prim->getPointRange()); it.blockAdvance(start, end);)
+				for (GA_Offset offset = start; offset < end; ++offset)
+				{
+					cd_handle.set(offset, color);
+					alpha_handle.set(offset, .1);
+				}
+		}
 		for (GA_Offset n_off: fluid_particles->neighbor_lists_cache.at(inspect))
 		{
 			GA_Offset new_pt_off = gdp->appendPoint();
@@ -56,9 +84,18 @@ void SIM_Hina_ParticlesVisualizer::buildGuideGeometrySubclass(const SIM_RootData
 			GU_PrimSphereParms params;
 			params.gdp = gdp;
 			params.ptoff = new_pt_off;
-			params.xform.scale(.005, .005, .005);
+			params.xform.scale(spacing, spacing, spacing);
 			params.xform.translate(UT_Vector3(0.));
-			GU_PrimSphere::build(params);
+			GEO_PrimSphere *sphere_prim = (GEO_PrimSphere *) GU_PrimSphere::build(params);
+
+			UT_Vector3 color = {1, 0, 0};
+			GA_Offset start, end;
+			for (GA_Iterator it(sphere_prim->getPointRange()); it.blockAdvance(start, end);)
+				for (GA_Offset offset = start; offset < end; ++offset)
+				{
+					cd_handle.set(offset, color);
+					alpha_handle.set(offset, 0.01);
+				}
 		}
 	}
 

@@ -21,6 +21,7 @@
 #include <Particles/Visualizer/SIM_Hina_ParticlesVisualizer.h>
 
 #include <_Temp/GAS_Hina_DFSPHSolver.h>
+#include <_Temp/GAS_TEST.h>
 
 
 void initializeSIM(void *)
@@ -47,4 +48,5 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_SubStep)
 
 	IMPLEMENT_DATAFACTORY(GAS_Hina_DFSPHSolver)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_TEST)
 }
