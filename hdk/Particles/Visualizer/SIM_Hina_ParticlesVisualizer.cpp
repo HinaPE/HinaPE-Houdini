@@ -42,7 +42,7 @@ void SIM_Hina_ParticlesVisualizer::buildGuideGeometrySubclass(const SIM_RootData
 
 	fpreal spacing = fluid_particles->getTargetSpacing();
 	fpreal kernel_radius = fluid_particles->getKernelRadiusOverTargetSpacing() * spacing;
-	spacing /= 2;
+	fpreal p_radius = spacing /= 2;
 	GU_DetailHandleAutoWriteLock gdl(gdh);
 	GU_Detail *gdp = gdl.getGdp();
 	gdp->clearAndDestroy();
@@ -84,7 +84,7 @@ void SIM_Hina_ParticlesVisualizer::buildGuideGeometrySubclass(const SIM_RootData
 			GU_PrimSphereParms params;
 			params.gdp = gdp;
 			params.ptoff = new_pt_off;
-			params.xform.scale(spacing, spacing, spacing);
+			params.xform.scale(p_radius, p_radius, p_radius);
 			params.xform.translate(UT_Vector3(0.));
 			GEO_PrimSphere *sphere_prim = (GEO_PrimSphere *) GU_PrimSphere::build(params);
 
@@ -127,7 +127,7 @@ void SIM_Hina_ParticlesVisualizer::buildGuideGeometrySubclass(const SIM_RootData
 			GU_PrimSphereParms params;
 			params.gdp = gdp;
 			params.ptoff = new_pt_off;
-			params.xform.scale(.005, .005, .005);
+			params.xform.scale(p_radius, p_radius, p_radius);
 			params.xform.translate(UT_Vector3(0.));
 			GEO_PrimSphere *sphere_prim = (GEO_PrimSphere *) GU_PrimSphere::build(params);
 

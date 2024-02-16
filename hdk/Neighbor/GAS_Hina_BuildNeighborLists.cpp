@@ -135,12 +135,11 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 							positions[pt_idx][2] = pos.z();
 						}
 				}
-				boundary_point_set_indices[boundary_obj_name] = nsearch.add_point_set(positions.front().data(), positions.size(), true /* TODO: maybe this should be false*/, true);
+				boundary_point_set_indices[boundary_obj_name] = nsearch.add_point_set(positions.front().data(), positions.size(), false /* NOT dynamic */, false /* NOT search neighbors */, true /* BE SEARCHED by other points sets*/);
 			}
 		}
 
 		// build neighbors
-		nsearch.set_active(true);
 		nsearch.find_neighbors();
 
 
