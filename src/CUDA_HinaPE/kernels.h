@@ -4,6 +4,8 @@
 #include <UT/UT_Vector.h>
 #include <array>
 
+namespace HinaPE
+{
 constexpr fpreal PI = 3.14159265358979323846;
 
 template<bool use_cache = true, size_t accuracy = 10000>
@@ -108,5 +110,6 @@ private:
 	std::array<fpreal, accuracy> derivative_cache;
 	std::array<fpreal, accuracy> gradient_cache;
 };
+} // namespace HinaPE
 
 #endif //HINAPE_KERNELS_H

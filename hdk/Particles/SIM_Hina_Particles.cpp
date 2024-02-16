@@ -6,6 +6,7 @@
 #include <CUDA_CubbyFlow/Core/Particle/SPHSystemData.hpp>
 #include <CUDA_CubbyFlow/Core/PointGenerator/BccLatticePointGenerator.hpp>
 #include <CUDA_CubbyFlow/Core/PointGenerator/TrianglePointGenerator.hpp>
+#include <CUDA_HinaPE/kernels.h>
 
 SIM_HINA_GEOMETRY_IMPLEMENT(
 		Particles,
@@ -52,8 +53,8 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 
-	GA_RWAttributeRef neighbor_list_ref = gdp->addIntArray(GA_ATTRIB_POINT, HINA_GEOMETRY_ATTRIBUTE_NEIGHBORS);
-	neighbor_list_ref.setTypeInfo(GA_TYPE_VOID);
+//	GA_RWAttributeRef neighbor_list_ref = gdp->addIntArray(GA_ATTRIB_POINT, HINA_GEOMETRY_ATTRIBUTE_NEIGHBORS);
+//	neighbor_list_ref.setTypeInfo(GA_TYPE_VOID);
 
 	fpreal TargetSpacing = getTargetSpacing();
 	fpreal TargetDensity = getTargetDensity();
@@ -72,7 +73,8 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 		pointsGenerator.Generate(sampleBound, TargetSpacing, &points);
 
 		double maxNumberDensity = 0.0;
-		SPHStdKernel3 kernel{KernelRadius};
+//		SPHStdKernel3 kernel{KernelRadius};
+		HinaPE::CubicSplineKernel<false> kernel(KernelRadius);
 
 		for (size_t i = 0; i < points.Length(); ++i)
 		{
@@ -82,7 +84,8 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 			for (size_t j = 0; j < points.Length(); ++j)
 			{
 				const Vector3D &neighborPoint = points[j];
-				sum += kernel(neighborPoint.DistanceTo(point));
+//				sum += kernel(neighborPoint.DistanceTo(point));
+				sum += kernel.kernel(neighborPoint.DistanceTo(point));
 			}
 
 			maxNumberDensity = std::max(maxNumberDensity, sum);

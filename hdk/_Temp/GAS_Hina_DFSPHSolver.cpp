@@ -16,7 +16,7 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 	SIM_Hina_DFSPHParticles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_DFSPHParticles);
 	CHECK_NULL_RETURN_BOOL(fluid_particles)
 	fpreal kernel_radius = fluid_particles->getTargetSpacing() * fluid_particles->getKernelRadiusOverTargetSpacing();
-	CubicSplineKernel kernel(kernel_radius);
+	HinaPE::CubicSplineKernel kernel(kernel_radius);
 
 	SIM_GeometryAutoWriteLock lock(fluid_particles);
 	GU_Detail &gdp = lock.getGdp();
