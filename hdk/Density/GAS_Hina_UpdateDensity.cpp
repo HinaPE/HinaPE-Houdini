@@ -40,6 +40,7 @@ bool GAS_Hina_UpdateDensity::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 	for (auto &n_list: particles->neighbor_lists_cache)
 	{
 		double sum = 0.;
+		sum += kernel.kernel(0.); // important: self is also a neighbor
 
 		GA_Offset pt_off = n_list.first;
 		UT_Vector3 pt_pos = gdp.getPos3(pt_off);
