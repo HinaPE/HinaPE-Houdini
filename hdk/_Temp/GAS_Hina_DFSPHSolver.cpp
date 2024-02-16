@@ -41,6 +41,5 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 }
 bool GAS_Hina_DFSPHSolver::_compute_alpha()
 {
-
 	return true;
 }

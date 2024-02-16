@@ -44,7 +44,6 @@ void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 }
 void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 {
-//	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_COLOR, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_VELOCITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_FORCE, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_MASS, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
@@ -52,9 +51,6 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_PRESSURE, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
-
-//	GA_RWAttributeRef neighbor_list_ref = gdp->addIntArray(GA_ATTRIB_POINT, HINA_GEOMETRY_ATTRIBUTE_NEIGHBORS);
-//	neighbor_list_ref.setTypeInfo(GA_TYPE_VOID);
 
 	fpreal TargetSpacing = getTargetSpacing();
 	fpreal TargetDensity = getTargetDensity();
@@ -94,7 +90,7 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 		this->Mass = TargetDensity / maxNumberDensity;
 	}
 }
-void SIM_Hina_Particles::Commit()
+void SIM_Hina_Particles::commit()
 {
 	SIM_GeometryAutoWriteLock lock(this);
 	GU_Detail &gdp = lock.getGdp();
@@ -102,7 +98,6 @@ void SIM_Hina_Particles::Commit()
 	GA_RWHandleV3 vel_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
 	GA_RWHandleI fn_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID);
 	GA_RWHandleI bn_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY);
-//	GA_RWHandleV3 cd_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_COLOR);
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
@@ -116,18 +111,20 @@ void SIM_Hina_Particles::Commit()
 			vel_handle.set(pt_off, vel);
 			fn_sum_handle.set(pt_off, fn_sum);
 			bn_sum_handle.set(pt_off, bn_sum);
-
-//			fpreal v_l = vel.length();
-//			fpreal c = std::clamp(v_l / 10, 0., 1.);
-//			cd_handle.set(pt_off, UT_Vector3(c, c, 1));
 		}
+}
+void SIM_Hina_Particles::for_all_neighbors(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func)
+{
+	std::vector<GA_Offset> &neighbors = neighbor_lists_cache[pt_off];
+	for (const GA_Offset &n_off: neighbors)
+		func(n_off);
 }
 
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		CommitCache,
 		true,
-		false,
+		true,
 		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
 )
 void GAS_Hina_CommitCache::_init() {}
@@ -136,6 +133,6 @@ bool GAS_Hina_CommitCache::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 {
 	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
 	CHECK_NULL_RETURN_BOOL(particles)
-	particles->Commit();
+	particles->commit();
 	return true;
 }

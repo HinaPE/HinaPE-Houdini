@@ -20,7 +20,6 @@ void SIM_Hina_Akinci2012BoundaryParticles::_makeEqual_Akinci2012BoundaryParticle
 	this->offset_map = src->offset_map;
 }
 void SIM_Hina_Akinci2012BoundaryParticles::_setup_gdp(GU_Detail *gdp) const { SIM_Hina_Particles::_setup_gdp(gdp); }
-void SIM_Hina_Akinci2012BoundaryParticles::Commit() { SIM_Hina_Particles::Commit(); }
 void SIM_Hina_Akinci2012BoundaryParticles::UpdateBoundaryParticles(SIM_Object *boundary_obj)
 {
 	// Reload the whole boundary particles

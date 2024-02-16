@@ -1,0 +1,10 @@
+#ifndef HINAPE_GAS_HINA_ADVECTVEL_H
+#define HINAPE_GAS_HINA_ADVECTVEL_H
+
+#include <SIM_Hina_Generator.h>
+
+GAS_HINA_SUBSOLVER_CLASS(
+		AdvectVel,
+)
+
+#endif //HINAPE_GAS_HINA_ADVECTVEL_H

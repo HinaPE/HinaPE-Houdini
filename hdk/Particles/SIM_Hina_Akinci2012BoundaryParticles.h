@@ -8,7 +8,6 @@
 SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		Akinci2012BoundaryParticles,
 		Particles,
-		void Commit() override;
 		void UpdateBoundaryParticles(SIM_Object *boundary_obj);
 
 		std::map<GA_Offset, GA_Offset> offset_map;
