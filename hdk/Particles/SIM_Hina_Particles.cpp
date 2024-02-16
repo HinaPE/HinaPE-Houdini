@@ -43,7 +43,7 @@ void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 }
 void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 {
-	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_COLOR, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
+//	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_COLOR, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_VELOCITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_FORCE, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_MASS, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
@@ -99,7 +99,7 @@ void SIM_Hina_Particles::Commit()
 	GA_RWHandleV3 vel_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
 	GA_RWHandleI fn_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID);
 	GA_RWHandleI bn_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY);
-	GA_RWHandleV3 cd_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_COLOR);
+//	GA_RWHandleV3 cd_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_COLOR);
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
@@ -114,11 +114,12 @@ void SIM_Hina_Particles::Commit()
 			fn_sum_handle.set(pt_off, fn_sum);
 			bn_sum_handle.set(pt_off, bn_sum);
 
-			fpreal v_l = vel.length();
-			fpreal c = std::clamp(v_l / 10, 0., 1.);
-			cd_handle.set(pt_off, UT_Vector3(c, c, 1));
+//			fpreal v_l = vel.length();
+//			fpreal c = std::clamp(v_l / 10, 0., 1.);
+//			cd_handle.set(pt_off, UT_Vector3(c, c, 1));
 		}
 }
+
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		CommitCache,
@@ -134,65 +135,4 @@ bool GAS_Hina_CommitCache::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 	CHECK_NULL_RETURN_BOOL(particles)
 	particles->Commit();
 	return true;
-}
-SIM_Guide *GAS_Hina_CommitCache::createGuideObjectSubclass() const { return new SIM_GuideShared(this, true); }
-void GAS_Hina_CommitCache::buildGuideGeometrySubclass(const SIM_RootData &root, const SIM_Options &options, const GU_DetailHandle &gdh, UT_DMatrix4 *xform, const SIM_Time &t) const
-{
-	if (gdh.isNull())
-		return;
-
-	if (!getShowGuideGeometry(options))
-		return;
-
-	UT_Vector3 color = getDomainColor(options);
-
-	GU_DetailHandleAutoWriteLock gdl(gdh);
-	GU_Detail *gdp = gdl.getGdp();
-	gdp->clearAndDestroy();
-
-	UT_Vector3 Center = UT_Vector3(0.);
-	UT_Vector3 Extent = {2, 2, 2};
-//	getFluidDomain();
-
-	std::array<UT_Vector3, 8> vertices{};
-	for (int i = 0; i < 8; i++)
-	{
-		vertices[i] = UT_Vector3(
-				Center.x() + Extent.x() * ((i & 1) ? 0.5 : -0.5),
-				Center.y() + Extent.y() * ((i & 2) ? 0.5 : -0.5),
-				Center.z() + Extent.z() * ((i & 4) ? 0.5 : -0.5)
-		);
-	}
-
-	std::array<GA_Offset, 8> pt_off{};
-	for (int i = 0; i < 8; i++)
-	{
-		pt_off[i] = gdp->appendPointOffset();
-		gdp->setPos3(pt_off[i], vertices[i]);
-
-		GA_RWHandleV3 gdp_handle_cd(gdp->addFloatTuple(GA_ATTRIB_POINT, "Cd", 3));
-		gdp_handle_cd.set(pt_off[i], color);
-	}
-
-	static const int edges[12][2] = {
-			{0, 1},
-			{0, 4},
-			{1, 3},
-			{1, 5},
-			{2, 0},
-			{2, 3},
-			{2, 6},
-			{3, 7},
-			{4, 5},
-			{4, 6},
-			{5, 7},
-			{6, 7},
-	};
-
-	for (int i = 0; i < 12; i++)
-	{
-		GEO_PrimPoly *line = GEO_PrimPoly::build(gdp, 2, GU_POLY_OPEN);
-		for (int j = 0; j < 2; j++)
-			line->setVertexPoint(j, pt_off[edges[i][j]]);
-	}
 }

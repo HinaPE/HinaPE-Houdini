@@ -178,8 +178,6 @@ public: \
 static const char *DATANAME; \
 mutable UT_WorkBuffer error_msg; \
 __VA_ARGS__ \
-GET_GUIDE_FUNC_B(SIM_NAME_SHOWGUIDE, ShowGuideGeometry, true); \
-GET_GUIDE_FUNC_V3("DomainColor", DomainColor, (.0156356, 0, .5)) \
 protected: \
 GAS_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
 ~GAS_Hina_##NAME() override = default; \
@@ -232,15 +230,6 @@ static SIM_DopDescription DESC(GEN_NODE, \
                                DATANAME, \
                                classname(), \
                                PRMS.data()); \
-static PRM_Name ShowGuideGeometry(SIM_NAME_SHOWGUIDE, "ShowGuideGeometry"); \
-static PRM_Name DomainColor("DomainColor", "DomainColor"); \
-static std::array<PRM_Default, 3> DomainColorDefault{.0156356, 0, .5}; \
-static std::array<PRM_Template, 3> PRMS_GUIDE{ \
-PRM_Template(PRM_TOGGLE, 1, &ShowGuideGeometry, PRMoneDefaults), \
-PRM_Template(PRM_RGBA, 3, &DomainColor, DomainColorDefault.data()), \
-PRM_Template() \
-}; \
-DESC.setGuideTemplates(PRMS_GUIDE.data()); \
 DESC.setDefaultUniqueDataName(UNIQUE); \
 setGasDescription(DESC); \
 return &DESC; \
