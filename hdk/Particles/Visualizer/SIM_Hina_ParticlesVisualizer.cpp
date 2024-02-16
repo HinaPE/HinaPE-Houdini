@@ -1,6 +1,6 @@
 #include "SIM_Hina_ParticlesVisualizer.h"
 
-#include <Akinci2012/SIM_Hina_Akinci2012BoundaryParticles.h>
+#include <Particles/SIM_Hina_Akinci2012BoundaryParticles.h>
 #include <SOP/SOP_Node.h>
 
 const SIM_DopDescription *SIM_Hina_ParticlesVisualizer::getDopDescription()

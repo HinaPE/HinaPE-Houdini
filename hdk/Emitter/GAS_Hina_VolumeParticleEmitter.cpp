@@ -1,5 +1,5 @@
 #include "GAS_Hina_VolumeParticleEmitter.h"
-#include <Common/SIM_Hina_Particles.h>
+#include <Particles/SIM_Hina_Particles.h>
 
 #include <CUDA_CubbyFlow/Core/Emitter/VolumeParticleEmitter3.hpp>
 #include <CUDA_CubbyFlow/Core/Geometry/SurfaceToImplicit.hpp>

@@ -1,5 +1,5 @@
 #include "GAS_Hina_GravityForce.h"
-#include <Common/SIM_Hina_Particles.h>
+#include <Particles/SIM_Hina_Particles.h>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		GravityForce,

@@ -1,5 +1,5 @@
 #include "GAS_Hina_CollisionSolve.h"
-#include <Common/SIM_Hina_Particles.h>
+#include <Particles/SIM_Hina_Particles.h>
 #include <Collision/SIM_Hina_RigidBodyCollider.h>
 
 #include <CUDA_CubbyFlow/Core/Geometry/RigidBodyCollider.hpp>

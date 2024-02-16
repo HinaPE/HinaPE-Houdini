@@ -1,48 +1,50 @@
 #include <UT/UT_DSOVersion.h> // Very Important!!! Include this!!!
 
-#include <Akinci2012/SIM_Hina_Akinci2012BoundaryParticles.h>
+#include <Advect/GAS_Hina_SemiImplicitEuler.h>
+#include <Advect/GAS_Hina_SubStep.h>
 
 #include <Collision/GAS_Hina_CollisionSolve.h>
 #include <Collision/SIM_Hina_RigidBodyCollider.h>
 
-#include <Common/SIM_Hina_Particles.h>
-#include <Common/GAS_Hina_BuildNeighborLists.h>
-#include <Common/GAS_Hina_ClearForce.h>
-#include <Common/GAS_Hina_GravityForce.h>
-#include <Common/GAS_Hina_SemiImplicitEuler.h>
-#include <Common/GAS_Hina_UpdateDensity.h>
-#include <Common/GAS_Hina_VolumeParticleEmitter.h>
-#include <Common/GAS_Hina_SubStep.h>
+#include <Density/GAS_Hina_UpdateDensity.h>
 
-#include <DFSPH/SIM_Hina_DFSPHParticles.h>
-#include <DFSPH/GAS_Hina_DFSPHSolver.h>
+#include <Emitter/GAS_Hina_VolumeParticleEmitter.h>
 
-#include <Visualizer/SIM_Hina_ParticlesVisualizer.h>
+#include <Force/NonPressure/GAS_Hina_ClearForce.h>
+#include <Force/NonPressure/GAS_Hina_GravityForce.h>
+
+#include <Neighbor/GAS_Hina_BuildNeighborLists.h>
+
+#include <Particles/SIM_Hina_Akinci2012BoundaryParticles.h>
+#include <Particles/SIM_Hina_DFSPHParticles.h>
+#include <Particles/SIM_Hina_Particles.h>
+#include <Particles/Visualizer/SIM_Hina_ParticlesVisualizer.h>
+
+#include <_Temp/GAS_Hina_DFSPHSolver.h>
+
 
 void initializeSIM(void *)
 {
-	// Akinci2012
-	IMPLEMENT_DATAFACTORY(SIM_Hina_Akinci2012BoundaryParticles)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_SemiImplicitEuler)
 
-	// Collision
 	IMPLEMENT_DATAFACTORY(GAS_Hina_CollisionSolve);
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBodyCollider);
 
-	// Common
-	IMPLEMENT_DATAFACTORY(GAS_Hina_BuildNeighborLists)
-	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles)
-	IMPLEMENT_DATAFACTORY(GAS_Hina_CommitCache)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_VolumeParticleEmitter)
+
 	IMPLEMENT_DATAFACTORY(GAS_Hina_ClearForce)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GravityForce)
-	IMPLEMENT_DATAFACTORY(GAS_Hina_SemiImplicitEuler)
+
+	IMPLEMENT_DATAFACTORY(GAS_Hina_BuildNeighborLists)
+
+	IMPLEMENT_DATAFACTORY(SIM_Hina_Akinci2012BoundaryParticles)
+	IMPLEMENT_DATAFACTORY(SIM_Hina_DFSPHParticles)
+	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_CommitCache)
+	IMPLEMENT_DATAFACTORY(SIM_Hina_ParticlesVisualizer)
+
 	IMPLEMENT_DATAFACTORY(GAS_Hina_UpdateDensity)
-	IMPLEMENT_DATAFACTORY(GAS_Hina_VolumeParticleEmitter)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_SubStep)
 
-	// DFSPH
-	IMPLEMENT_DATAFACTORY(SIM_Hina_DFSPHParticles)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_DFSPHSolver)
-
-	// Visualizer
-	IMPLEMENT_DATAFACTORY(SIM_Hina_ParticlesVisualizer)
 }

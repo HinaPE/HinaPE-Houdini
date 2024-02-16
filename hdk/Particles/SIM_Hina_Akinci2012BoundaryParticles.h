@@ -1,7 +1,7 @@
 #ifndef HINAPE_SIM_HINA_AKINCI2012BOUNDARYPARTICLES_H
 #define HINAPE_SIM_HINA_AKINCI2012BOUNDARYPARTICLES_H
 
-#include <Common/SIM_Hina_Particles.h>
+#include <Particles/SIM_Hina_Particles.h>
 
 #include "SIM/SIM_Geometry.h"
 

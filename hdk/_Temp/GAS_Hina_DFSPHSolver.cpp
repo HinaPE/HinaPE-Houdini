@@ -1,5 +1,5 @@
 #include "GAS_Hina_DFSPHSolver.h"
-#include <DFSPH/SIM_Hina_DFSPHParticles.h>
+#include <Particles/SIM_Hina_DFSPHParticles.h>
 #include <CUDA_HinaPE/kernels.h>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
