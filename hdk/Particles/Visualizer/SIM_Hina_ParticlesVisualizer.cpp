@@ -73,7 +73,7 @@ void SIM_Hina_ParticlesVisualizer::buildGuideGeometrySubclass(const SIM_RootData
 				for (GA_Offset offset = start; offset < end; ++offset)
 				{
 					cd_handle.set(offset, color);
-					alpha_handle.set(offset, .1);
+					alpha_handle.set(offset, .2);
 				}
 		}
 		for (GA_Offset n_off: fluid_particles->neighbor_lists_cache.at(inspect))
@@ -94,7 +94,7 @@ void SIM_Hina_ParticlesVisualizer::buildGuideGeometrySubclass(const SIM_RootData
 				for (GA_Offset offset = start; offset < end; ++offset)
 				{
 					cd_handle.set(offset, color);
-					alpha_handle.set(offset, 0.01);
+					alpha_handle.set(offset, 0.1);
 				}
 		}
 	}
@@ -129,7 +129,16 @@ void SIM_Hina_ParticlesVisualizer::buildGuideGeometrySubclass(const SIM_RootData
 			params.ptoff = new_pt_off;
 			params.xform.scale(.005, .005, .005);
 			params.xform.translate(UT_Vector3(0.));
-			GU_PrimSphere::build(params);
+			GEO_PrimSphere *sphere_prim = (GEO_PrimSphere *) GU_PrimSphere::build(params);
+
+			UT_Vector3 color = {1, 1, 1};
+			GA_Offset start, end;
+			for (GA_Iterator it(sphere_prim->getPointRange()); it.blockAdvance(start, end);)
+				for (GA_Offset offset = start; offset < end; ++offset)
+				{
+					cd_handle.set(offset, color);
+					alpha_handle.set(offset, 1);
+				}
 		}
 	}
 }

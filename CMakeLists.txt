@@ -13,6 +13,14 @@ endif ()
 set(Houdini_DIR ${Houdini_PATH}/toolkit/cmake)
 find_package(Houdini REQUIRED)
 
+# Find OpenMP
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
+
 if (MSVC)
     # Find CUDA
     find_package(CUDAToolkit REQUIRED)
@@ -29,5 +37,6 @@ endif ()
 add_subdirectory(src/CUDA_HinaPE)
 add_subdirectory(src/CUDA_CubbyFlow)
 add_subdirectory(src/CUDA_NeighborSearch)
+add_subdirectory(src/TreeNSearch)
 add_subdirectory(hdk)
 add_subdirectory(standalone)

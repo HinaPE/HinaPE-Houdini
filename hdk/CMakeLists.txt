@@ -17,6 +17,7 @@ target_link_libraries(
         Houdini
         CUDA_CubbyFlow
         CUDA_HinaPE
+        TreeNSearch
 )
 if (MSVC)
     target_link_libraries(

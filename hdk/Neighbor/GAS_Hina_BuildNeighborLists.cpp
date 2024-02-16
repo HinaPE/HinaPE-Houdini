@@ -48,6 +48,8 @@ void GAS_Hina_BuildNeighborLists::_init() {}
 void GAS_Hina_BuildNeighborLists::_makeEqual(const GAS_Hina_BuildNeighborLists *src) {}
 bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
 {
+	std::map<UT_String, std::vector<std::array<cuNSearch::Real, 3>>> temp_positions;
+
 	// ========== 1. Fetch Fluid Particles ==========
 	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
 	CHECK_NULL_RETURN_BOOL(fluid_particles)
@@ -55,6 +57,8 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 	double radius = getKernelRadius();
 	fluid_particles->neighbor_lists_cache.clear();
 	fluid_particles->other_neighbor_lists_cache.clear();
+	UT_String fluid_obj_name = obj->getName();
+	temp_positions.try_emplace(fluid_obj_name);
 
 
 	// ========== 2. Fetch Boundaries Particles ==========
@@ -70,6 +74,7 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 				continue;
 
 			UT_String boundary_obj_name = obj_collider->getName();
+			temp_positions.try_emplace(boundary_obj_name);
 			SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci2012BoundaryParticles::DATANAME, SIM_Hina_Akinci2012BoundaryParticles);
 			if (boundary_akinci)
 			{
@@ -90,7 +95,7 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 		// add fluid particles
 		unsigned int fluid_point_set_index;
 		{
-			std::vector<std::array<cuNSearch::Real, 3>> positions;
+			std::vector<std::array<cuNSearch::Real, 3>> &positions = temp_positions[fluid_obj_name];
 			SIM_GeometryAutoWriteLock lock(fluid_particles);
 			GU_Detail &gdp = lock.getGdp();
 			positions.resize(gdp.getNumPoints());
@@ -113,9 +118,9 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 		{
 			for (auto &pair: boundaries_akinci)
 			{
-				UT_String boundary_name = pair.first;
+				UT_String boundary_obj_name = pair.first;
 				SIM_Hina_Akinci2012BoundaryParticles *boundary_particles = pair.second;
-				std::vector<std::array<cuNSearch::Real, 3>> positions;
+				std::vector<std::array<cuNSearch::Real, 3>> &positions = temp_positions[boundary_obj_name];
 				SIM_GeometryAutoWriteLock lock(boundary_particles);
 				GU_Detail &gdp = lock.getGdp();
 				positions.resize(gdp.getNumPoints());
@@ -130,11 +135,12 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 							positions[pt_idx][2] = pos.z();
 						}
 				}
-				boundary_point_set_indices[boundary_name] = nsearch.add_point_set(positions.front().data(), positions.size(), true /* TODO: maybe this should be false*/, true);
+				boundary_point_set_indices[boundary_obj_name] = nsearch.add_point_set(positions.front().data(), positions.size(), true /* TODO: maybe this should be false*/, true);
 			}
 		}
 
 		// build neighbors
+		nsearch.set_active(true);
 		nsearch.find_neighbors();
 
 
@@ -164,11 +170,10 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 					{
 						UT_String boundary_name = pair.first;
 						unsigned int boundary_point_set_index = pair.second;
-						auto &boundary_point_set = nsearch.point_set(boundary_point_set_index);
-						auto neighbor_count = boundary_point_set.n_neighbors(fluid_point_set_index, pt_idx);
+						auto neighbor_count = fluid_point_set.n_neighbors(boundary_point_set_index, pt_idx);
 						for (int nidx = 0; nidx < neighbor_count; ++nidx)
 						{
-							auto bn_idx = boundary_point_set.neighbor(fluid_point_set_index, pt_idx, nidx);
+							auto bn_idx = fluid_point_set.neighbor(boundary_point_set_index, pt_idx, nidx);
 							GA_Offset bn_off = gdp.pointOffset(bn_idx);
 							fluid_particles->other_neighbor_lists_cache[boundary_name][pt_off].emplace_back(bn_off);
 						}
