@@ -1,4 +1,5 @@
 #include "SIM_Hina_Akinci2012BoundaryParticles.h"
+#include <CUDA_HinaPE/kernels.h>
 
 SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		Akinci2012BoundaryParticles,
@@ -20,7 +21,7 @@ void SIM_Hina_Akinci2012BoundaryParticles::_makeEqual_Akinci2012BoundaryParticle
 	this->offset_map = src->offset_map;
 }
 void SIM_Hina_Akinci2012BoundaryParticles::_setup_gdp(GU_Detail *gdp) const { SIM_Hina_Particles::_setup_gdp(gdp); }
-void SIM_Hina_Akinci2012BoundaryParticles::UpdateBoundaryParticles(SIM_Object *boundary_obj)
+void SIM_Hina_Akinci2012BoundaryParticles::UpdateBoundaryParticlesFromSOP(SIM_Object *boundary_obj)
 {
 	// Reload the whole boundary particles
 	if (_init)
@@ -83,4 +84,26 @@ void SIM_Hina_Akinci2012BoundaryParticles::UpdateBoundaryParticles(SIM_Object *b
 				}
 		}
 	}
+}
+void SIM_Hina_Akinci2012BoundaryParticles::calculate_volume()
+{
+	HinaPE::CubicSplineKernel<false> kernel(getTargetSpacing() * getKernelRadiusOverTargetSpacing());
+	SIM_GeometryAutoWriteLock lock(this);
+	GU_Detail &gdp = lock.getGdp();
+	GA_Offset pt_off;
+	GA_RWHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
+	GA_FOR_ALL_PTOFF(&gdp, pt_off)
+		{
+			fpreal volume = 0.0;
+			volume += kernel.kernel(0); // remember to include self (self is also a neighbor of itself)
+			for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &)
+			{
+				UT_Vector3 p_i = gdp.getPos3(pt_off);
+				UT_Vector3 p_j = gdp.getPos3(n_off);
+				const UT_Vector3 r = p_i - p_j;
+				volume += kernel.kernel(r.length());
+			});
+			volume = 1.0 / volume;
+			volume_handle.set(pt_off, volume);
+		}
 }

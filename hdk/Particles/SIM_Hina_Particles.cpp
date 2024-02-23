@@ -15,12 +15,12 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
         HINA_FLOAT_PARAMETER(TargetSpacing, .02) \
         HINA_FLOAT_PARAMETER(KernelRadiusOverTargetSpacing, 1.8) \
         HINA_FLOAT_PARAMETER(TargetDensity, 1000.) \
-		static std::array<PRM_Name, 4> Kernels = { \
+        static std::array<PRM_Name, 4> Kernels = {\
             PRM_Name("0", "Poly64"), \
             PRM_Name("1", "Spiky"), \
             PRM_Name("2", "CubicSpline"), \
             PRM_Name(nullptr), \
-		}; \
+}; \
         static PRM_Name KernelName("Kernel", "Kernel"); \
         static PRM_Default KernelNameDefault(2, "CubicSpline"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Kernels.data()); \
@@ -106,18 +106,52 @@ void SIM_Hina_Particles::commit()
 			vel_handle.set(pt_off, vel);
 		}
 }
-void SIM_Hina_Particles::for_each_neighbor_fluid(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func)
+void SIM_Hina_Particles::calculate_volume()
 {
-	std::vector<GA_Offset> &neighbors = neighbor_lists_cache[pt_off];
-	for (const GA_Offset &n_off: neighbors)
-		func(n_off);
-	func(pt_off); // remember to include self (self is also a neighbor of itself)
+	HinaPE::CubicSplineKernel<false> kernel(getTargetSpacing() * getKernelRadiusOverTargetSpacing());
+	SIM_GeometryAutoWriteLock lock(this);
+	GU_Detail &gdp = lock.getGdp();
+	GA_Offset pt_off;
+	GA_RWHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
+	GA_FOR_ALL_PTOFF(&gdp, pt_off)
+		{
+			fpreal volume = 0.0;
+			volume += kernel.kernel(0); // remember to include self (self is also a neighbor of itself)
+			for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &)
+			{
+				UT_Vector3 p_i = gdp.getPos3(pt_off);
+				UT_Vector3 p_j = gdp.getPos3(n_off);
+				const UT_Vector3 r = p_i - p_j;
+				volume += kernel.kernel(r.length());
+			});
+			for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &)
+			{
+				UT_Vector3 p_i = gdp.getPos3(pt_off);
+				UT_Vector3 p_j = gdp.getPos3(n_off);
+				const UT_Vector3 r = p_i - p_j;
+				volume += kernel.kernel(r.length());
+			});
+			volume = 1.0 / volume;
+			volume_handle.set(pt_off, volume);
+		}
 }
-void SIM_Hina_Particles::for_each_neighbor_boundary(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func, const UT_String &boundary_name)
+void SIM_Hina_Particles::for_each_neighbor_self(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func)
 {
-	std::vector<GA_Offset> &neighbors = other_neighbor_lists_cache[boundary_name][pt_off];
-	for (const GA_Offset &n_off: neighbors)
-		func(n_off);
+	std::vector<std::pair<GA_Offset, UT_Vector3>> &neighbors = neighbor_lists_cache[pt_off];
+	for (const std::pair<GA_Offset, UT_Vector3> &n_off: neighbors)
+		func(n_off.first, n_off.second);
+}
+void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func)
+{
+	for (auto &neighbor_lists: other_neighbor_lists_cache)
+		for (const std::pair<GA_Offset, UT_Vector3> &n_off: neighbor_lists.second[pt_off])
+			func(n_off.first, n_off.second);
+}
+void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func, const UT_String &other_name)
+{
+	std::vector<std::pair<GA_Offset, UT_Vector3>> &neighbors = other_neighbor_lists_cache[other_name][pt_off];
+	for (const std::pair<GA_Offset, UT_Vector3> &n_off: neighbors)
+		func(n_off.first, n_off.second);
 }
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(

@@ -8,7 +8,8 @@
 SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		Akinci2012BoundaryParticles,
 		Particles,
-		void UpdateBoundaryParticles(SIM_Object *boundary_obj);
+		void UpdateBoundaryParticlesFromSOP(SIM_Object *boundary_obj);
+		void calculate_volume() override; // call after neighbor list is built
 
 		std::map<GA_Offset, GA_Offset> offset_map; // key: this particles set (Boundary Hina Particles), value: boundary particles set (From SOP)
 		bool _dynamic;

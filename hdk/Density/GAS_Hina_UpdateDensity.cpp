@@ -46,7 +46,7 @@ bool GAS_Hina_UpdateDensity::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 		UT_Vector3 pt_pos = gdp.getPos3(pt_off);
 		for (auto &n_off: n_list.second)
 		{
-			UT_Vector3 n_pos = pos_handle.get(n_off);
+			UT_Vector3 n_pos = pos_handle.get(n_off.first);
 			fpreal dist = pt_pos.distance(n_pos);
 			sum += kernel.kernel(dist);
 		}
