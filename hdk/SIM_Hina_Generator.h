@@ -46,6 +46,12 @@ error_msg.appendSprintf("%s::NULL POINTER Exception, From %s\n", ptr->getDataTyp
 return false; \
 }
 
+#define CHECK_NULL_RETURN_VOID(ptr) \
+if (!ptr) \
+{ \
+error_msg.appendSprintf("%s::NULL POINTER Exception, From %s\n", ptr->getDataType().c_str(), DATANAME); \
+}
+
 #define SIM_HINA_GEOMETRY_CLASS(NAME, ...) \
 class SIM_Hina_##NAME : public SIM_GeometryCopy \
 { \

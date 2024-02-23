@@ -17,8 +17,8 @@ SIM_HINA_GEOMETRY_CLASS(
 		std::map<GA_Offset, UT_Vector3> positions_cache;
 		std::map<GA_Offset, UT_Vector3> velocity_cache;
 		virtual void commit(); // Commit Caches to GDP
-		void for_all_neighbors(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func);
-
+		void for_each_neighbor_fluid(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func);
+		void for_each_neighbor_boundary(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func, const UT_String &boundary_name);
 )
 
 GAS_HINA_SUBSOLVER_CLASS(

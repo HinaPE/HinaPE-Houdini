@@ -5,8 +5,6 @@
 
 GAS_HINA_SUBSOLVER_CLASS(
 		DFSPHSolver,
-
-		bool _compute_alpha();
 )
 
 #endif //HINAPE_GAS_HINA_DFSPHSOLVER_H

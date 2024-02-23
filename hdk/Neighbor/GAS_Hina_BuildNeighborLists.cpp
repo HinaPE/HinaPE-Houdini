@@ -44,183 +44,203 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 )
 #endif
 
-void GAS_Hina_BuildNeighborLists::_init() {}
-void GAS_Hina_BuildNeighborLists::_makeEqual(const GAS_Hina_BuildNeighborLists *src) {}
-bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
+void GAS_Hina_BuildNeighborLists::_init()
 {
-	std::map<UT_String, std::vector<std::array<cuNSearch::Real, 3>>> temp_positions;
-
-	// ========== 1. Fetch Fluid Particles ==========
-	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
-	CHECK_NULL_RETURN_BOOL(fluid_particles)
-	double spacing = fluid_particles->getTargetSpacing();
-	double radius = getKernelRadius();
-	fluid_particles->neighbor_lists_cache.clear();
-	fluid_particles->other_neighbor_lists_cache.clear();
-	UT_String fluid_obj_name = obj->getName();
-	temp_positions.try_emplace(fluid_obj_name);
-
-
-	// ========== 2. Fetch Boundaries Particles ==========
-	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundaries_akinci;
+	if (this->nsearch)
 	{
-		SIM_ObjectArray affectors;
-		obj->getAffectors(affectors, "SIM_RelationshipCollide");
-		exint num_affectors = affectors.entries();
-		for (int i = 0; i < num_affectors; ++i)
-		{
-			SIM_Object *obj_collider = affectors(i);
-			if (obj_collider->getName().equal(obj->getName()))
-				continue;
-
-			UT_String boundary_obj_name = obj_collider->getName();
-			temp_positions.try_emplace(boundary_obj_name);
-			SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci2012BoundaryParticles::DATANAME, SIM_Hina_Akinci2012BoundaryParticles);
-			if (boundary_akinci)
-			{
-				boundaries_akinci[boundary_obj_name] = boundary_akinci;
-				boundary_akinci->neighbor_lists_cache.clear();
-				boundary_akinci->other_neighbor_lists_cache.clear();
-				boundary_akinci->UpdateBoundaryParticles(obj_collider);
-			}
-		}
+		delete this->nsearch;
+		this->nsearch = nullptr;
 	}
-
-	// ========== 3. Build Neighbor Lists ==========
+	this->nsearch = nullptr;
+	this->cached_positions.clear();
+	this->cached_point_set_indices.clear();
+}
+void GAS_Hina_BuildNeighborLists::_makeEqual(const GAS_Hina_BuildNeighborLists *src)
+{
+	this->nsearch = src->nsearch;
+	this->cached_positions = src->cached_positions;
+	this->cached_point_set_indices = src->cached_point_set_indices;
+}
+bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM_Time time, SIM_Time timestep)
+{
 	if (getBackend() == 1) // CUDA
 	{
 #ifdef WIN32
-		cuNSearch::NeighborhoodSearch nsearch(radius);
-
-		// add fluid particles
-		unsigned int fluid_point_set_index;
+		if (!nsearch)
+			init_search_engine(fluid_obj);
+		else
 		{
-			std::vector<std::array<cuNSearch::Real, 3>> &positions = temp_positions[fluid_obj_name];
-			SIM_GeometryAutoWriteLock lock(fluid_particles);
-			GU_Detail &gdp = lock.getGdp();
-			positions.resize(gdp.getNumPoints());
-			{
-				GA_Offset pt_off;
-				GA_FOR_ALL_PTOFF(&gdp, pt_off)
-					{
-						GA_Index pt_idx = gdp.pointIndex(pt_off);
-						UT_Vector3 pos = gdp.getPos3(pt_off);
-						positions[pt_idx][0] = pos.x();
-						positions[pt_idx][1] = pos.y();
-						positions[pt_idx][2] = pos.z();
-					}
-			}
-			fluid_point_set_index = nsearch.add_point_set(positions.front().data(), positions.size(), true, true);
-		}
-
-		// add boundaries particles
-		std::map<UT_String, unsigned int> boundary_point_set_indices;
-		{
-			for (auto &pair: boundaries_akinci)
-			{
-				UT_String boundary_obj_name = pair.first;
-				SIM_Hina_Akinci2012BoundaryParticles *boundary_particles = pair.second;
-				std::vector<std::array<cuNSearch::Real, 3>> &positions = temp_positions[boundary_obj_name];
-				SIM_GeometryAutoWriteLock lock(boundary_particles);
-				GU_Detail &gdp = lock.getGdp();
-				positions.resize(gdp.getNumPoints());
-				{
-					GA_Offset pt_off;
-					GA_FOR_ALL_PTOFF(&gdp, pt_off)
-						{
-							GA_Index pt_idx = gdp.pointIndex(pt_off);
-							UT_Vector3 pos = gdp.getPos3(pt_off);
-							positions[pt_idx][0] = pos.x();
-							positions[pt_idx][1] = pos.y();
-							positions[pt_idx][2] = pos.z();
-						}
-				}
-				boundary_point_set_indices[boundary_obj_name] = nsearch.add_point_set(positions.front().data(), positions.size(), false /* NOT dynamic */, false /* NOT search neighbors */, true /* BE SEARCHED by other points sets*/);
-			}
-		}
-
-		// build neighbors
-		nsearch.find_neighbors();
-
-
-		// ========== 4. Set Neighbor Lists ==========
-		{
-			auto &fluid_point_set = nsearch.point_set(fluid_point_set_index);
-			SIM_GeometryAutoWriteLock lock(fluid_particles);
-			GU_Detail &gdp = lock.getGdp();
-			GA_Offset pt_off;
-			GA_FOR_ALL_PTOFF(&gdp, pt_off)
-				{
-					GA_Index pt_idx = gdp.pointIndex(pt_off);
-
-					// self neighbors
-					{
-						auto neighbor_count = fluid_point_set.n_neighbors(fluid_point_set_index, pt_idx);
-						for (int nidx = 0; nidx < neighbor_count; ++nidx)
-						{
-							auto fn_idx = fluid_point_set.neighbor(fluid_point_set_index, pt_idx, nidx);
-							GA_Offset fn_off = gdp.pointOffset(fn_idx);
-							fluid_particles->neighbor_lists_cache[pt_off].emplace_back(fn_off);
-						}
-					}
-
-					// boundary neighbors
-					for (auto &pair: boundary_point_set_indices)
-					{
-						UT_String boundary_name = pair.first;
-						unsigned int boundary_point_set_index = pair.second;
-						auto neighbor_count = fluid_point_set.n_neighbors(boundary_point_set_index, pt_idx);
-						for (int nidx = 0; nidx < neighbor_count; ++nidx)
-						{
-							auto bn_idx = fluid_point_set.neighbor(boundary_point_set_index, pt_idx, nidx);
-							GA_Offset bn_off = gdp.pointOffset(bn_idx);
-							fluid_particles->other_neighbor_lists_cache[boundary_name][pt_off].emplace_back(bn_off);
-						}
-					}
-				}
+			SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
+			CHECK_NULL_RETURN_BOOL(fluid_particles)
+			update_particle_set(fluid_obj->getName(), fluid_particles);
+			nsearch->find_neighbors();
+			update_neighbor(fluid_obj->getName(), fluid_particles);
 		}
 #endif
 	} else if (getBackend() == 0) // TBBParallelHash (NOT YET SUPPORT Akinci2012)
 	{
-		CubbyFlow::Array1<CubbyFlow::Vector3D> positions;
-		SIM_GeometryAutoWriteLock lock(fluid_particles);
-		GU_Detail &gdp = lock.getGdp();
-		positions.Resize(gdp.getNumPoints());
-		{
-			GA_Offset pt_off;
-			GA_FOR_ALL_PTOFF(&gdp, pt_off)
-				{
-					GA_Index pt_idx = gdp.pointIndex(pt_off);
-					UT_Vector3 pos = gdp.getPos3(pt_off);
-					positions[pt_idx][0] = pos.x();
-					positions[pt_idx][1] = pos.y();
-					positions[pt_idx][2] = pos.z();
-				}
-		}
-		CubbyFlow::Vector3UZ res = CubbyFlow::Vector3UZ::MakeConstant(64);
-		auto searcher = CubbyFlow::PointParallelHashGridSearcher3::GetBuilder()
-				.WithGridSpacing(spacing * 2)
-				.WithResolution(res)
-				.MakeShared();
-		searcher->Build(positions, radius);
-		{
-			GA_Offset pt_off;
-			GA_FOR_ALL_PTOFF(&gdp, pt_off)
-				{
-					GA_Index pt_idx = gdp.pointIndex(pt_off);
-					UT_Vector3 pt = gdp.getPos3(pt_off);
-					searcher->ForEachNearbyPoint(
-							AS_CFVector3D(pt), radius, [&](size_t n_idx, const CubbyFlow::Vector3D &)
-							{
-								if (pt_idx != n_idx)
-								{
-									GA_Offset n_off = gdp.pointOffset(n_idx);
-									fluid_particles->neighbor_lists_cache[pt_off].emplace_back(n_off);
-								}
-							});
-				}
-		}
+//		CubbyFlow::Array1<CubbyFlow::Vector3D> positions;
+//		SIM_GeometryAutoWriteLock lock(fluid_particles);
+//		GU_Detail &gdp = lock.getGdp();
+//		positions.Resize(gdp.getNumPoints());
+//		{
+//			GA_Offset pt_off;
+//			GA_FOR_ALL_PTOFF(&gdp, pt_off)
+//				{
+//					GA_Index pt_idx = gdp.pointIndex(pt_off);
+//					UT_Vector3 pos = gdp.getPos3(pt_off);
+//					positions[pt_idx][0] = pos.x();
+//					positions[pt_idx][1] = pos.y();
+//					positions[pt_idx][2] = pos.z();
+//				}
+//		}
+//		CubbyFlow::Vector3UZ res = CubbyFlow::Vector3UZ::MakeConstant(64);
+//		auto searcher = CubbyFlow::PointParallelHashGridSearcher3::GetBuilder()
+//				.WithGridSpacing(spacing * 2)
+//				.WithResolution(res)
+//				.MakeShared();
+//		searcher->Build(positions, radius);
+//		{
+//			GA_Offset pt_off;
+//			GA_FOR_ALL_PTOFF(&gdp, pt_off)
+//				{
+//					GA_Index pt_idx = gdp.pointIndex(pt_off);
+//					UT_Vector3 pt = gdp.getPos3(pt_off);
+//					searcher->ForEachNearbyPoint(
+//							AS_CFVector3D(pt), radius, [&](size_t n_idx, const CubbyFlow::Vector3D &)
+//							{
+//								if (pt_idx != n_idx)
+//								{
+//									GA_Offset n_off = gdp.pointOffset(n_idx);
+//									fluid_particles->neighbor_lists_cache[pt_off].emplace_back(n_off);
+//								}
+//							});
+//				}
+//		}
 	}
 
 	return true;
+}
+void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
+{
+	nsearch = new cuNSearch::NeighborhoodSearch(getKernelRadius());
+	cached_positions.clear();
+	cached_point_set_indices.clear();
+
+	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
+	CHECK_NULL_RETURN_VOID(fluid_particles)
+
+	// ========== 1. Add Fluid Particles ==========
+	_add_particle_set(fluid_obj->getName(), fluid_particles);
+
+	// ========== 2. Add Boundaries Particles ==========
+	SIM_ObjectArray affectors;
+	fluid_obj->getAffectors(affectors, "SIM_RelationshipCollide");
+	exint num_affectors = affectors.entries();
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles;
+	for (int i = 0; i < num_affectors; ++i)
+	{
+		SIM_Object *obj_collider = affectors(i);
+		if (obj_collider->getName().equal(fluid_obj->getName()))
+			continue;
+
+		UT_String boundary_obj_name = obj_collider->getName();
+		SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci2012BoundaryParticles::DATANAME, SIM_Hina_Akinci2012BoundaryParticles);
+		if (boundary_akinci)
+		{
+			boundary_particles[boundary_obj_name] = boundary_akinci;
+			boundary_akinci->UpdateBoundaryParticles(obj_collider);
+			_add_particle_set(boundary_obj_name, boundary_akinci);
+		}
+	}
+	nsearch->set_active(true);
+	nsearch->find_neighbors();
+	update_neighbor(fluid_obj->getName(), fluid_particles);
+	for (const auto &pair: boundary_particles)
+		update_neighbor(pair.first, pair.second);
+
+	/**
+	 * For fluid particles, we need to search with all other particles
+	 * For boundary particles, we only need to search with itself (for initialize Volume)
+	 * After initialization, we only need to search neighbors for fluid particles
+	 */
+	for (const auto &pair1: cached_point_set_indices)
+	{
+		const UT_String &this_name = pair1.first;
+		const unsigned int this_point_set_index = pair1.second;
+		if (this_name != fluid_obj->getName())
+			nsearch->set_active(this_point_set_index, false /* search neighbors */, true /* BE SEARCHED by other points sets*/);
+	}
+}
+void GAS_Hina_BuildNeighborLists::_add_particle_set(const UT_String &name, SIM_Hina_Particles *particles)
+{
+	std::vector<std::array<cuNSearch::Real, 3>> &positions = cached_positions[name];
+	{
+		SIM_GeometryAutoReadLock lock(particles);
+		const GU_Detail *gdp = lock.getGdp();
+		positions.resize(gdp->getNumPoints());
+		GA_Offset pt_off;
+		GA_FOR_ALL_PTOFF(gdp, pt_off)
+			{
+				GA_Index pt_idx = gdp->pointIndex(pt_off);
+				UT_Vector3 pos = gdp->getPos3(pt_off);
+				positions[pt_idx][0] = pos.x();
+				positions[pt_idx][1] = pos.y();
+				positions[pt_idx][2] = pos.z();
+			}
+	}
+	cached_point_set_indices[name] = nsearch->add_point_set(positions.front().data(), positions.size(), true /* dynamic */, true /* search neighbors */, true /* BE SEARCHED by other points sets*/);
+}
+void GAS_Hina_BuildNeighborLists::update_particle_set(const UT_String &name, SIM_Hina_Particles *particles)
+{
+	std::vector<std::array<cuNSearch::Real, 3>> &positions = cached_positions[name];
+	{
+		SIM_GeometryAutoReadLock lock(particles);
+		const GU_Detail *gdp = lock.getGdp();
+		positions.resize(gdp->getNumPoints());
+		GA_Offset pt_off;
+		GA_FOR_ALL_PTOFF(gdp, pt_off)
+			{
+				GA_Index pt_idx = gdp->pointIndex(pt_off);
+				UT_Vector3 pos = gdp->getPos3(pt_off);
+				positions[pt_idx][0] = pos.x();
+				positions[pt_idx][1] = pos.y();
+				positions[pt_idx][2] = pos.z();
+			}
+	}
+	nsearch->resize_point_set(cached_point_set_indices[name], positions.front().data(), positions.size());
+	nsearch->update_point_set(cached_point_set_indices[name]);
+}
+void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hina_Particles *particles)
+{
+	particles->neighbor_lists_cache.clear();
+	particles->other_neighbor_lists_cache.clear();
+
+	const unsigned int point_set_index = cached_point_set_indices[name];
+	const auto &point_set = nsearch->point_set(point_set_index);
+	SIM_GeometryAutoWriteLock lock(particles);
+	GU_Detail &gdp = lock.getGdp();
+	GA_Offset pt_off;
+	GA_FOR_ALL_PTOFF(&gdp, pt_off)
+		{
+			GA_Index pt_idx = gdp.pointIndex(pt_off);
+
+			for (const auto &pair: cached_point_set_indices)
+			{
+				const UT_String &other_point_set_name = pair.first;
+				const unsigned int other_point_set_index = pair.second;
+
+				auto neighbor_count = point_set.n_neighbors(other_point_set_index, pt_idx);
+				for (int nidx = 0; nidx < neighbor_count; ++nidx)
+				{
+					const auto n_idx = point_set.neighbor(other_point_set_index, pt_idx, nidx);
+					const GA_Offset n_off = gdp.pointOffset(n_idx);
+
+					if (other_point_set_index == point_set_index) // self neighbors
+						particles->neighbor_lists_cache[pt_off].emplace_back(n_off);
+					else // other neighbors
+						particles->other_neighbor_lists_cache[other_point_set_name][pt_off].emplace_back(n_off);
+				}
+			}
+		}
 }

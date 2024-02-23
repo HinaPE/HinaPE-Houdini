@@ -114,13 +114,19 @@ void SIM_Hina_Particles::commit()
 			bn_sum_handle.set(pt_off, bn_sum);
 		}
 }
-void SIM_Hina_Particles::for_all_neighbors(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func)
+void SIM_Hina_Particles::for_each_neighbor_fluid(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func)
 {
 	std::vector<GA_Offset> &neighbors = neighbor_lists_cache[pt_off];
 	for (const GA_Offset &n_off: neighbors)
 		func(n_off);
+	func(pt_off); // remember to include self (self is also a neighbor of itself)
 }
-
+void SIM_Hina_Particles::for_each_neighbor_boundary(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func, const UT_String &boundary_name)
+{
+	std::vector<GA_Offset> &neighbors = other_neighbor_lists_cache[boundary_name][pt_off];
+	for (const GA_Offset &n_off: neighbors)
+		func(n_off);
+}
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		CommitCache,
