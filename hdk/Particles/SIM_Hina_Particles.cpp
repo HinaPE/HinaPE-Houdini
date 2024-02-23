@@ -50,8 +50,8 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_DENSITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_PRESSURE, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_VOLUME, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
-	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
-	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
+	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
+	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 
 	fpreal TargetSpacing = getTargetSpacing();
 	fpreal TargetDensity = getTargetDensity();
@@ -97,21 +97,13 @@ void SIM_Hina_Particles::commit()
 	GU_Detail &gdp = lock.getGdp();
 	GA_RWHandleV3 pos_handle = gdp.getP();
 	GA_RWHandleV3 vel_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
-	GA_RWHandleI fn_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_FLUID);
-	GA_RWHandleI bn_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_BOUNDARY);
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
 			UT_Vector3 pos = positions_cache[pt_off];
 			UT_Vector3 vel = velocity_cache[pt_off];
-			int fn_sum = neighbor_lists_cache[pt_off].size();
-			int bn_sum = 0;
-			for (auto &pair: other_neighbor_lists_cache)
-				bn_sum += pair.second[pt_off].size();
 			pos_handle.set(pt_off, pos);
 			vel_handle.set(pt_off, vel);
-			fn_sum_handle.set(pt_off, fn_sum);
-			bn_sum_handle.set(pt_off, bn_sum);
 		}
 }
 void SIM_Hina_Particles::for_each_neighbor_fluid(const GA_Offset &pt_off, std::function<void(const GA_Offset &)> func)

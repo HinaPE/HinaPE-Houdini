@@ -153,7 +153,7 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 			_add_particle_set(boundary_obj_name, boundary_akinci);
 		}
 	}
-	nsearch->set_active(true);
+	nsearch->set_active(true); // for first search, we search for all other point sets with all other point sets
 	nsearch->find_neighbors();
 	update_neighbor(fluid_obj->getName(), fluid_particles);
 	for (const auto &pair: boundary_particles)
@@ -220,6 +220,8 @@ void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hin
 	const auto &point_set = nsearch->point_set(point_set_index);
 	SIM_GeometryAutoWriteLock lock(particles);
 	GU_Detail &gdp = lock.getGdp();
+	GA_RWHandleI self_n_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF);
+	GA_RWHandleI other_n_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS);
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
@@ -242,5 +244,12 @@ void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hin
 						particles->other_neighbor_lists_cache[other_point_set_name][pt_off].emplace_back(n_off);
 				}
 			}
+
+			int fn_sum = particles->neighbor_lists_cache[pt_off].size();
+			int bn_sum = 0;
+			for (auto &pair: particles->other_neighbor_lists_cache)
+				bn_sum += pair.second[pt_off].size();
+			self_n_sum_handle.set(pt_off, fn_sum);
+			other_n_sum_handle.set(pt_off, bn_sum);
 		}
 }
