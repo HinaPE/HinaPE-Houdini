@@ -156,12 +156,8 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 	nsearch->set_active(true); // for first search, we search for all other point sets with all other point sets
 	nsearch->find_neighbors();
 	update_neighbor(fluid_obj->getName(), fluid_particles);
-	fluid_particles->calculate_volume();
 	for (const auto &pair: boundary_particles)
-	{
 		update_neighbor(pair.first, pair.second);
-		pair.second->calculate_volume();
-	}
 
 	/**
 	 * For fluid particles, we need to search with all other particles
@@ -268,4 +264,7 @@ void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hin
 			self_n_sum_handle.set(pt_off, fn_sum);
 			other_n_sum_handle.set(pt_off, bn_sum);
 		}
+
+	particles->calculate_mass();
+	particles->calculate_volume();
 }

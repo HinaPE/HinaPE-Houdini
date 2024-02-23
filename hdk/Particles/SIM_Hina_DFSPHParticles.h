@@ -8,6 +8,8 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		Particles,
 		std::map<GA_Offset, fpreal> alpha_cache;
 		std::map<GA_Offset, fpreal> kappa_cache;
+
+		void calculate_alpha(); // call after calculate_density
 )
 
 #endif //HINAPE_SIM_HINA_DFSPHPARTICLES_H
