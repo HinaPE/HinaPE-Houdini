@@ -29,20 +29,7 @@ bool GAS_Hina_UpdateDensityAkinci::_solve(SIM_Engine &engine, SIM_Object *obj, S
 	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
 	CHECK_NULL_RETURN_BOOL(particles)
 
-	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles;
-	SIM_ObjectArray affectors;
-	obj->getAffectors(affectors, "SIM_RelationshipCollide");
-	exint num_affectors = affectors.entries();
-	for (int i = 0; i < num_affectors; ++i)
-	{
-		SIM_Object *obj_collider = affectors(i);
-		if (obj_collider->getName().equal(obj->getName()))
-			continue;
-		UT_String boundary_obj_name = obj_collider->getName();
-		SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci2012BoundaryParticles::DATANAME, SIM_Hina_Akinci2012BoundaryParticles);
-		if (boundary_akinci)
-			boundary_particles[boundary_obj_name] = boundary_akinci;
-	}
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles = FetchAllAkinciBoundaries(obj);
 
 	HinaPE::CubicSplineKernel<false> kernel(particles->getTargetSpacing() * particles->getKernelRadiusOverTargetSpacing());
 	SIM_GeometryAutoWriteLock lock(particles);

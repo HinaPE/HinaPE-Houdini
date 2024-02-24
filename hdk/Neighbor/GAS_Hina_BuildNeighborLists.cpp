@@ -134,24 +134,11 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 	_add_particle_set(fluid_obj->getName(), fluid_particles);
 
 	// ========== 2. Add Boundaries Particles ==========
-	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles;
-	SIM_ObjectArray affectors;
-	fluid_obj->getAffectors(affectors, "SIM_RelationshipCollide");
-	exint num_affectors = affectors.entries();
-	for (int i = 0; i < num_affectors; ++i)
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles = FetchAllAkinciBoundariesAndApply(fluid_obj, [&](SIM_Object *obj_boundary, SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci, const UT_String &boundary_name)
 	{
-		SIM_Object *obj_collider = affectors(i);
-		if (obj_collider->getName().equal(fluid_obj->getName()))
-			continue;
-		UT_String boundary_obj_name = obj_collider->getName();
-		SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci2012BoundaryParticles::DATANAME, SIM_Hina_Akinci2012BoundaryParticles);
-		if (boundary_akinci)
-		{
-			boundary_particles[boundary_obj_name] = boundary_akinci;
-			boundary_akinci->UpdateBoundaryParticlesFromSOP(obj_collider);
-			_add_particle_set(boundary_obj_name, boundary_akinci);
-		}
-	}
+		boundary_akinci->load_sop(obj_boundary);
+		_add_particle_set(boundary_name, boundary_akinci);
+	});
 	nsearch->set_active(true); // for first search, we search for all other point sets with all other point sets
 	nsearch->find_neighbors();
 	update_neighbor(fluid_obj->getName(), fluid_particles);

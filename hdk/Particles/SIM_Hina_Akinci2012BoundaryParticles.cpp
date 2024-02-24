@@ -21,7 +21,7 @@ void SIM_Hina_Akinci2012BoundaryParticles::_makeEqual_Akinci2012BoundaryParticle
 	this->offset_map = src->offset_map;
 }
 void SIM_Hina_Akinci2012BoundaryParticles::_setup_gdp(GU_Detail *gdp) const { SIM_Hina_Particles::_setup_gdp(gdp); }
-void SIM_Hina_Akinci2012BoundaryParticles::UpdateBoundaryParticlesFromSOP(SIM_Object *boundary_obj)
+void SIM_Hina_Akinci2012BoundaryParticles::load_sop(SIM_Object *boundary_obj)
 {
 	// Reload the whole boundary particles
 	if (_init)
@@ -126,4 +126,43 @@ void SIM_Hina_Akinci2012BoundaryParticles::calculate_volume()
 			volume = 1.0 / volume;
 			volume_handle.set(pt_off, volume);
 		}
+}
+std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> FetchAllAkinciBoundaries(SIM_Object *fluid_obj)
+{
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> res;
+	SIM_ObjectArray affectors;
+	fluid_obj->getAffectors(affectors, "SIM_RelationshipCollide");
+	exint num_affectors = affectors.entries();
+	for (int i = 0; i < num_affectors; ++i)
+	{
+		SIM_Object *obj_collider = affectors(i);
+		if (obj_collider->getName().equal(fluid_obj->getName()))
+			continue;
+		UT_String boundary_obj_name = obj_collider->getName();
+		SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci2012BoundaryParticles::DATANAME, SIM_Hina_Akinci2012BoundaryParticles);
+		if (boundary_akinci)
+			res[boundary_obj_name] = boundary_akinci;
+	}
+	return res;
+}
+std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> FetchAllAkinciBoundariesAndApply(SIM_Object *fluid_obj, const std::function<void(SIM_Object *, SIM_Hina_Akinci2012BoundaryParticles *, const UT_String &)> &func)
+{
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> res;
+	SIM_ObjectArray affectors;
+	fluid_obj->getAffectors(affectors, "SIM_RelationshipCollide");
+	exint num_affectors = affectors.entries();
+	for (int i = 0; i < num_affectors; ++i)
+	{
+		SIM_Object *obj_collider = affectors(i);
+		if (obj_collider->getName().equal(fluid_obj->getName()))
+			continue;
+		UT_String boundary_obj_name = obj_collider->getName();
+		SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci2012BoundaryParticles::DATANAME, SIM_Hina_Akinci2012BoundaryParticles);
+		if (boundary_akinci)
+		{
+			res[boundary_obj_name] = boundary_akinci;
+			func(obj_collider, boundary_akinci, boundary_obj_name);
+		}
+	}
+	return res;
 }

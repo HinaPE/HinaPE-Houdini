@@ -25,9 +25,9 @@ SIM_HINA_GEOMETRY_CLASS(
 		virtual void commit(); // Commit Caches to GDP
 		virtual void calculate_mass();
 		virtual void calculate_volume();
-		void for_each_neighbor_self(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func);
-		void for_each_neighbor_others(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func);
-		void for_each_neighbor_others(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func, const UT_String &other_name);
+		void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
+		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
+		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func, const UT_String &other_name);
 )
 
 GAS_HINA_SUBSOLVER_CLASS(

@@ -139,19 +139,19 @@ void SIM_Hina_Particles::calculate_volume()
 			volume_handle.set(pt_off, volume);
 		}
 }
-void SIM_Hina_Particles::for_each_neighbor_self(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func)
+void SIM_Hina_Particles::for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func)
 {
 	const auto &neighbors = neighbor_lists_cache[pt_off];
 	for (const auto &neighbor: neighbors)
 		func(neighbor.pt_off, neighbor.pt_pos);
 }
-void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func)
+void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func)
 {
 	for (auto &neighbor_lists: other_neighbor_lists_cache)
 		for (const auto &neighbor: neighbor_lists.second[pt_off])
 			func(neighbor.pt_off, neighbor.pt_pos);
 }
-void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func, const UT_String &other_name)
+void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func, const UT_String &other_name)
 {
 	const auto &neighbors = other_neighbor_lists_cache[other_name][pt_off];
 	for (const auto &neighbor: neighbors)
