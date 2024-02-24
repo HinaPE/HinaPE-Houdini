@@ -51,9 +51,9 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 				fpreal grad_sum_square = 0;
 				UT_Vector3 grad_sum = {0, 0, 0};
 
-				UT_Vector3 x_i = position_handle.get(pt_off);
-				fpreal m_i = mass_handle.get(pt_off);
-				fpreal rho_i = density_handle.get(pt_off);
+				UT_Vector3 x_i = DFSPH_particles->position_cache[pt_off];
+				fpreal m_i = DFSPH_particles->mass_cache[pt_off];
+				fpreal rho_i = DFSPH_particles->density_cache[pt_off];
 				// self contribution
 				{
 					UT_Vector3 grad = kernel.gradient(UT_Vector3(0., 0., 0.)); // TODO: maybe error here

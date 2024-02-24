@@ -31,6 +31,8 @@ void SIM_Hina_Particles::_init_Particles()
 	this->UnivMass = 1;
 	this->neighbor_lists_cache.clear();
 	this->other_neighbor_lists_cache.clear();
+	this->offset2index.clear();
+	this->index2offset.clear();
 	this->position_cache.clear();
 	this->velocity_cache.clear();
 	this->force_cache.clear();
@@ -43,6 +45,8 @@ void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 	this->UnivMass = src->UnivMass;
 	this->neighbor_lists_cache = src->neighbor_lists_cache;
 	this->other_neighbor_lists_cache = src->other_neighbor_lists_cache;
+	this->offset2index = src->offset2index;
+	this->index2offset = src->index2offset;
 	this->position_cache = src->position_cache;
 	this->velocity_cache = src->velocity_cache;
 	this->force_cache = src->force_cache;
@@ -67,14 +71,30 @@ void SIM_Hina_Particles::load()
 {
 	SIM_GeometryAutoReadLock lock(this);
 	const GU_Detail *gdp = lock.getGdp();
+	GA_ROHandleV3 pos_handle = gdp->getP();
 	GA_ROHandleV3 vel_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
+	GA_ROHandleV3 force_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_FORCE);
+	GA_ROHandleF mass_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
+	GA_ROHandleF volume_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
+	GA_ROHandleF density_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DENSITY);
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(gdp, pt_off)
 		{
-			UT_Vector3 pos = gdp->getPos3(pt_off);
+			GA_Size index = gdp->pointIndex(pt_off);
+			UT_Vector3 pos = pos_handle.get(pt_off);
 			UT_Vector3 vel = vel_handle.get(pt_off);
+			UT_Vector3 force = force_handle.get(pt_off);
+			fpreal mass = mass_handle.get(pt_off);
+			fpreal volume = volume_handle.get(pt_off);
+			fpreal density = density_handle.get(pt_off);
+			offset2index[pt_off] = index;
+			index2offset[index] = pt_off;
 			position_cache[pt_off] = pos;
 			velocity_cache[pt_off] = vel;
+			force_cache[pt_off] = force;
+			mass_cache[pt_off] = mass;
+			volume_cache[pt_off] = volume;
+			density_cache[pt_off] = density;
 		}
 }
 void SIM_Hina_Particles::commit()
@@ -154,45 +174,40 @@ void SIM_Hina_Particles::calculate_mass()
 		this->UnivMass = TargetDensity / maxNumberDensity;
 	}
 
-	SIM_GeometryAutoWriteLock lock(this);
-	GU_Detail &gdp = lock.getGdp();
-	GA_RWHandleF mass_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
-	GA_Offset pt_off;
-	GA_FOR_ALL_PTOFF(&gdp, pt_off)
-		{
-			mass_cache[pt_off] = this->UnivMass;
-			mass_handle.set(pt_off, this->UnivMass);
-		}
+	for (auto &m: mass_cache)
+		m.second = this->UnivMass;
 }
 void SIM_Hina_Particles::calculate_volume() // deprecated
 {
 	HinaPE::CubicSplineKernel<false> kernel(getTargetSpacing() * getKernelRadiusOverTargetSpacing());
-	SIM_GeometryAutoWriteLock lock(this);
-	GU_Detail &gdp = lock.getGdp();
-	GA_RWHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
+	for (auto &V: volume_cache)
+	{
+		GA_Offset pt_off = V.first;
 
-	GA_Offset pt_off;
-	GA_FOR_ALL_PTOFF(&gdp, pt_off)
+		fpreal volume = 0.0;
+		volume += kernel.kernel(0); // remember to include self (self is also a neighbor of itself)
+		UT_Vector3 p_i = position_cache[pt_off];
+		for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
 		{
-			fpreal volume = 0.0;
-			volume += kernel.kernel(0); // remember to include self (self is also a neighbor of itself)
-			UT_Vector3 p_i = gdp.getPos3(pt_off);
-			for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
-			{
-				UT_Vector3 p_j = n_pos;
-				const UT_Vector3 r = p_i - p_j;
-				volume += kernel.kernel(r.length());
-			});
-			for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
-			{
-				UT_Vector3 p_j = n_pos;
-				const UT_Vector3 r = p_i - p_j;
-				volume += kernel.kernel(r.length());
-			});
-			volume = 1.0 / volume;
-			volume_cache[pt_off] = volume;
-			volume_handle.set(pt_off, volume);
-		}
+			UT_Vector3 p_j = n_pos;
+			const UT_Vector3 r = p_i - p_j;
+			volume += kernel.kernel(r.length());
+		});
+		for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+		{
+			UT_Vector3 p_j = n_pos;
+			const UT_Vector3 r = p_i - p_j;
+			volume += kernel.kernel(r.length());
+		});
+		volume = 1.0 / volume;
+
+		V.second = volume;
+	}
+}
+void SIM_Hina_Particles::for_each_offset(const std::function<void(const GA_Offset &)> &func)
+{
+	for (const auto &pair: offset2index)
+		func(pair.first);
 }
 void SIM_Hina_Particles::for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func)
 {

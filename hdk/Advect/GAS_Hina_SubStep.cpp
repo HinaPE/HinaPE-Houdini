@@ -1,8 +1,11 @@
 #include "GAS_Hina_SubStep.h"
 
+#include <SIM/SIM_ObjectArray.h>
 #include <SIM/SIM_DopDescription.h>
 #include <PRM/PRM_Template.h>
 #include <PRM/PRM_Default.h>
+
+#include <Particles/SIM_Hina_Particles.h>
 
 SIM_Solver::SIM_Result GAS_Hina_SubStep::solveObjectsSubclass(SIM_Engine &engine, SIM_ObjectArray &objects, SIM_ObjectArray &newobjects, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep)
 {
@@ -17,6 +20,13 @@ SIM_Solver::SIM_Result GAS_Hina_SubStep::solveObjectsSubclass(SIM_Engine &engine
 	for (int i = 0; i < sub_step; ++i)
 	{
 		SIM_Solver::SIM_Result res = GAS_SubStep::solveObjectsSubclass(engine, objects, newobjects, feedbacktoobjects, sub_time);
+		for (int j = 0; j < objects.size(); ++j)
+		{
+			SIM_Object *obj = objects(j);
+			SIM_Hina_Particles *particles = SIM_DATA_GET(*obj, SIM_Hina_Particles::DATANAME, SIM_Hina_Particles);
+			if (particles)
+				particles->commit();
+		}
 		if (res != SIM_Solver::SIM_SOLVER_SUCCESS)
 			return res;
 	}
@@ -44,7 +54,7 @@ const SIM_DopDescription *GAS_Hina_SubStep::getDopDescription()
 double GAS_Hina_SubStep::_calculate_substep()
 {
 	// Compute CFL Condition
-	
+
 
 	return getMAX_SUBSTEP();
 }

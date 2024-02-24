@@ -48,8 +48,9 @@ void SIM_Hina_Akinci2012BoundaryParticles::load_sop(SIM_Object *boundary_obj)
 			for (auto &pair: positions)
 			{
 				pt_off = gdp.appendPoint();
-				gdp.setPos3(pt_off, pair.second);
 				this->offset_map[pt_off] = pair.first;
+				this->position_cache[pt_off] = pair.second;
+				gdp.setPos3(pt_off, pair.second);
 			}
 		}
 		_init = false;
@@ -87,41 +88,33 @@ void SIM_Hina_Akinci2012BoundaryParticles::load_sop(SIM_Object *boundary_obj)
 }
 void SIM_Hina_Akinci2012BoundaryParticles::calculate_mass()
 {
+	// NOTE; calculate volume first
 	fpreal RigidDensity = 1000.; // TODO: make it a parameter
-	SIM_GeometryAutoWriteLock lock(this);
-	GU_Detail &gdp = lock.getGdp();
-	GA_RWHandleF mass_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
-	GA_ROHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
-	GA_Offset pt_off;
-	GA_FOR_ALL_PTOFF(&gdp, pt_off)
-		{
-			fpreal volume = volume_handle.get(pt_off);
-			mass_cache[pt_off] = volume * RigidDensity;
-			mass_handle.set(pt_off, volume * RigidDensity);
-		}
+	for_each_offset(
+			[&](const GA_Offset &pt_off)
+			{
+				fpreal volume = volume_cache[pt_off];
+				mass_cache[pt_off] = volume * RigidDensity;
+			});
 }
 void SIM_Hina_Akinci2012BoundaryParticles::calculate_volume()
 {
 	HinaPE::CubicSplineKernel<false> kernel(getTargetSpacing() * getKernelRadiusOverTargetSpacing());
-	SIM_GeometryAutoWriteLock lock(this);
-	GU_Detail &gdp = lock.getGdp();
-	GA_Offset pt_off;
-	GA_RWHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
-	GA_FOR_ALL_PTOFF(&gdp, pt_off)
-		{
-			fpreal volume = 0.0;
-			volume += kernel.kernel(0); // remember to include self (self is also a neighbor of itself)
-			for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &)
+	for_each_offset(
+			[&](const GA_Offset &pt_off)
 			{
-				UT_Vector3 p_i = gdp.getPos3(pt_off);
-				UT_Vector3 p_j = gdp.getPos3(n_off);
-				const UT_Vector3 r = p_i - p_j;
-				volume += kernel.kernel(r.length());
+				fpreal volume = 0.0;
+				volume += kernel.kernel(0); // remember to include self (self is also a neighbor of itself)
+				UT_Vector3 x_i = position_cache[pt_off];
+				for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &)
+				{
+					UT_Vector3 x_j = position_cache[n_off];
+					const UT_Vector3 r = x_i - x_j;
+					volume += kernel.kernel(r.length());
+				});
+				volume = 1.0 / volume;
+				volume_cache[pt_off] = volume;
 			});
-			volume = 1.0 / volume;
-			volume_cache[pt_off] = volume;
-			volume_handle.set(pt_off, volume);
-		}
 }
 std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> FetchAllAkinciBoundaries(SIM_Object *fluid_obj)
 {

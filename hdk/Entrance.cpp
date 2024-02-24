@@ -1,7 +1,5 @@
 #include <UT/UT_DSOVersion.h> // Very Important!!! Include this!!!
 
-#include <Advect/GAS_Hina_AdvectPos.h>
-#include <Advect/GAS_HIna_AdvectVel.h>
 #include <Advect/GAS_Hina_SemiImplicitEuler.h>
 #include <Advect/GAS_Hina_SubStep.h>
 
@@ -30,8 +28,6 @@
 
 void initializeSIM(void *)
 {
-	IMPLEMENT_DATAFACTORY(GAS_Hina_AdvectPos)
-	IMPLEMENT_DATAFACTORY(GAS_Hina_AdvectVel)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_SemiImplicitEuler)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_SubStep)
 
