@@ -122,21 +122,13 @@ void SIM_Hina_Particles::calculate_volume()
 	HinaPE::CubicSplineKernel<false> kernel(getTargetSpacing() * getKernelRadiusOverTargetSpacing());
 	SIM_GeometryAutoWriteLock lock(this);
 	GU_Detail &gdp = lock.getGdp();
-	GA_RWHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
-
 	GA_Offset pt_off;
+	GA_RWHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
 			fpreal volume = 0.0;
 			volume += kernel.kernel(0); // remember to include self (self is also a neighbor of itself)
 			for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &)
-			{
-				UT_Vector3 p_i = gdp.getPos3(pt_off);
-				UT_Vector3 p_j = gdp.getPos3(n_off);
-				const UT_Vector3 r = p_i - p_j;
-				volume += kernel.kernel(r.length());
-			});
-			for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &)
 			{
 				UT_Vector3 p_i = gdp.getPos3(pt_off);
 				UT_Vector3 p_j = gdp.getPos3(n_off);
@@ -149,21 +141,21 @@ void SIM_Hina_Particles::calculate_volume()
 }
 void SIM_Hina_Particles::for_each_neighbor_self(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func)
 {
-	std::vector<std::pair<GA_Offset, UT_Vector3>> &neighbors = neighbor_lists_cache[pt_off];
-	for (const std::pair<GA_Offset, UT_Vector3> &n_off: neighbors)
-		func(n_off.first, n_off.second);
+	const auto &neighbors = neighbor_lists_cache[pt_off];
+	for (const auto &neighbor: neighbors)
+		func(neighbor.pt_off, neighbor.pt_pos);
 }
 void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func)
 {
 	for (auto &neighbor_lists: other_neighbor_lists_cache)
-		for (const std::pair<GA_Offset, UT_Vector3> &n_off: neighbor_lists.second[pt_off])
-			func(n_off.first, n_off.second);
+		for (const auto &neighbor: neighbor_lists.second[pt_off])
+			func(neighbor.pt_off, neighbor.pt_pos);
 }
 void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, std::function<void(const GA_Offset &, const UT_Vector3 &)> func, const UT_String &other_name)
 {
-	std::vector<std::pair<GA_Offset, UT_Vector3>> &neighbors = other_neighbor_lists_cache[other_name][pt_off];
-	for (const std::pair<GA_Offset, UT_Vector3> &n_off: neighbors)
-		func(n_off.first, n_off.second);
+	const auto &neighbors = other_neighbor_lists_cache[other_name][pt_off];
+	for (const auto &neighbor: neighbors)
+		func(neighbor.pt_off, neighbor.pt_pos);
 }
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(

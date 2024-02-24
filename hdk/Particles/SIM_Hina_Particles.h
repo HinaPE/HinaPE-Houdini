@@ -3,6 +3,12 @@
 
 #include <SIM_Hina_Generator.h>
 
+struct ParticleState
+{
+	GA_Offset pt_off;
+	UT_Vector3 pt_pos;
+};
+
 SIM_HINA_GEOMETRY_CLASS(
 		Particles,
 		HINA_GETSET_PARAMETER(FluidDomain, GETSET_DATA_FUNCS_V3)
@@ -12,8 +18,8 @@ SIM_HINA_GEOMETRY_CLASS(
 		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
 
 		fpreal Mass;
-		std::map<GA_Offset, std::vector<std::pair<GA_Offset, UT_Vector3>>> neighbor_lists_cache; // neighbors of this particles set
-		std::map<UT_String, std::map<GA_Offset, std::vector<std::pair<GA_Offset, UT_Vector3>>>> other_neighbor_lists_cache; // neighbors of other particles sets
+		std::map<GA_Offset, std::vector<ParticleState>> neighbor_lists_cache; // neighbors of this particles set
+		std::map<UT_String, std::map<GA_Offset, std::vector<ParticleState>>> other_neighbor_lists_cache; // neighbors of other particles sets
 		std::map<GA_Offset, UT_Vector3> positions_cache;
 		std::map<GA_Offset, UT_Vector3> velocity_cache;
 		virtual void commit(); // Commit Caches to GDP

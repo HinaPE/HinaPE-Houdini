@@ -83,7 +83,7 @@ void SIM_Hina_ParticlesNeighborsVisualizer::buildGuideGeometrySubclass(const SIM
 		}
 		for (const auto& neighbor: fluid_particles->neighbor_lists_cache.at(inspect))
 		{
-			GA_Offset n_off = neighbor.first;
+			GA_Offset n_off = neighbor.pt_off;
 			GA_Offset new_pt_off = gdp->appendPoint();
 			gdp->setPos3(new_pt_off, f_gdp->getPos3(n_off));
 
@@ -129,7 +129,7 @@ void SIM_Hina_ParticlesNeighborsVisualizer::buildGuideGeometrySubclass(const SIM
 		const GU_Detail *b_gdp = lock.getGdp();
 		for (const auto& neighbor: fluid_particles->other_neighbor_lists_cache.at(name).at(inspect))
 		{
-			GA_Offset n_off = neighbor.first;
+			GA_Offset n_off = neighbor.pt_off;
 			GA_Offset new_pt_off = gdp->appendPoint();
 			gdp->setPos3(new_pt_off, b_gdp->getPos3(n_off));
 

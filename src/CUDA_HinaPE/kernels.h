@@ -59,19 +59,7 @@ struct CubicSplineKernel
 		if (r_l < eps) r_l = eps; // note: r's length can be 0!
 		UT_Vector3 r_u = r / r_l;
 
-		UT_Vector3 res;
-		const fpreal q = 2 * r_l / h;
-		if constexpr (use_cache)
-		{
-			int cache_idx = std::floor(q * accuracy / 2.);
-			res = r_u * gradient_cache[cache_idx];
-		} else
-		{
-			fpreal d;
-			if (q < 1) d = (-3. * q + 9. / 4. * q * q) / h;
-			else d = (-3. / 4. * (2. - q) * (2. - q)) / h;
-			res = r_u * (a * d);
-		}
+		UT_Vector3 res = derivative(r_l) * r_u;
 		return res;
 	}
 
@@ -88,16 +76,12 @@ struct CubicSplineKernel
 					kernel_cache[i] = a * b;
 					const fpreal c = -3. * q + 9. / 4. * q * q;
 					derivative_cache[i] = a * c;
-					const fpreal d = (-3. * q + 9. / 4. * q * q) / h;
-					gradient_cache[i] = a * d;
 				} else
 				{
 					const fpreal b = 1. / 4. * (2. - q) * (2. - q) * (2. - q);
 					kernel_cache[i] = a * b;
 					const fpreal c = -3. / 4. * (2. - q) * (2. - q);
 					derivative_cache[i] = a * c;
-					const fpreal d = (-3. / 4. * (2. - q) * (2. - q)) / h;
-					gradient_cache[i] = a * d;
 				}
 			}
 		}
@@ -108,7 +92,6 @@ private:
 	const fpreal a;
 	std::array<fpreal, accuracy> kernel_cache;
 	std::array<fpreal, accuracy> derivative_cache;
-	std::array<fpreal, accuracy> gradient_cache;
 };
 } // namespace HinaPE
 

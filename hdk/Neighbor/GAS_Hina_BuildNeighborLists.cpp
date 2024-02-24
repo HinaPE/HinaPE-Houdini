@@ -155,8 +155,14 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 	nsearch->set_active(true); // for first search, we search for all other point sets with all other point sets
 	nsearch->find_neighbors();
 	update_neighbor(fluid_obj->getName(), fluid_particles);
+	fluid_particles->calculate_mass();
+	fluid_particles->calculate_volume();
 	for (const auto &pair: boundary_particles)
+	{
 		update_neighbor(pair.first, pair.second);
+		pair.second->calculate_volume();
+		pair.second->calculate_mass();
+	}
 
 	/**
 	 * For fluid particles, we need to search with all other particles
@@ -243,7 +249,10 @@ void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hin
 								point_set.GetPoints()[3 * n_idx + 0],
 								point_set.GetPoints()[3 * n_idx + 1],
 								point_set.GetPoints()[3 * n_idx + 2]};
-						particles->neighbor_lists_cache[pt_off].emplace_back(std::make_pair(n_off, n_pos));
+						ParticleState ns;
+						ns.pt_off = n_off;
+						ns.pt_pos = n_pos;
+						particles->neighbor_lists_cache[pt_off].emplace_back(ns);
 					} else // other neighbors
 					{
 						auto &other_point_set = nsearch->point_set(other_point_set_index);
@@ -251,7 +260,10 @@ void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hin
 								other_point_set.GetPoints()[3 * n_idx + 0],
 								other_point_set.GetPoints()[3 * n_idx + 1],
 								other_point_set.GetPoints()[3 * n_idx + 2]};
-						particles->other_neighbor_lists_cache[other_point_set_name][pt_off].emplace_back(std::make_pair(n_off, n_pos));
+						ParticleState ns;
+						ns.pt_off = n_off;
+						ns.pt_pos = n_pos;
+						particles->other_neighbor_lists_cache[other_point_set_name][pt_off].emplace_back(ns);
 					}
 				}
 			}
@@ -263,7 +275,4 @@ void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hin
 			self_n_sum_handle.set(pt_off, fn_sum);
 			other_n_sum_handle.set(pt_off, bn_sum);
 		}
-
-	particles->calculate_mass();
-	particles->calculate_volume();
 }
