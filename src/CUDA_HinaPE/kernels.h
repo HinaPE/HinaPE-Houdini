@@ -63,8 +63,17 @@ struct CubicSplineKernel
 		return res;
 	}
 
-	constexpr CubicSplineKernel(fpreal h) : h(h), a(1. / (PI * h * h * h)), kernel_cache(), derivative_cache()
+	constexpr CubicSplineKernel(fpreal h) : h(h), a(1. / (PI * h * h * h))
 	{
+		if constexpr (use_cache)
+			InitCache(h);
+	}
+
+	inline static void InitCache(fpreal h)
+	{
+		if (cache_initialized)
+			return;
+		fpreal a = 1. / (PI * h * h * h);
 		if constexpr (use_cache)
 		{
 			for (int i = 0; i < accuracy; ++i)
@@ -90,8 +99,9 @@ struct CubicSplineKernel
 private:
 	const fpreal h;
 	const fpreal a;
-	std::array<fpreal, accuracy> kernel_cache;
-	std::array<fpreal, accuracy> derivative_cache;
+	inline static std::array<fpreal, accuracy> kernel_cache;
+	inline static std::array<fpreal, accuracy> derivative_cache;
+	inline static bool cache_initialized = false;
 };
 } // namespace HinaPE
 
