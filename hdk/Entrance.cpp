@@ -52,6 +52,7 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Akinci2012BoundaryParticles)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_DFSPHParticles)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_LoadCache)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_CommitCache)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_ParticlesNeighborsVisualizer)
 

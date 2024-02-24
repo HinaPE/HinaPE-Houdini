@@ -34,7 +34,7 @@ bool GAS_Hina_CollisionSolve::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Ti
 		for (int idx = 0; idx < pt_size; ++idx)
 		{
 			GA_Offset pt_off = gdp.pointOffset(idx);
-			pos_array[idx] = AS_CFVector3D(particles->positions_cache[pt_off]);
+			pos_array[idx] = AS_CFVector3D(particles->position_cache[pt_off]);
 			vel_array[idx] = AS_CFVector3D(particles->velocity_cache[pt_off]);
 		}
 	}
@@ -85,7 +85,7 @@ bool GAS_Hina_CollisionSolve::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Ti
 		for (int idx = 0; idx < pt_size; ++idx)
 		{
 			GA_Offset pt_off = gdp.pointOffset(idx);
-			particles->positions_cache[pt_off] = AS_UTVector3D(pos_array[idx]);
+			particles->position_cache[pt_off] = AS_UTVector3D(pos_array[idx]);
 			particles->velocity_cache[pt_off] = AS_UTVector3D(vel_array[idx]);
 		}
 	}

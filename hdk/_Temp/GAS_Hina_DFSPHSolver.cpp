@@ -23,7 +23,9 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 	SIM_GeometryAutoWriteLock lock(DFSPH_particles);
 	GU_Detail *gdp_fluid = &lock.getGdp();
 	GA_Offset pt_off;
+	GA_ROHandleV3 position_handle = gdp_fluid->getP();
 	GA_ROHandleV3 velocity_handle = gdp_fluid->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
+	GA_ROHandleV3 force_handle = gdp_fluid->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_FORCE);
 	GA_ROHandleF volume_handle = gdp_fluid->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
 	GA_ROHandleF mass_handle = gdp_fluid->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
 	GA_ROHandleF density_handle = gdp_fluid->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DENSITY);
@@ -49,12 +51,12 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 				fpreal grad_sum_square = 0;
 				UT_Vector3 grad_sum = {0, 0, 0};
 
-				UT_Vector3 x_i = gdp_fluid->getPos3(pt_off);
+				UT_Vector3 x_i = position_handle.get(pt_off);
 				fpreal m_i = mass_handle.get(pt_off);
 				fpreal rho_i = density_handle.get(pt_off);
 				// self contribution
 				{
-					UT_Vector3 grad = kernel.gradient(UT_Vector3(0., 0., 0.));
+					UT_Vector3 grad = kernel.gradient(UT_Vector3(0., 0., 0.)); // TODO: maybe error here
 					grad_sum += grad;
 					grad_square_sum += grad.length2();
 				}
@@ -69,15 +71,21 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 					grad_square_sum += grad.length2();
 				});
 				// akinci boundaries neighbors contribution
-				DFSPH_particles->for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+				for (const auto &pair: akinci_boundaries)
 				{
-					UT_Vector3 x_j = n_pos;
-					fpreal volume = volume_handle.get(n_off);
-					const UT_Vector3 r = x_i - x_j;
-					UT_Vector3 grad = 1000. * volume * kernel.gradient(r);
-					grad_sum += grad;
-					grad_sum_square += grad.length2();
-				});
+					SIM_GeometryAutoReadLock _(pair.second);
+					const GU_Detail *gdp_boundary = _.getGdp();
+					GA_ROHandleF mass_handle_boundary = gdp_boundary->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
+					DFSPH_particles->for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+					{
+						UT_Vector3 x_j = n_pos;
+						fpreal m_j = mass_handle_boundary.get(n_off);
+						const UT_Vector3 r = x_i - x_j;
+						UT_Vector3 grad = m_j * kernel.gradient(r);
+						grad_sum += grad;
+						grad_square_sum += grad.length2();
+					}, pair.first);
+				}
 				grad_sum_square = grad_sum.length2();
 				fpreal denominator = grad_square_sum + grad_sum_square;
 				if (denominator < 1e-6)
@@ -125,14 +133,12 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 				fpreal Drho = 0; // self Drho is 0
 				int num_neighbors = 0;
 				UT_Vector3 x_i = gdp_fluid->getPos3(pt_off);
-//				UT_Vector3 v_i = velocity_handle.get(pt_off);
 				UT_Vector3 v_i = DFSPH_particles->velocity_cache[pt_off];
 				fpreal m_i = mass_handle.get(pt_off);
 				fpreal V_i = volume_handle.get(pt_off);
 				DFSPH_particles->for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
 				{
 					UT_Vector3 x_j = n_pos;
-//					UT_Vector3 v_j = velocity_handle.get(n_off);
 					UT_Vector3 v_j = DFSPH_particles->velocity_cache[n_off];
 					fpreal m_j = mass_handle.get(n_off);
 					fpreal V_j = volume_handle.get(n_off);

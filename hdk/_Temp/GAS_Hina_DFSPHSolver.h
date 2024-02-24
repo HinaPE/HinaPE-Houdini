@@ -3,6 +3,8 @@
 
 #include <SIM_Hina_Generator.h>
 
+class SIM_Hina_DFSPHParticles;
+
 GAS_HINA_SUBSOLVER_CLASS(
 		DFSPHSolver,
 )

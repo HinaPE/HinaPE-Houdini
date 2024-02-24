@@ -187,6 +187,9 @@ bool GAS_Hina_VolumeParticleEmitter::_solve(SIM_Engine &engine, SIM_Object *obj,
 		GA_Offset pt_off = gdp.appendPoint();
 		UT_Vector3 pos = new_positions[idx];
 		UT_Vector3 vel = new_velocities[idx];
+		particles->position_cache[pt_off] = pos;
+		particles->velocity_cache[pt_off] = vel;
+		particles->mass_cache[pt_off] = mass;
 		pos_handle.set(pt_off, pos);
 		vel_handle.set(pt_off, vel);
 		mass_handle.set(pt_off, mass);

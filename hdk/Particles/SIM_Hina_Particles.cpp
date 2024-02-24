@@ -31,7 +31,7 @@ void SIM_Hina_Particles::_init_Particles()
 	this->UnivMass = 1;
 	this->neighbor_lists_cache.clear();
 	this->other_neighbor_lists_cache.clear();
-	this->positions_cache.clear();
+	this->position_cache.clear();
 	this->velocity_cache.clear();
 	this->force_cache.clear();
 	this->mass_cache.clear();
@@ -43,7 +43,7 @@ void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 	this->UnivMass = src->UnivMass;
 	this->neighbor_lists_cache = src->neighbor_lists_cache;
 	this->other_neighbor_lists_cache = src->other_neighbor_lists_cache;
-	this->positions_cache = src->positions_cache;
+	this->position_cache = src->position_cache;
 	this->velocity_cache = src->velocity_cache;
 	this->force_cache = src->force_cache;
 	this->mass_cache = src->mass_cache;
@@ -63,6 +63,20 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 }
 
+void SIM_Hina_Particles::load()
+{
+	SIM_GeometryAutoReadLock lock(this);
+	const GU_Detail *gdp = lock.getGdp();
+	GA_ROHandleV3 vel_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
+	GA_Offset pt_off;
+	GA_FOR_ALL_PTOFF(gdp, pt_off)
+		{
+			UT_Vector3 pos = gdp->getPos3(pt_off);
+			UT_Vector3 vel = vel_handle.get(pt_off);
+			position_cache[pt_off] = pos;
+			velocity_cache[pt_off] = vel;
+		}
+}
 void SIM_Hina_Particles::commit()
 {
 	SIM_GeometryAutoWriteLock lock(this);
@@ -79,7 +93,7 @@ void SIM_Hina_Particles::commit()
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
-			UT_Vector3 pos = positions_cache[pt_off];
+			UT_Vector3 pos = position_cache[pt_off];
 			UT_Vector3 vel = velocity_cache[pt_off];
 			UT_Vector3 force = force_cache[pt_off];
 			fpreal force_n = force.length();
@@ -150,21 +164,28 @@ void SIM_Hina_Particles::calculate_mass()
 			mass_handle.set(pt_off, this->UnivMass);
 		}
 }
-void SIM_Hina_Particles::calculate_volume()
+void SIM_Hina_Particles::calculate_volume() // deprecated
 {
 	HinaPE::CubicSplineKernel<false> kernel(getTargetSpacing() * getKernelRadiusOverTargetSpacing());
 	SIM_GeometryAutoWriteLock lock(this);
 	GU_Detail &gdp = lock.getGdp();
-	GA_Offset pt_off;
 	GA_RWHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
+
+	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
 			fpreal volume = 0.0;
 			volume += kernel.kernel(0); // remember to include self (self is also a neighbor of itself)
-			for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &)
+			UT_Vector3 p_i = gdp.getPos3(pt_off);
+			for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
 			{
-				UT_Vector3 p_i = gdp.getPos3(pt_off);
-				UT_Vector3 p_j = gdp.getPos3(n_off);
+				UT_Vector3 p_j = n_pos;
+				const UT_Vector3 r = p_i - p_j;
+				volume += kernel.kernel(r.length());
+			});
+			for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+			{
+				UT_Vector3 p_j = n_pos;
 				const UT_Vector3 r = p_i - p_j;
 				volume += kernel.kernel(r.length());
 			});
@@ -190,6 +211,22 @@ void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, const
 	const auto &neighbors = other_neighbor_lists_cache[other_name][pt_off];
 	for (const auto &neighbor: neighbors)
 		func(neighbor.pt_off, neighbor.pt_pos);
+}
+
+GAS_HINA_SUBSOLVER_IMPLEMENT(
+		LoadCache,
+		true,
+		true,
+		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
+)
+void GAS_Hina_LoadCache::_init() {}
+void GAS_Hina_LoadCache::_makeEqual(const GAS_Hina_LoadCache *src) {}
+bool GAS_Hina_LoadCache::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
+{
+	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
+	CHECK_NULL_RETURN_BOOL(particles)
+	particles->load();
+	return true;
 }
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(

@@ -26,7 +26,7 @@ bool GAS_Hina_AdvectPos::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time ti
 			UT_Vector3 vel = vel_handle.get(pt_off);
 
 			pos = pos + dt * vel;
-			particles->positions_cache[pt_off] = pos;
+			particles->position_cache[pt_off] = pos;
 		}
 	return true;
 }

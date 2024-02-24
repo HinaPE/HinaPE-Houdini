@@ -19,6 +19,10 @@ bool GAS_Hina_ClearForce::_solve(SIM_Engine &, SIM_Object *obj, SIM_Time, SIM_Ti
 	GU_Detail &gdp = lock.getGdp();
 	GA_RWHandleV3 force_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_FORCE);
 	GA_Offset pt_off;
-	GA_FOR_ALL_PTOFF(&gdp, pt_off) { force_handle.set(pt_off, UT_Vector3(0.)); }
+	GA_FOR_ALL_PTOFF(&gdp, pt_off)
+		{
+			particles->force_cache[pt_off] = UT_Vector3(0.);
+			force_handle.set(pt_off, UT_Vector3(0.));
+		}
 	return true;
 }

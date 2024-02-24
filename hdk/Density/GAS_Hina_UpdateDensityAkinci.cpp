@@ -61,6 +61,7 @@ bool GAS_Hina_UpdateDensityAkinci::_solve(SIM_Engine &engine, SIM_Object *obj, S
 					rho += 1000. * volume * kernel.kernel(r.length());
 				}, pair.first);
 			}
+			particles->density_cache[pt_off] = rho;
 			density_handle.set(pt_off, rho);
 		}
 	return true;

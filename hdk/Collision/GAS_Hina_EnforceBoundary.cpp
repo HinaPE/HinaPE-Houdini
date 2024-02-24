@@ -36,7 +36,7 @@ bool GAS_Hina_EnforceBoundary::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_T
 			if (pos.z() <= -HalfDomain.z()) { pos.z() = -HalfDomain.z(); vel.z() = std::max(0.f, vel.z()); }
 			if (pos.z() >= HalfDomain.z()) { pos.z() = HalfDomain.z(); vel.z() = std::min(0.f, vel.z()); }
 
-			particles->positions_cache[pt_off] = pos;
+			particles->position_cache[pt_off] = pos;
 			particles->velocity_cache[pt_off] = vel;
 		}
 	return true;

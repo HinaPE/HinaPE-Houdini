@@ -32,7 +32,7 @@ bool GAS_Hina_SemiImplicitEuler::_solve(SIM_Engine &engine, SIM_Object *obj, SIM
 
 			vel = vel + dt * force / mass;
 			pos = pos + dt * vel;
-			particles->positions_cache[pt_off] = pos;
+			particles->position_cache[pt_off] = pos;
 			particles->velocity_cache[pt_off] = vel;
 		}
 	return true;

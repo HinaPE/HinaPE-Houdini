@@ -103,12 +103,17 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 	// ========== 3. Search ==========
 	nsearch->set_active(true); // for first search, we search for all other point sets with all other point sets
 	nsearch->find_neighbors();
+
+	// ========== 4. update neighbor caches in Particles Data ==========
 	_update_neighbor(fluid_obj->getName(), fluid_particles);
+	for (const auto &pair: boundary_particles)
+		_update_neighbor(pair.first, pair.second);
+
+	// ========== 5. Calculate Mass and Volume ==========
 	fluid_particles->calculate_mass();
 	fluid_particles->calculate_volume();
 	for (const auto &pair: boundary_particles)
 	{
-		_update_neighbor(pair.first, pair.second);
 		pair.second->calculate_volume();
 		pair.second->calculate_mass();
 	}

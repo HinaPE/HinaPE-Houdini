@@ -46,6 +46,7 @@ bool GAS_Hina_UpdateDensity::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 				const UT_Vector3 r = p_i - p_j;
 				rho += m_i * kernel.kernel(r.length());
 			});
+			particles->density_cache[pt_off] = rho;
 			density_handle.set(pt_off, rho);
 		}
 	return true;
