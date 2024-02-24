@@ -15,11 +15,11 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
 				HINA_FLOAT_PARAMETER(KernelRadius, 0.036)
 
-				static std::array<PRM_Name, 3> Backend = {\
+		static std::array<PRM_Name, 3> Backend = {\
             PRM_Name("0", "TBBParallelHash"), \
             PRM_Name("1", "CUDA"), \
             PRM_Name(nullptr), \
-}; \
+		}; \
         static PRM_Name BackendName("Backend", "Backend"); \
         static PRM_Default BackendNameDefault(0, "TBBParallelHash"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Backend.data()); \
@@ -63,9 +63,6 @@ void GAS_Hina_BuildNeighborLists::_makeEqual(const GAS_Hina_BuildNeighborLists *
 }
 bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM_Time time, SIM_Time timestep)
 {
-	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
-	CHECK_NULL_RETURN_BOOL(fluid_particles)
-
 	switch (getBackend())
 	{
 		case 0: // TBB parallel hash (NOT YET SUPPORT Akinci2012)
@@ -75,11 +72,7 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *fluid_o
 			if (!nsearch)
 				init_search_engine(fluid_obj);
 			else
-			{
-				update_particle_set(fluid_obj->getName(), fluid_particles);
-				nsearch->find_neighbors();
-				update_neighbor(fluid_obj->getName(), fluid_particles);
-			}
+				update_search_engine(fluid_obj);
 		}
 			break;
 		default:
@@ -106,14 +99,16 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 		boundary_akinci->load_sop(obj_boundary);
 		_add_particle_set(boundary_name, boundary_akinci);
 	});
+
+	// ========== 3. Search ==========
 	nsearch->set_active(true); // for first search, we search for all other point sets with all other point sets
 	nsearch->find_neighbors();
-	update_neighbor(fluid_obj->getName(), fluid_particles);
+	_update_neighbor(fluid_obj->getName(), fluid_particles);
 	fluid_particles->calculate_mass();
 	fluid_particles->calculate_volume();
 	for (const auto &pair: boundary_particles)
 	{
-		update_neighbor(pair.first, pair.second);
+		_update_neighbor(pair.first, pair.second);
 		pair.second->calculate_volume();
 		pair.second->calculate_mass();
 	}
@@ -130,6 +125,15 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 		if (this_name != fluid_obj->getName())
 			nsearch->set_active(this_point_set_index, false /* search neighbors */, true /* BE SEARCHED by other points sets*/);
 	}
+}
+void GAS_Hina_BuildNeighborLists::update_search_engine(SIM_Object *fluid_obj)
+{
+	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
+	CHECK_NULL_RETURN_VOID(fluid_particles)
+
+	_update_particle_set(fluid_obj->getName(), fluid_particles);
+	nsearch->find_neighbors();
+	_update_neighbor(fluid_obj->getName(), fluid_particles);
 }
 void GAS_Hina_BuildNeighborLists::_add_particle_set(const UT_String &name, SIM_Hina_Particles *particles)
 {
@@ -150,7 +154,7 @@ void GAS_Hina_BuildNeighborLists::_add_particle_set(const UT_String &name, SIM_H
 	}
 	cached_point_set_indices[name] = nsearch->add_point_set(positions.front().data(), positions.size(), true /* dynamic */, true /* search neighbors */, true /* BE SEARCHED by other points sets*/);
 }
-void GAS_Hina_BuildNeighborLists::update_particle_set(const UT_String &name, SIM_Hina_Particles *particles)
+void GAS_Hina_BuildNeighborLists::_update_particle_set(const UT_String &name, SIM_Hina_Particles *particles)
 {
 	std::vector<std::array<cuNSearch::Real, 3>> &positions = cached_positions[name];
 	{
@@ -170,21 +174,19 @@ void GAS_Hina_BuildNeighborLists::update_particle_set(const UT_String &name, SIM
 	nsearch->resize_point_set(cached_point_set_indices[name], positions.front().data(), positions.size());
 	nsearch->update_point_set(cached_point_set_indices[name]);
 }
-void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hina_Particles *particles)
+void GAS_Hina_BuildNeighborLists::_update_neighbor(const UT_String &name, SIM_Hina_Particles *particles)
 {
 	particles->neighbor_lists_cache.clear();
 	particles->other_neighbor_lists_cache.clear();
 
 	const unsigned int point_set_index = cached_point_set_indices[name];
 	auto &point_set = nsearch->point_set(point_set_index);
-	SIM_GeometryAutoWriteLock lock(particles);
-	GU_Detail &gdp = lock.getGdp();
-	GA_RWHandleI self_n_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF);
-	GA_RWHandleI other_n_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS);
+	SIM_GeometryAutoReadLock lock(particles);
+	const GU_Detail *gdp = lock.getGdp();
 	GA_Offset pt_off;
-	GA_FOR_ALL_PTOFF(&gdp, pt_off)
+	GA_FOR_ALL_PTOFF(gdp, pt_off)
 		{
-			GA_Index pt_idx = gdp.pointIndex(pt_off);
+			GA_Index pt_idx = gdp->pointIndex(pt_off);
 
 			for (const auto &pair: cached_point_set_indices)
 			{
@@ -195,7 +197,7 @@ void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hin
 				for (int nidx = 0; nidx < neighbor_count; ++nidx)
 				{
 					const auto n_idx = point_set.neighbor(other_point_set_index, pt_idx, nidx);
-					const GA_Offset n_off = gdp.pointOffset(n_idx);
+					const GA_Offset n_off = gdp->pointOffset(n_idx);
 
 					if (other_point_set_index == point_set_index) // self neighbors
 					{
@@ -221,12 +223,5 @@ void GAS_Hina_BuildNeighborLists::update_neighbor(const UT_String &name, SIM_Hin
 					}
 				}
 			}
-
-			int fn_sum = particles->neighbor_lists_cache[pt_off].size();
-			int bn_sum = 0;
-			for (auto &pair: particles->other_neighbor_lists_cache)
-				bn_sum += pair.second[pt_off].size();
-			self_n_sum_handle.set(pt_off, fn_sum);
-			other_n_sum_handle.set(pt_off, bn_sum);
 		}
 }

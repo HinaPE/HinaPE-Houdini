@@ -23,12 +23,12 @@ SIM_HINA_GEOMETRY_CLASS(
 		std::map<GA_Offset, UT_Vector3> positions_cache;
 		std::map<GA_Offset, UT_Vector3> velocity_cache;
 		std::map<GA_Offset, UT_Vector3> force_cache;
-		std::map<GA_Offset, UT_Vector3> mass_cache;
+		std::map<GA_Offset, fpreal> mass_cache;
 		std::map<GA_Offset, fpreal> volume_cache;
 		std::map<GA_Offset, fpreal> density_cache;
 		virtual void commit();
-		virtual void calculate_mass();
-		virtual void calculate_volume();
+		virtual void calculate_mass(); // init phase, call once
+		virtual void calculate_volume(); // after density is calculated, update every step
 		void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func, const UT_String &other_name);

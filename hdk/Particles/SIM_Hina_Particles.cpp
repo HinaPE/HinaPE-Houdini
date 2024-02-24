@@ -54,6 +54,7 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 {
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_VELOCITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_FORCE, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
+	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_FORCE_NORM, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_MASS, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_VOLUME, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_DENSITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
@@ -68,13 +69,37 @@ void SIM_Hina_Particles::commit()
 	GU_Detail &gdp = lock.getGdp();
 	GA_RWHandleV3 pos_handle = gdp.getP();
 	GA_RWHandleV3 vel_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
+	GA_RWHandleV3 force_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_FORCE);
+	GA_RWHandleF force_n_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_FORCE_NORM);
+	GA_RWHandleF mass_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
+	GA_RWHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
+	GA_RWHandleF density_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DENSITY);
+	GA_RWHandleI self_n_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF);
+	GA_RWHandleI other_n_sum_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS);
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
 			UT_Vector3 pos = positions_cache[pt_off];
 			UT_Vector3 vel = velocity_cache[pt_off];
+			UT_Vector3 force = force_cache[pt_off];
+			fpreal force_n = force.length();
+			fpreal mass = mass_cache[pt_off];
+			fpreal volume = volume_cache[pt_off];
+			fpreal density = density_cache[pt_off];
 			pos_handle.set(pt_off, pos);
 			vel_handle.set(pt_off, vel);
+			force_handle.set(pt_off, force);
+			force_n_handle.set(pt_off, force_n);
+			mass_handle.set(pt_off, mass);
+			volume_handle.set(pt_off, volume);
+			density_handle.set(pt_off, density);
+
+			int fn_sum = neighbor_lists_cache[pt_off].size();
+			int bn_sum = 0;
+			for (auto &pair: other_neighbor_lists_cache)
+				bn_sum += pair.second[pt_off].size();
+			self_n_sum_handle.set(pt_off, fn_sum);
+			other_n_sum_handle.set(pt_off, bn_sum);
 		}
 }
 void SIM_Hina_Particles::calculate_mass()
