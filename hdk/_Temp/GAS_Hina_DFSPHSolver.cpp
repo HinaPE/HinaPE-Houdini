@@ -136,7 +136,7 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 					UT_Vector3 v_j = DFSPH_particles->velocity_cache[n_off];
 					fpreal m_j = mass_handle.get(n_off);
 					fpreal V_j = volume_handle.get(n_off);
-					Drho += V_j * (v_i - v_j).dot(kernel.gradient(x_i - x_j));
+					Drho += m_j * (v_i - v_j).dot(kernel.gradient(x_i - x_j));
 					++num_neighbors;
 				});
 				for (const auto &pair: akinci_boundaries)
@@ -154,7 +154,7 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
 						UT_Vector3 v_j = velocity_handle_boundary.get(n_off);
 						fpreal m_j = mass_handle_boundary.get(n_off);
 						fpreal V_j = volume_handle_boundary.get(n_off);
-						Drho += V_j * (v_i - v_j).dot(kernel.gradient(x_i - x_j));
+						Drho += m_j * (v_i - v_j).dot(kernel.gradient(x_i - x_j));
 						++num_neighbors;
 					}, name);
 				}

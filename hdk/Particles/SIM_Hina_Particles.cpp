@@ -28,31 +28,40 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
 )
 void SIM_Hina_Particles::_init_Particles()
 {
-	this->Mass = 1;
+	this->UnivMass = 1;
 	this->neighbor_lists_cache.clear();
 	this->other_neighbor_lists_cache.clear();
 	this->positions_cache.clear();
 	this->velocity_cache.clear();
+	this->force_cache.clear();
+	this->mass_cache.clear();
+	this->volume_cache.clear();
+	this->density_cache.clear();
 }
 void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 {
-	this->Mass = src->Mass;
+	this->UnivMass = src->UnivMass;
 	this->neighbor_lists_cache = src->neighbor_lists_cache;
 	this->other_neighbor_lists_cache = src->other_neighbor_lists_cache;
 	this->positions_cache = src->positions_cache;
 	this->velocity_cache = src->velocity_cache;
+	this->force_cache = src->force_cache;
+	this->mass_cache = src->mass_cache;
+	this->volume_cache = src->volume_cache;
+	this->density_cache = src->density_cache;
 }
 void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 {
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_VELOCITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_FORCE, HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_MASS, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
+	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_VOLUME, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_DENSITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_PRESSURE, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
-	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_VOLUME, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS, HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
 }
+
 void SIM_Hina_Particles::commit()
 {
 	SIM_GeometryAutoWriteLock lock(this);
@@ -87,7 +96,6 @@ void SIM_Hina_Particles::calculate_mass()
 		pointsGenerator.Generate(sampleBound, TargetSpacing, &points);
 
 		double maxNumberDensity = 0.0;
-//		SPHStdKernel3 kernel{KernelRadius};
 		HinaPE::CubicSplineKernel<false> kernel(KernelRadius);
 
 		for (size_t i = 0; i < points.Length(); ++i)
@@ -98,14 +106,13 @@ void SIM_Hina_Particles::calculate_mass()
 			for (size_t j = 0; j < points.Length(); ++j)
 			{
 				const Vector3D &neighborPoint = points[j];
-//				sum += kernel(neighborPoint.DistanceTo(point));
 				sum += kernel.kernel(neighborPoint.DistanceTo(point));
 			}
 
 			maxNumberDensity = std::max(maxNumberDensity, sum);
 		}
 
-		this->Mass = TargetDensity / maxNumberDensity;
+		this->UnivMass = TargetDensity / maxNumberDensity;
 	}
 
 	SIM_GeometryAutoWriteLock lock(this);
@@ -114,7 +121,8 @@ void SIM_Hina_Particles::calculate_mass()
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
-			mass_handle.set(pt_off, this->Mass);
+			mass_cache[pt_off] = this->UnivMass;
+			mass_handle.set(pt_off, this->UnivMass);
 		}
 }
 void SIM_Hina_Particles::calculate_volume()
@@ -136,6 +144,7 @@ void SIM_Hina_Particles::calculate_volume()
 				volume += kernel.kernel(r.length());
 			});
 			volume = 1.0 / volume;
+			volume_cache[pt_off] = volume;
 			volume_handle.set(pt_off, volume);
 		}
 }

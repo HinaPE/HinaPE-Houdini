@@ -63,60 +63,27 @@ void GAS_Hina_BuildNeighborLists::_makeEqual(const GAS_Hina_BuildNeighborLists *
 }
 bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM_Time time, SIM_Time timestep)
 {
-	if (getBackend() == 1) // CUDA
+	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
+	CHECK_NULL_RETURN_BOOL(fluid_particles)
+
+	switch (getBackend())
 	{
-#ifdef WIN32
-		if (!nsearch)
-			init_search_engine(fluid_obj);
-		else
+		case 0: // TBB parallel hash (NOT YET SUPPORT Akinci2012)
+			break;
+		case 1: // CUDA
 		{
-			SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
-			CHECK_NULL_RETURN_BOOL(fluid_particles)
-			update_particle_set(fluid_obj->getName(), fluid_particles);
-			nsearch->find_neighbors();
-			update_neighbor(fluid_obj->getName(), fluid_particles);
+			if (!nsearch)
+				init_search_engine(fluid_obj);
+			else
+			{
+				update_particle_set(fluid_obj->getName(), fluid_particles);
+				nsearch->find_neighbors();
+				update_neighbor(fluid_obj->getName(), fluid_particles);
+			}
 		}
-#endif
-	} else if (getBackend() == 0) // TBBParallelHash (NOT YET SUPPORT Akinci2012)
-	{
-//		CubbyFlow::Array1<CubbyFlow::Vector3D> positions;
-//		SIM_GeometryAutoWriteLock lock(fluid_particles);
-//		GU_Detail &gdp = lock.getGdp();
-//		positions.Resize(gdp.getNumPoints());
-//		{
-//			GA_Offset pt_off;
-//			GA_FOR_ALL_PTOFF(&gdp, pt_off)
-//				{
-//					GA_Index pt_idx = gdp.pointIndex(pt_off);
-//					UT_Vector3 pos = gdp.getPos3(pt_off);
-//					positions[pt_idx][0] = pos.x();
-//					positions[pt_idx][1] = pos.y();
-//					positions[pt_idx][2] = pos.z();
-//				}
-//		}
-//		CubbyFlow::Vector3UZ res = CubbyFlow::Vector3UZ::MakeConstant(64);
-//		auto searcher = CubbyFlow::PointParallelHashGridSearcher3::GetBuilder()
-//				.WithGridSpacing(spacing * 2)
-//				.WithResolution(res)
-//				.MakeShared();
-//		searcher->Build(positions, radius);
-//		{
-//			GA_Offset pt_off;
-//			GA_FOR_ALL_PTOFF(&gdp, pt_off)
-//				{
-//					GA_Index pt_idx = gdp.pointIndex(pt_off);
-//					UT_Vector3 pt = gdp.getPos3(pt_off);
-//					searcher->ForEachNearbyPoint(
-//							AS_CFVector3D(pt), radius, [&](size_t n_idx, const CubbyFlow::Vector3D &)
-//							{
-//								if (pt_idx != n_idx)
-//								{
-//									GA_Offset n_off = gdp.pointOffset(n_idx);
-//									fluid_particles->neighbor_lists_cache[pt_off].emplace_back(n_off);
-//								}
-//							});
-//				}
-//		}
+			break;
+		default:
+			break;
 	}
 
 	return true;

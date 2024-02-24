@@ -87,6 +87,7 @@ void SIM_Hina_Akinci2012BoundaryParticles::load_sop(SIM_Object *boundary_obj)
 }
 void SIM_Hina_Akinci2012BoundaryParticles::calculate_mass()
 {
+	fpreal RigidDensity = 1000.; // TODO: make it a parameter
 	SIM_GeometryAutoWriteLock lock(this);
 	GU_Detail &gdp = lock.getGdp();
 	GA_RWHandleF mass_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
@@ -95,7 +96,8 @@ void SIM_Hina_Akinci2012BoundaryParticles::calculate_mass()
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
 			fpreal volume = volume_handle.get(pt_off);
-			mass_handle.set(pt_off, volume * 1000.);
+			mass_cache[pt_off] = volume * RigidDensity;
+			mass_handle.set(pt_off, volume * RigidDensity);
 		}
 }
 void SIM_Hina_Akinci2012BoundaryParticles::calculate_volume()
@@ -124,6 +126,7 @@ void SIM_Hina_Akinci2012BoundaryParticles::calculate_volume()
 				volume += kernel.kernel(r.length());
 			});
 			volume = 1.0 / volume;
+			volume_cache[pt_off] = volume;
 			volume_handle.set(pt_off, volume);
 		}
 }

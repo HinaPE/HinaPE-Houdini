@@ -29,7 +29,7 @@ bool GAS_Hina_UpdateDensityAkinci::_solve(SIM_Engine &engine, SIM_Object *obj, S
 	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
 	CHECK_NULL_RETURN_BOOL(particles)
 
-	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles = FetchAllAkinciBoundaries(obj);
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> akinci_boundaries = FetchAllAkinciBoundaries(obj);
 
 	HinaPE::CubicSplineKernel<false> kernel(particles->getTargetSpacing() * particles->getKernelRadiusOverTargetSpacing());
 	SIM_GeometryAutoWriteLock lock(particles);
@@ -51,14 +51,11 @@ bool GAS_Hina_UpdateDensityAkinci::_solve(SIM_Engine &engine, SIM_Object *obj, S
 				const UT_Vector3 r = p_i - p_j;
 				rho += m_i * kernel.kernel(r.length());
 			});
-			for (const auto &pair: boundary_particles)
+			for (const auto &pair: akinci_boundaries)
 			{
-				SIM_GeometryAutoReadLock read_lock(pair.second);
-				const GU_Detail *gdp_boundary = read_lock.getGdp();
-				GA_ROHandleF volume_handle = gdp_boundary->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
 				particles->for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
 				{
-					fpreal volume = volume_handle.get(n_off);
+					fpreal volume = pair.second->volume_cache[n_off];
 					UT_Vector3 p_j = n_pos;
 					const UT_Vector3 r = p_i - p_j;
 					rho += 1000. * volume * kernel.kernel(r.length());

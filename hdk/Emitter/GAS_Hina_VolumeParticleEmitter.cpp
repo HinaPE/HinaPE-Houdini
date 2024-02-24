@@ -181,7 +181,7 @@ bool GAS_Hina_VolumeParticleEmitter::_solve(SIM_Engine &engine, SIM_Object *obj,
 	GA_RWHandleV3 pos_handle = gdp.getP();
 	GA_RWHandleV3 vel_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
 	GA_RWHandleF mass_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
-	fpreal mass = particles->Mass;
+	fpreal mass = particles->UnivMass;
 	for (GA_Size idx = 0; idx < new_particles; ++idx)
 	{
 		GA_Offset pt_off = gdp.appendPoint();

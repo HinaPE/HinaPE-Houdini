@@ -17,12 +17,16 @@ SIM_HINA_GEOMETRY_CLASS(
 		HINA_GETSET_PARAMETER(TargetDensity, GETSET_DATA_FUNCS_F)
 		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
 
-		fpreal Mass;
+		fpreal UnivMass;
 		std::map<GA_Offset, std::vector<ParticleState>> neighbor_lists_cache; // neighbors of this particles set
 		std::map<UT_String, std::map<GA_Offset, std::vector<ParticleState>>> other_neighbor_lists_cache; // neighbors of other particles sets
 		std::map<GA_Offset, UT_Vector3> positions_cache;
 		std::map<GA_Offset, UT_Vector3> velocity_cache;
-		virtual void commit(); // Commit Caches to GDP
+		std::map<GA_Offset, UT_Vector3> force_cache;
+		std::map<GA_Offset, UT_Vector3> mass_cache;
+		std::map<GA_Offset, fpreal> volume_cache;
+		std::map<GA_Offset, fpreal> density_cache;
+		virtual void commit();
 		virtual void calculate_mass();
 		virtual void calculate_volume();
 		void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
