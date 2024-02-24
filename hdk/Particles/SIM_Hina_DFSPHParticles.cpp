@@ -15,5 +15,28 @@ void SIM_Hina_DFSPHParticles::_setup_gdp(GU_Detail *gdp) const
 }
 void SIM_Hina_DFSPHParticles::calculate_alpha()
 {
+	SIM_GeometryAutoWriteLock lock(this);
+	GU_Detail &gdp = lock.getGdp();
+	GA_ROHandleF mass_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
+	GA_ROHandleF volume_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
 
+	HinaPE::CubicSplineKernel<false> kernel(getTargetSpacing() * getKernelRadiusOverTargetSpacing());
+
+	GA_Offset pt_off;
+	GA_FOR_ALL_PTOFF(&gdp, pt_off)
+		{
+			fpreal sum_grad;
+			UT_Vector3D grad{0., 0., 0.};
+			fpreal mass = mass_handle.get(pt_off);
+			fpreal volume = volume_handle.get(pt_off);
+			alpha_cache[pt_off] = 0;
+
+			UT_Vector3D p_i = gdp.getPos3(pt_off);
+			for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+			{
+				UT_Vector3D p_j = n_pos;
+				const UT_Vector3D r = p_i - p_j;
+				grad += kernel.derivative(r.length());
+			});
+		}
 }

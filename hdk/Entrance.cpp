@@ -10,6 +10,7 @@
 #include <Collision/SIM_Hina_RigidBodyCollider.h>
 
 #include <Density/GAS_Hina_UpdateDensity.h>
+#include <Density/GAS_Hina_UpdateDensityAkinci.h>
 
 #include <Emitter/GAS_Hina_VolumeParticleEmitter.h>
 
@@ -39,6 +40,7 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBodyCollider);
 
 	IMPLEMENT_DATAFACTORY(GAS_Hina_UpdateDensity)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_UpdateDensityAkinci)
 
 	IMPLEMENT_DATAFACTORY(GAS_Hina_VolumeParticleEmitter)
 
