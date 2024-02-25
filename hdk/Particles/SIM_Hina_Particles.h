@@ -28,22 +28,14 @@ SIM_HINA_GEOMETRY_CLASS(
 		std::map<GA_Offset, fpreal> mass_cache;
 		std::map<GA_Offset, fpreal> volume_cache;
 		std::map<GA_Offset, fpreal> density_cache;
-		virtual void load();
-		virtual void commit();
+		virtual void load(); // load from gdp. generally, we never need to manually call this function
+		virtual void commit(); // auto commit at `GAS_Hina_SubStep`
 		virtual void calculate_mass(); // init phase, call once
 		virtual void calculate_volume(); // after density is calculated, update every step
 		void for_each_offset(const std::function<void(const GA_Offset &)> &func);
 		void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func, const UT_String &other_name);
-)
-
-GAS_HINA_SUBSOLVER_CLASS(
-		LoadCache,
-)
-
-GAS_HINA_SUBSOLVER_CLASS(
-		CommitCache,
 )
 
 #endif //HINAPE_SIM_HINA_PARTICLES_H

@@ -112,10 +112,11 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 	// ========== 5. Calculate Mass and Volume ==========
 	fluid_particles->calculate_mass();
 	fluid_particles->calculate_volume();
-	for (const auto &pair: boundary_particles)
+	for (auto &pair: boundary_particles)
 	{
 		pair.second->calculate_volume();
 		pair.second->calculate_mass();
+		pair.second->commit(); // important! for affectors, we need to manually commit to avoid solving sequence issues
 	}
 
 	/**

@@ -6,6 +6,7 @@
 #include <PRM/PRM_Default.h>
 
 #include <Particles/SIM_Hina_Particles.h>
+#include <Particles/SIM_Hina_Akinci2012BoundaryParticles.h>
 
 SIM_Solver::SIM_Result GAS_Hina_SubStep::solveObjectsSubclass(SIM_Engine &engine, SIM_ObjectArray &objects, SIM_ObjectArray &newobjects, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep)
 {

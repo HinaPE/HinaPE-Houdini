@@ -11,7 +11,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 void SIM_Hina_Akinci2012BoundaryParticles::_init_Akinci2012BoundaryParticles()
 {
 	this->_init = true;
-	this->_dynamic = true;
+	this->_dynamic = false;
 	this->offset_map.clear();
 }
 void SIM_Hina_Akinci2012BoundaryParticles::_makeEqual_Akinci2012BoundaryParticles(const SIM_Hina_Akinci2012BoundaryParticles *src)
@@ -54,6 +54,7 @@ void SIM_Hina_Akinci2012BoundaryParticles::load_sop(SIM_Object *boundary_obj)
 			}
 		}
 		_init = false;
+		load();
 		return;
 	}
 
@@ -84,6 +85,7 @@ void SIM_Hina_Akinci2012BoundaryParticles::load_sop(SIM_Object *boundary_obj)
 					gdp.setPos3(pt_off, positions[offset_map[pt_off]]);
 				}
 		}
+		load();
 	}
 }
 void SIM_Hina_Akinci2012BoundaryParticles::calculate_mass()

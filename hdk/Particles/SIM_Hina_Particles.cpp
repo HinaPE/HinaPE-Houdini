@@ -227,35 +227,3 @@ void SIM_Hina_Particles::for_each_neighbor_others(const GA_Offset &pt_off, const
 	for (const auto &neighbor: neighbors)
 		func(neighbor.pt_off, neighbor.pt_pos);
 }
-
-GAS_HINA_SUBSOLVER_IMPLEMENT(
-		LoadCache,
-		true,
-		true,
-		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
-)
-void GAS_Hina_LoadCache::_init() {}
-void GAS_Hina_LoadCache::_makeEqual(const GAS_Hina_LoadCache *src) {}
-bool GAS_Hina_LoadCache::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
-{
-	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
-	CHECK_NULL_RETURN_BOOL(particles)
-	particles->load();
-	return true;
-}
-
-GAS_HINA_SUBSOLVER_IMPLEMENT(
-		CommitCache,
-		true,
-		true,
-		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
-)
-void GAS_Hina_CommitCache::_init() {}
-void GAS_Hina_CommitCache::_makeEqual(const GAS_Hina_CommitCache *src) {}
-bool GAS_Hina_CommitCache::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
-{
-	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
-	CHECK_NULL_RETURN_BOOL(particles)
-	particles->commit();
-	return true;
-}
