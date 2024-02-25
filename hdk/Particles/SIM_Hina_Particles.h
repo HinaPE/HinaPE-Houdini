@@ -41,6 +41,7 @@ SIM_HINA_GEOMETRY_CLASS(
 		void advect_velocity(fpreal dt);
 		void clear_force();
 		void calculate_force_gravity();
+		void force_keep_boundary();
 		size_t size() const;
 		void for_each_offset(const std::function<void(const GA_Offset &)> &func);
 		void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);

@@ -8,7 +8,8 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		Particles,
 		std::map<GA_Offset, fpreal> alpha_cache;
 		std::map<GA_Offset, fpreal> kappa_cache;
-		std::map<GA_Offset, fpreal> Drho_cache;
+		std::map<GA_Offset, fpreal> density_adv_cache;
+		std::map<GA_Offset, fpreal> d_density_cache;
 		void commit() override;
 )
 

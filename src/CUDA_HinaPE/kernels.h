@@ -76,6 +76,7 @@ struct CubicSplineKernel
 		fpreal a = 1. / (PI * h * h * h);
 		if constexpr (use_cache)
 		{
+			printf("Initializing kernel cache\n");
 			for (int i = 0; i < accuracy; ++i)
 			{
 				const fpreal q = 2 * i / (fpreal) accuracy;

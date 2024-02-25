@@ -39,6 +39,10 @@ void SIM_Hina_ParticlesNeighborsVisualizer::buildGuideGeometrySubclass(const SIM
 	const SIM_Object *obj = (const SIM_Object *) &root;
 	const SIM_Hina_Particles *fluid_particles = (const SIM_Hina_Particles *) obj->getConstNamedSubData(SIM_Hina_Particles::DATANAME);
 
+	GA_Offset inspect = getInspectOffset(options);
+	if (!fluid_particles->offset2index.count(inspect))
+		return;
+
 	GU_DetailHandleAutoWriteLock gdl(gdh);
 	GU_Detail *gdp = gdl.getGdp();
 	gdp->clearAndDestroy();
@@ -57,8 +61,6 @@ void SIM_Hina_ParticlesNeighborsVisualizer::buildGuideGeometrySubclass(const SIM
 	fpreal spacing = fluid_particles->getTargetSpacing();
 	fpreal kernel_radius = fluid_particles->getKernelRadiusOverTargetSpacing() * spacing;
 	fpreal p_radius = spacing /= 2;
-
-	GA_Offset inspect = getInspectOffset(options);
 	{
 		SIM_GeometryAutoReadLock lock(fluid_particles);
 		const GU_Detail *f_gdp = lock.getGdp();

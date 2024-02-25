@@ -15,13 +15,13 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
         HINA_FLOAT_PARAMETER(TargetSpacing, .02) \
         HINA_FLOAT_PARAMETER(KernelRadiusOverTargetSpacing, 1.8) \
         HINA_FLOAT_PARAMETER(TargetDensity, 1000.) \
-		HINA_FLOAT_VECTOR_PARAMETER(Gravity, 3, 0, -9.8, 0)
-        static std::array<PRM_Name, 4> Kernels = {\
+        HINA_FLOAT_VECTOR_PARAMETER(Gravity, 3, 0, -9.8, 0)
+				static std::array<PRM_Name, 4> Kernels = {\
             PRM_Name("0", "Poly64"), \
             PRM_Name("1", "Spiky"), \
             PRM_Name("2", "CubicSpline"), \
             PRM_Name(nullptr), \
-		}; \
+}; \
         static PRM_Name KernelName("Kernel", "Kernel"); \
         static PRM_Default KernelNameDefault(2, "CubicSpline"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Kernels.data()); \
@@ -247,6 +247,48 @@ void SIM_Hina_Particles::calculate_force_gravity()
 			{
 				force_cache[pt_off] += mass_cache[pt_off] * getGravity();
 			});
+}
+void SIM_Hina_Particles::force_keep_boundary()
+{
+	UT_Vector3 domain = getFluidDomain();
+	UT_Vector3 half_domain = domain * 0.5;
+	for_each_offset(
+			[&](GA_Offset pt_off)
+			{
+				UT_Vector3 &pos = position_cache[pt_off];
+				UT_Vector3 &vel = velocity_cache[pt_off];
+				if (pos.x() < -half_domain.x())
+				{
+					pos.x() = -half_domain.x();
+					vel.x() = 0;
+				}
+				if (pos.x() > half_domain.x())
+				{
+					pos.x() = half_domain.x();
+					vel.x() = 0;
+				}
+				if (pos.y() < -half_domain.y())
+				{
+					pos.y() = -half_domain.y();
+					vel.y() = 0;
+				}
+				if (pos.y() > half_domain.y())
+				{
+					pos.y() = half_domain.y();
+					vel.y() = 0;
+				}
+				if (pos.z() < -half_domain.z())
+				{
+					pos.z() = -half_domain.z();
+					vel.z() = 0;
+				}
+				if (pos.z() > half_domain.z())
+				{
+					pos.z() = half_domain.z();
+					vel.z() = 0;
+				}
+			}
+	);
 }
 size_t SIM_Hina_Particles::size() const
 {

@@ -36,7 +36,7 @@ SIM_Solver::SIM_Result GAS_Hina_SubStep::solveObjectsSubclass(SIM_Engine &engine
 const SIM_DopDescription *GAS_Hina_SubStep::getDopDescription()
 {
 	static PRM_Name MAX_SUBSTEP("MAX_SUBSTEP", "MAX_SUBSTEP");
-	static PRM_Default DefaultMAX_SUBSTEP{5};
+	static PRM_Default DefaultMAX_SUBSTEP{2};
 
 	static std::array<PRM_Template, 2> PRMS{
 			PRM_Template(PRM_INT, 1, &MAX_SUBSTEP, &DefaultMAX_SUBSTEP),
