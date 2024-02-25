@@ -22,26 +22,19 @@
 #include <Particles/SIM_Hina_Particles.h>
 #include <Particles/Visualizer/SIM_Hina_ParticlesVisualizer.h>
 
-#include <_Temp/GAS_Hina_DFSPHSolver.h>
-#include <_Temp/GAS_TEST.h>
+#include <Solvers/GAS_Hina_DFSPHSolver.h>
 
 
 void initializeSIM(void *)
 {
+	// Completed Classes
 	IMPLEMENT_DATAFACTORY(GAS_Hina_SemiImplicitEuler)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_SubStep)
-
-	IMPLEMENT_DATAFACTORY(GAS_Hina_CollisionSolve);
-	IMPLEMENT_DATAFACTORY(GAS_Hina_EnforceBoundary);
-	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBodyCollider);
 
 	IMPLEMENT_DATAFACTORY(GAS_Hina_UpdateDensity)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_UpdateDensityAkinci)
 
 	IMPLEMENT_DATAFACTORY(GAS_Hina_VolumeParticleEmitter)
-
-	IMPLEMENT_DATAFACTORY(GAS_Hina_ClearForce)
-	IMPLEMENT_DATAFACTORY(GAS_Hina_GravityForce)
 
 	IMPLEMENT_DATAFACTORY(GAS_Hina_BuildNeighborLists)
 
@@ -51,6 +44,15 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_ParticlesNeighborsVisualizer)
 
 
+	// On Development
 	IMPLEMENT_DATAFACTORY(GAS_Hina_DFSPHSolver)
-	IMPLEMENT_DATAFACTORY(GAS_Hina_TEST)
+
+
+	// Invalid
+	IMPLEMENT_DATAFACTORY(GAS_Hina_CollisionSolve);
+	IMPLEMENT_DATAFACTORY(GAS_Hina_EnforceBoundary);
+	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBodyCollider);
+
+	IMPLEMENT_DATAFACTORY(GAS_Hina_ClearForce)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_GravityForce)
 }

@@ -31,15 +31,18 @@ bool GAS_Hina_UpdateDensity::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 			[&](const GA_Offset &pt_off)
 			{
 				fpreal rho = 0.;
-
-				fpreal m_i = particles->mass_cache[pt_off];
-				rho += m_i * kernel.kernel(0.); // important: self is also a neighbor
+				{
+					// important: self is also a neighbor
+					fpreal m_i = particles->mass_cache[pt_off];
+					rho += m_i * kernel.kernel(0.);
+				}
 				UT_Vector3 p_i = particles->position_cache[pt_off];
 				particles->for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
 				{
 					UT_Vector3 p_j = n_pos;
+					fpreal m_j = particles->mass_cache[n_off];
 					const UT_Vector3 r = p_i - p_j;
-					rho += m_i * kernel.kernel(r.length());
+					rho += m_j * kernel.kernel(r.length());
 				});
 				particles->density_cache[pt_off] = rho;
 			});
