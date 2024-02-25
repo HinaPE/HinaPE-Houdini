@@ -15,11 +15,11 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
 				HINA_FLOAT_PARAMETER(KernelRadius, 0.036)
 
-		static std::array<PRM_Name, 3> Backend = {\
+				static std::array<PRM_Name, 3> Backend = {\
             PRM_Name("0", "TBBParallelHash"), \
             PRM_Name("1", "CUDA"), \
             PRM_Name(nullptr), \
-		}; \
+}; \
         static PRM_Name BackendName("Backend", "Backend"); \
         static PRM_Default BackendNameDefault(0, "TBBParallelHash"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Backend.data()); \
@@ -105,9 +105,11 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 	nsearch->find_neighbors();
 
 	// ========== 4. update neighbor caches in Particles Data ==========
-	_update_neighbor(fluid_obj->getName(), fluid_particles);
-	for (const auto &pair: boundary_particles)
-		_update_neighbor(pair.first, pair.second);
+	std::map<UT_String, SIM_Hina_Particles *> _;
+	_[fluid_obj->getName()] = fluid_particles;
+	for (auto &pair: boundary_particles)
+		_[pair.first] = pair.second;
+	_update_neighbor_cache(_);
 
 	// ========== 5. Calculate Mass and Volume ==========
 	fluid_particles->calculate_mass();
@@ -136,27 +138,30 @@ void GAS_Hina_BuildNeighborLists::update_search_engine(SIM_Object *fluid_obj)
 {
 	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
 	CHECK_NULL_RETURN_VOID(fluid_particles)
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles = FetchAllAkinciBoundaries(fluid_obj);
+	std::map<UT_String, SIM_Hina_Particles *> _;
+	_[fluid_obj->getName()] = fluid_particles;
+	for (auto &pair: boundary_particles)
+		_[pair.first] = pair.second;
 
 	_update_particle_set(fluid_obj->getName(), fluid_particles);
 	nsearch->find_neighbors();
-	_update_neighbor(fluid_obj->getName(), fluid_particles);
+	_update_neighbor_cache(_);
 }
 void GAS_Hina_BuildNeighborLists::_add_particle_set(const UT_String &name, SIM_Hina_Particles *particles)
 {
 	std::vector<std::array<cuNSearch::Real, 3>> &positions = cached_positions[name];
 	{
-		SIM_GeometryAutoReadLock lock(particles);
-		const GU_Detail *gdp = lock.getGdp();
-		positions.resize(gdp->getNumPoints());
-		GA_Offset pt_off;
-		GA_FOR_ALL_PTOFF(gdp, pt_off)
-			{
-				GA_Index pt_idx = gdp->pointIndex(pt_off);
-				UT_Vector3 pos = gdp->getPos3(pt_off);
-				positions[pt_idx][0] = pos.x();
-				positions[pt_idx][1] = pos.y();
-				positions[pt_idx][2] = pos.z();
-			}
+		positions.resize(particles->size());
+		particles->for_each_offset(
+				[&](const GA_Offset &pt_off)
+				{
+					GA_Index pt_idx = particles->offset2index[pt_off];
+					UT_Vector3 pos = particles->position_cache[pt_off];
+					positions[pt_idx][0] = pos.x();
+					positions[pt_idx][1] = pos.y();
+					positions[pt_idx][2] = pos.z();
+				});
 	}
 	cached_point_set_indices[name] = nsearch->add_point_set(positions.front().data(), positions.size(), true /* dynamic */, true /* search neighbors */, true /* BE SEARCHED by other points sets*/);
 }
@@ -164,70 +169,71 @@ void GAS_Hina_BuildNeighborLists::_update_particle_set(const UT_String &name, SI
 {
 	std::vector<std::array<cuNSearch::Real, 3>> &positions = cached_positions[name];
 	{
-		SIM_GeometryAutoReadLock lock(particles);
-		const GU_Detail *gdp = lock.getGdp();
-		positions.resize(gdp->getNumPoints());
-		GA_Offset pt_off;
-		GA_FOR_ALL_PTOFF(gdp, pt_off)
-			{
-				GA_Index pt_idx = gdp->pointIndex(pt_off);
-				UT_Vector3 pos = gdp->getPos3(pt_off);
-				positions[pt_idx][0] = pos.x();
-				positions[pt_idx][1] = pos.y();
-				positions[pt_idx][2] = pos.z();
-			}
+		positions.resize(particles->size());
+		particles->for_each_offset(
+				[&](const GA_Offset &pt_off)
+				{
+					GA_Index pt_idx = particles->offset2index[pt_off];
+					UT_Vector3 pos = particles->position_cache[pt_off];
+					positions[pt_idx][0] = pos.x();
+					positions[pt_idx][1] = pos.y();
+					positions[pt_idx][2] = pos.z();
+				});
 	}
 	nsearch->resize_point_set(cached_point_set_indices[name], positions.front().data(), positions.size());
 	nsearch->update_point_set(cached_point_set_indices[name]);
 }
-void GAS_Hina_BuildNeighborLists::_update_neighbor(const UT_String &name, SIM_Hina_Particles *particles)
+void GAS_Hina_BuildNeighborLists::_update_neighbor_cache(std::map<UT_String, SIM_Hina_Particles *> &target)
 {
-	particles->neighbor_lists_cache.clear();
-	particles->other_neighbor_lists_cache.clear();
+	for (auto &pair: target)
+	{
+		const UT_String &name = pair.first;
+		SIM_Hina_Particles *particles = pair.second;
 
-	const unsigned int point_set_index = cached_point_set_indices[name];
-	auto &point_set = nsearch->point_set(point_set_index);
-	SIM_GeometryAutoReadLock lock(particles);
-	const GU_Detail *gdp = lock.getGdp();
-	GA_Offset pt_off;
-	GA_FOR_ALL_PTOFF(gdp, pt_off)
-		{
-			GA_Index pt_idx = gdp->pointIndex(pt_off);
-
-			for (const auto &pair: cached_point_set_indices)
-			{
-				const UT_String &other_point_set_name = pair.first;
-				const unsigned int other_point_set_index = pair.second;
-
-				auto neighbor_count = point_set.n_neighbors(other_point_set_index, pt_idx);
-				for (int nidx = 0; nidx < neighbor_count; ++nidx)
+		particles->neighbor_lists_cache.clear();
+		particles->other_neighbor_lists_cache.clear();
+		const unsigned int point_set_index = cached_point_set_indices[name];
+		auto &point_set = nsearch->point_set(point_set_index);
+		particles->for_each_offset(
+				[&](const GA_Offset &pt_off)
 				{
-					const auto n_idx = point_set.neighbor(other_point_set_index, pt_idx, nidx);
-					const GA_Offset n_off = gdp->pointOffset(n_idx);
+					GA_Index pt_idx = particles->offset2index[pt_off];
+					for (const auto &pair: cached_point_set_indices)
+					{
+						const UT_String &other_point_set_name = pair.first;
+						const unsigned int other_point_set_index = pair.second;
 
-					if (other_point_set_index == point_set_index) // self neighbors
-					{
-						const UT_Vector3 n_pos = UT_Vector3D{
-								point_set.GetPoints()[3 * n_idx + 0],
-								point_set.GetPoints()[3 * n_idx + 1],
-								point_set.GetPoints()[3 * n_idx + 2]};
-						ParticleState ns;
-						ns.pt_off = n_off;
-						ns.pt_pos = n_pos;
-						particles->neighbor_lists_cache[pt_off].emplace_back(ns);
-					} else // other neighbors
-					{
-						auto &other_point_set = nsearch->point_set(other_point_set_index);
-						const UT_Vector3 n_pos = UT_Vector3D{
-								other_point_set.GetPoints()[3 * n_idx + 0],
-								other_point_set.GetPoints()[3 * n_idx + 1],
-								other_point_set.GetPoints()[3 * n_idx + 2]};
-						ParticleState ns;
-						ns.pt_off = n_off;
-						ns.pt_pos = n_pos;
-						particles->other_neighbor_lists_cache[other_point_set_name][pt_off].emplace_back(ns);
+						auto neighbor_count = point_set.n_neighbors(other_point_set_index, pt_idx);
+						for (int nidx = 0; nidx < neighbor_count; ++nidx)
+						{
+							const auto n_idx = point_set.neighbor(other_point_set_index, pt_idx, nidx);
+
+							if (other_point_set_index == point_set_index) // self neighbors
+							{
+								const GA_Offset n_off = particles->index2offset[n_idx];
+								const UT_Vector3 n_pos = UT_Vector3D{
+										point_set.GetPoints()[3 * n_idx + 0],
+										point_set.GetPoints()[3 * n_idx + 1],
+										point_set.GetPoints()[3 * n_idx + 2]};
+								ParticleState ns;
+								ns.pt_off = n_off;
+								ns.pt_pos = n_pos;
+								particles->neighbor_lists_cache[pt_off].emplace_back(ns);
+							} else // other neighbors
+							{
+								const GA_Offset n_off = target[other_point_set_name]->index2offset[n_idx];
+								auto &other_point_set = nsearch->point_set(other_point_set_index);
+								const UT_Vector3 n_pos = UT_Vector3D{
+										other_point_set.GetPoints()[3 * n_idx + 0],
+										other_point_set.GetPoints()[3 * n_idx + 1],
+										other_point_set.GetPoints()[3 * n_idx + 2]};
+								ParticleState ns;
+								ns.pt_off = n_off;
+								ns.pt_pos = n_pos;
+								particles->other_neighbor_lists_cache[other_point_set_name][pt_off].emplace_back(ns);
+							}
+						}
 					}
-				}
-			}
-		}
+				});
+	}
 }
