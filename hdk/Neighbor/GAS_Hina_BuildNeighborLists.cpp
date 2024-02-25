@@ -63,6 +63,10 @@ void GAS_Hina_BuildNeighborLists::_makeEqual(const GAS_Hina_BuildNeighborLists *
 }
 bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM_Time time, SIM_Time timestep)
 {
+	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
+	CHECK_NULL_RETURN_VOID(fluid_particles)
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles = FetchAllAkinciBoundaries(fluid_obj);
+
 	switch (getBackend())
 	{
 		case 0: // TBB parallel hash (NOT YET SUPPORT Akinci2012)
@@ -70,9 +74,16 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *fluid_o
 		case 1: // CUDA
 		{
 			if (!nsearch)
-				init_search_engine(fluid_obj);
-			else
-				update_search_engine(fluid_obj);
+			{
+				fluid_particles->obj_name = fluid_obj->getName();
+				FetchAllAkinciBoundariesAndApply(fluid_obj, [&](SIM_Object *obj_boundary, SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci, const UT_String &boundary_name)
+				{
+					boundary_akinci->load_sop(obj_boundary);
+					boundary_akinci->obj_name = obj_boundary->getName();
+				});
+				init_search_engine(fluid_particles, boundary_particles);
+			} else
+				update_search_engine(fluid_particles, boundary_particles);
 		}
 			break;
 		default:
@@ -81,24 +92,18 @@ bool GAS_Hina_BuildNeighborLists::_solve(SIM_Engine &engine, SIM_Object *fluid_o
 
 	return true;
 }
-void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
+void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Hina_Particles *particles, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries)
 {
 	nsearch = new cuNSearch::NeighborhoodSearch(getKernelRadius());
 	cached_positions.clear();
 	cached_point_set_indices.clear();
 
-	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
-	CHECK_NULL_RETURN_VOID(fluid_particles)
-
 	// ========== 1. Add Fluid Particles ==========
-	_add_particle_set(fluid_obj->getName(), fluid_particles);
+	_add_particle_set(particles->obj_name, particles);
 
 	// ========== 2. Add Boundaries Particles ==========
-	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles = FetchAllAkinciBoundariesAndApply(fluid_obj, [&](SIM_Object *obj_boundary, SIM_Hina_Akinci2012BoundaryParticles *boundary_akinci, const UT_String &boundary_name)
-	{
-		boundary_akinci->load_sop(obj_boundary);
-		_add_particle_set(boundary_name, boundary_akinci);
-	});
+	for (auto &pair: akinci_boundaries)
+		_add_particle_set(pair.first, pair.second);
 
 	// ========== 3. Search ==========
 	nsearch->set_active(true); // for first search, we search for all other point sets with all other point sets
@@ -106,15 +111,15 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 
 	// ========== 4. update neighbor caches in Particles Data ==========
 	std::map<UT_String, SIM_Hina_Particles *> _;
-	_[fluid_obj->getName()] = fluid_particles;
-	for (auto &pair: boundary_particles)
+	_[particles->obj_name] = particles;
+	for (auto &pair: akinci_boundaries)
 		_[pair.first] = pair.second;
-	_update_neighbor_cache(_);
+	_update_neighbor_cache(_, true);
 
 	// ========== 5. Calculate Mass and Volume ==========
-	fluid_particles->calculate_mass();
-	fluid_particles->calculate_volume();
-	for (auto &pair: boundary_particles)
+	particles->calculate_mass();
+	particles->calculate_volume();
+	for (auto &pair: akinci_boundaries)
 	{
 		pair.second->calculate_volume();
 		pair.second->calculate_mass();
@@ -130,21 +135,18 @@ void GAS_Hina_BuildNeighborLists::init_search_engine(SIM_Object *fluid_obj)
 	{
 		const UT_String &this_name = pair1.first;
 		const unsigned int this_point_set_index = pair1.second;
-		if (this_name != fluid_obj->getName())
+		if (this_name != particles->obj_name)
 			nsearch->set_active(this_point_set_index, false /* search neighbors */, true /* BE SEARCHED by other points sets*/);
 	}
 }
-void GAS_Hina_BuildNeighborLists::update_search_engine(SIM_Object *fluid_obj)
+void GAS_Hina_BuildNeighborLists::update_search_engine(SIM_Hina_Particles *particles, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries)
 {
-	SIM_Hina_Particles *fluid_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
-	CHECK_NULL_RETURN_VOID(fluid_particles)
-	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> boundary_particles = FetchAllAkinciBoundaries(fluid_obj);
 	std::map<UT_String, SIM_Hina_Particles *> _;
-	_[fluid_obj->getName()] = fluid_particles;
-	for (auto &pair: boundary_particles)
+	_[particles->obj_name] = particles;
+	for (auto &pair: akinci_boundaries)
 		_[pair.first] = pair.second;
 
-	_update_particle_set(fluid_obj->getName(), fluid_particles);
+	_update_particle_set(particles->obj_name, particles);
 	nsearch->find_neighbors();
 	_update_neighbor_cache(_);
 }
@@ -183,14 +185,17 @@ void GAS_Hina_BuildNeighborLists::_update_particle_set(const UT_String &name, SI
 	nsearch->resize_point_set(cached_point_set_indices[name], positions.front().data(), positions.size());
 	nsearch->update_point_set(cached_point_set_indices[name]);
 }
-void GAS_Hina_BuildNeighborLists::_update_neighbor_cache(std::map<UT_String, SIM_Hina_Particles *> &target)
+void GAS_Hina_BuildNeighborLists::_update_neighbor_cache(std::map<UT_String, SIM_Hina_Particles *> &target, bool init)
 {
 	for (auto &pair: target)
 	{
-		pair.second->nsearch = nsearch; // TODO: remove following
+		pair.second->neighbor_lists_builder = this; // TODO: remove following
 
 		const UT_String &name = pair.first;
 		SIM_Hina_Particles *particles = pair.second;
+
+		if (!init && SIM_DATA_CAST(particles, SIM_Hina_Akinci2012BoundaryParticles)) // skip boundary particles
+			continue;
 
 		particles->neighbor_lists_cache.clear();
 		particles->other_neighbor_lists_cache.clear();

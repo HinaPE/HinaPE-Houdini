@@ -30,7 +30,7 @@ bool GAS_Hina_UpdateDensityAkinci::_solve(SIM_Engine &engine, SIM_Object *obj, S
 	CHECK_NULL_RETURN_BOOL(particles)
 	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> akinci_boundaries = FetchAllAkinciBoundaries(obj);
 
-	calculate_density(particles, akinci_boundaries);
+	GAS_Hina_UpdateDensityAkinci::calculate_density(particles, akinci_boundaries);
 	return true;
 }
 void GAS_Hina_UpdateDensityAkinci::calculate_density(SIM_Hina_Particles *particles, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries)

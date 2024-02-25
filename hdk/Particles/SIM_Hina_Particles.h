@@ -7,7 +7,6 @@ namespace cuNSearch
 {
 class NeighborhoodSearch;
 }
-
 struct ParticleState
 {
 	GA_Offset pt_off;
@@ -48,9 +47,9 @@ SIM_HINA_GEOMETRY_CLASS(
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func, const UT_String &other_name);
 
-private:
-		cuNSearch::NeighborhoodSearch* nsearch;
+		UT_String obj_name;
 		friend class GAS_Hina_BuildNeighborLists;
+		GAS_Hina_BuildNeighborLists* neighbor_lists_builder;
 )
 
 #endif //HINAPE_SIM_HINA_PARTICLES_H

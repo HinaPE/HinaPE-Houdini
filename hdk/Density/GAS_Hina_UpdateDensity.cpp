@@ -26,7 +26,7 @@ bool GAS_Hina_UpdateDensity::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
 	CHECK_NULL_RETURN_BOOL(particles)
 
-	calculate_density(particles);
+	GAS_Hina_UpdateDensity::calculate_density(particles);
 	return true;
 }
 void GAS_Hina_UpdateDensity::calculate_density(SIM_Hina_Particles *particles)

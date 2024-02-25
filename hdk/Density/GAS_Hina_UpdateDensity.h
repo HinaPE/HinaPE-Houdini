@@ -9,7 +9,7 @@ GAS_HINA_SUBSOLVER_CLASS(
 		UpdateDensity,
 		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
 
-	void calculate_density(SIM_Hina_Particles *particles);
+		static void calculate_density(SIM_Hina_Particles *particles);
 )
 
 #endif //HINAPE_HOUDINI_GAS_HINA_UPDATEDENSITY_H

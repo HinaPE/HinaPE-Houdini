@@ -17,29 +17,25 @@ void GAS_Hina_DFSPHSolver::_makeEqual(const GAS_Hina_DFSPHSolver *src) {}
 bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM_Time time, SIM_Time timestep)
 {
 	SIM_Hina_DFSPHParticles *DFSPH_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_DFSPHParticles);
-	GAS_Hina_BuildNeighborLists *neighbor_solver = SIM_DATA_GET(*fluid_obj, GAS_Hina_BuildNeighborLists::DATANAME, GAS_Hina_BuildNeighborLists);
-	GAS_Hina_UpdateDensityAkinci *density_solver = SIM_DATA_GET(*fluid_obj, GAS_Hina_UpdateDensityAkinci::DATANAME, GAS_Hina_UpdateDensityAkinci);
 	CHECK_NULL_RETURN_BOOL(DFSPH_particles)
-	CHECK_NULL_RETURN_BOOL(neighbor_solver)
-	CHECK_NULL_RETURN_BOOL(density_solver)
 	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> akinci_boundaries = FetchAllAkinciBoundaries(fluid_obj);
 
 	fpreal remain_time = timestep;
 
 	/// REFER TO PAPER [Divergence-Free Smoothed Particle Hydrodynamics], Section 3.1, Algorithm 1
 //	while (remain_time > 1e-6)
-//	{
-	calculate_non_pressure_force(DFSPH_particles);
-	fpreal dt_CFL = calculate_CFL_dt(DFSPH_particles, remain_time);
-	DFSPH_particles->advect_velocity(dt_CFL);
-	correct_density_error(DFSPH_particles, akinci_boundaries);
-	DFSPH_particles->advect_position(dt_CFL);
-	neighbor_solver->update_search_engine(fluid_obj);
-	density_solver->calculate_density(DFSPH_particles, akinci_boundaries);
-	calculate_alpha(DFSPH_particles, akinci_boundaries);
-	correct_divergence_error(DFSPH_particles, akinci_boundaries);
-	remain_time -= dt_CFL;
-//	}
+	{
+		calculate_non_pressure_force(DFSPH_particles);
+		fpreal dt_CFL = calculate_CFL_dt(DFSPH_particles, remain_time);
+		DFSPH_particles->advect_velocity(dt_CFL);
+		correct_density_error(DFSPH_particles, akinci_boundaries);
+		DFSPH_particles->advect_position(dt_CFL);
+		DFSPH_particles->neighbor_lists_builder->update_search_engine(DFSPH_particles, akinci_boundaries);
+		GAS_Hina_UpdateDensityAkinci::calculate_density(DFSPH_particles, akinci_boundaries);
+		calculate_alpha(DFSPH_particles, akinci_boundaries);
+		correct_divergence_error(DFSPH_particles, akinci_boundaries);
+		remain_time -= dt_CFL;
+	}
 
 
 
