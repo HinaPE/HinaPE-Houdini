@@ -10,6 +10,7 @@ GAS_HINA_SUBSOLVER_CLASS(
 		DFSPHSolver,
 
 		fpreal calculate_CFL_dt(SIM_Hina_DFSPHParticles *fluid, fpreal t_max);
+		void calculate_non_pressure_force(SIM_Hina_DFSPHParticles *fluid);
 		void calculate_alpha(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundary);
 		void correct_density_error(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundary);
 		void correct_divergence_error(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundary);

@@ -1,4 +1,6 @@
 #include "GAS_Hina_DFSPHSolver.h"
+#include <Density/GAS_Hina_UpdateDensityAkinci.h>
+#include <Neighbor/GAS_Hina_BuildNeighborLists.h>
 #include <Particles/SIM_Hina_DFSPHParticles.h>
 #include <Particles/SIM_Hina_Akinci2012BoundaryParticles.h>
 #include <CUDA_HinaPE/kernels.h>
@@ -12,27 +14,51 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 
 void GAS_Hina_DFSPHSolver::_init() {}
 void GAS_Hina_DFSPHSolver::_makeEqual(const GAS_Hina_DFSPHSolver *src) {}
-bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
+bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM_Time time, SIM_Time timestep)
 {
-	SIM_Hina_DFSPHParticles *DFSPH_particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_DFSPHParticles);
+	SIM_Hina_DFSPHParticles *DFSPH_particles = SIM_DATA_CAST(getGeometryCopy(fluid_obj, GAS_NAME_GEOMETRY), SIM_Hina_DFSPHParticles);
+	GAS_Hina_BuildNeighborLists *neighbor_solver = SIM_DATA_GET(*fluid_obj, GAS_Hina_BuildNeighborLists::DATANAME, GAS_Hina_BuildNeighborLists);
+	GAS_Hina_UpdateDensityAkinci *density_solver = SIM_DATA_GET(*fluid_obj, GAS_Hina_UpdateDensityAkinci::DATANAME, GAS_Hina_UpdateDensityAkinci);
 	CHECK_NULL_RETURN_BOOL(DFSPH_particles)
-	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> akinci_boundaries = FetchAllAkinciBoundaries(obj);
+	CHECK_NULL_RETURN_BOOL(neighbor_solver)
+	CHECK_NULL_RETURN_BOOL(density_solver)
+	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> akinci_boundaries = FetchAllAkinciBoundaries(fluid_obj);
 
+	fpreal remain_time = timestep;
 
 	/// REFER TO PAPER [Divergence-Free Smoothed Particle Hydrodynamics], Section 3.1, Algorithm 1
-	/// ========== 1. init neighborhoods ==========
-	// perform neighbor search [done by `GAS_Hina_BuildNeighborLists`]
-
-	/// ========== 2. compute densities and factors alpha ==========
-	// compute densities [done by `GAS_Hina_UpdateDensityAkinci`]
-	// compute alpha factors
+//	while (remain_time > 1e-6)
+//	{
+	calculate_non_pressure_force(DFSPH_particles);
+	fpreal dt_CFL = calculate_CFL_dt(DFSPH_particles, remain_time);
+	DFSPH_particles->advect_velocity(dt_CFL);
+	correct_density_error(DFSPH_particles, akinci_boundaries);
+	DFSPH_particles->advect_position(dt_CFL);
+	neighbor_solver->update_search_engine(fluid_obj);
+	density_solver->calculate_density(DFSPH_particles, akinci_boundaries);
 	calculate_alpha(DFSPH_particles, akinci_boundaries);
+	correct_divergence_error(DFSPH_particles, akinci_boundaries);
+	remain_time -= dt_CFL;
+//	}
 
 
-	/// ========== 3. start simulation loop ==========
-	// 3.1 apply CFL condition
-	fpreal dt_CFL = calculate_CFL_dt(DFSPH_particles, timestep);
 
+
+
+
+//	/// ========== 1. init neighborhoods ==========
+//	// perform neighbor search [done by `GAS_Hina_BuildNeighborLists`]
+//
+//	/// ========== 2. compute densities and factors alpha ==========
+//	// compute densities [done by `GAS_Hina_UpdateDensityAkinci`]
+//	// compute alpha factors
+//	calculate_alpha(DFSPH_particles, akinci_boundaries);
+//
+//
+//	/// ========== 3. start simulation loop ==========
+//	// 3.1 apply CFL condition
+//	fpreal dt_CFL = calculate_CFL_dt(DFSPH_particles, timestep);
+//
 //	// 3.2 predict velocities v_i*
 //	UT_Vector3 gravity = {0, -9.8, 0}; // TODO: enable more external forces
 //	{
@@ -111,6 +137,11 @@ fpreal GAS_Hina_DFSPHSolver::calculate_CFL_dt(SIM_Hina_DFSPHParticles *fluid, fp
 	dt_CFL /= max_vel;
 	dt_CFL = std::min(dt_CFL, t_max);
 	return dt_CFL;
+}
+void GAS_Hina_DFSPHSolver::calculate_non_pressure_force(SIM_Hina_DFSPHParticles *fluid)
+{
+	fluid->clear_force();
+	fluid->calculate_force_gravity();
 }
 void GAS_Hina_DFSPHSolver::calculate_alpha(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries)
 {

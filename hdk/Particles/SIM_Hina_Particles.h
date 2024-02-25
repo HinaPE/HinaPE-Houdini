@@ -21,6 +21,7 @@ SIM_HINA_GEOMETRY_CLASS(
 		HINA_GETSET_PARAMETER(KernelRadiusOverTargetSpacing, GETSET_DATA_FUNCS_F)
 		HINA_GETSET_PARAMETER(TargetDensity, GETSET_DATA_FUNCS_F)
 		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
+		HINA_GETSET_PARAMETER(Gravity, GETSET_DATA_FUNCS_V3)
 
 		fpreal UnivMass;
 		std::map<GA_Offset, std::vector<ParticleState>> neighbor_lists_cache; // neighbors of this particles set TODO: remove this
@@ -39,6 +40,8 @@ SIM_HINA_GEOMETRY_CLASS(
 		virtual void calculate_volume(); // after density is calculated, update every step
 		void advect_position(fpreal dt);
 		void advect_velocity(fpreal dt);
+		void clear_force();
+		void calculate_force_gravity();
 		size_t size() const;
 		void for_each_offset(const std::function<void(const GA_Offset &)> &func);
 		void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);

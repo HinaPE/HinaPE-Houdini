@@ -1,5 +1,4 @@
 #include "SIM_Hina_Particles.h"
-#include <Collision/SIM_Hina_RigidBodyCollider.h>
 
 #include <CUDA_CubbyFlow/Core/Geometry/BoundingBox.hpp>
 #include <CUDA_CubbyFlow/Core/Particle/SPHKernels.hpp>
@@ -15,12 +14,13 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
         HINA_FLOAT_PARAMETER(TargetSpacing, .02) \
         HINA_FLOAT_PARAMETER(KernelRadiusOverTargetSpacing, 1.8) \
         HINA_FLOAT_PARAMETER(TargetDensity, 1000.) \
+		HINA_FLOAT_VECTOR_PARAMETER(Gravity, 3, 0, -9.8, 0)
         static std::array<PRM_Name, 4> Kernels = {\
             PRM_Name("0", "Poly64"), \
             PRM_Name("1", "Spiky"), \
             PRM_Name("2", "CubicSpline"), \
             PRM_Name(nullptr), \
-}; \
+		}; \
         static PRM_Name KernelName("Kernel", "Kernel"); \
         static PRM_Default KernelNameDefault(2, "CubicSpline"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Kernels.data()); \
@@ -228,6 +228,22 @@ void SIM_Hina_Particles::advect_velocity(fpreal dt)
 				vel += force / mass * dt;
 			}
 	);
+}
+void SIM_Hina_Particles::clear_force()
+{
+	for_each_offset(
+			[&](GA_Offset pt_off)
+			{
+				force_cache[pt_off] = UT_Vector3(0, 0, 0);
+			});
+}
+void SIM_Hina_Particles::calculate_force_gravity()
+{
+	for_each_offset(
+			[&](GA_Offset pt_off)
+			{
+				force_cache[pt_off] += mass_cache[pt_off] * getGravity();
+			});
 }
 size_t SIM_Hina_Particles::size() const
 {
