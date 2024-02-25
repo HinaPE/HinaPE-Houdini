@@ -3,6 +3,11 @@
 
 #include <SIM_Hina_Generator.h>
 
+namespace cuNSearch
+{
+class NeighborhoodSearch;
+}
+
 struct ParticleState
 {
 	GA_Offset pt_off;
@@ -18,8 +23,8 @@ SIM_HINA_GEOMETRY_CLASS(
 		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
 
 		fpreal UnivMass;
-		std::map<GA_Offset, std::vector<ParticleState>> neighbor_lists_cache; // neighbors of this particles set
-		std::map<UT_String, std::map<GA_Offset, std::vector<ParticleState>>> other_neighbor_lists_cache; // neighbors of other particles sets
+		std::map<GA_Offset, std::vector<ParticleState>> neighbor_lists_cache; // neighbors of this particles set TODO: remove this
+		std::map<UT_String, std::map<GA_Offset, std::vector<ParticleState>>> other_neighbor_lists_cache; // neighbors of other particles sets TODO: remove this
 		std::map<GA_Offset, GA_Size> offset2index;
 		std::map<GA_Size, GA_Offset> index2offset;
 		std::map<GA_Offset, UT_Vector3> position_cache;
@@ -37,6 +42,10 @@ SIM_HINA_GEOMETRY_CLASS(
 		void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func, const UT_String &other_name);
+
+private:
+		cuNSearch::NeighborhoodSearch* nsearch;
+		friend class GAS_Hina_BuildNeighborLists;
 )
 
 #endif //HINAPE_SIM_HINA_PARTICLES_H

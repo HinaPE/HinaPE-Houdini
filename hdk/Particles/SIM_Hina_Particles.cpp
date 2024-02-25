@@ -39,6 +39,7 @@ void SIM_Hina_Particles::_init_Particles()
 	this->mass_cache.clear();
 	this->volume_cache.clear();
 	this->density_cache.clear();
+	this->nsearch = nullptr;
 }
 void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 {
@@ -53,6 +54,7 @@ void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 	this->mass_cache = src->mass_cache;
 	this->volume_cache = src->volume_cache;
 	this->density_cache = src->density_cache;
+	this->nsearch = src->nsearch;
 }
 void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 {

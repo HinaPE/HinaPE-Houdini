@@ -187,6 +187,8 @@ void GAS_Hina_BuildNeighborLists::_update_neighbor_cache(std::map<UT_String, SIM
 {
 	for (auto &pair: target)
 	{
+		pair.second->nsearch = nsearch; // TODO: remove following
+
 		const UT_String &name = pair.first;
 		SIM_Hina_Particles *particles = pair.second;
 
