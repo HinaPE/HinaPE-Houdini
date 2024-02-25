@@ -20,13 +20,13 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM
 	CHECK_NULL_RETURN_BOOL(DFSPH_particles)
 	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> akinci_boundaries = FetchAllAkinciBoundaries(fluid_obj);
 
-	fpreal remain_time = timestep;
 
 	/// REFER TO PAPER [Divergence-Free Smoothed Particle Hydrodynamics], Section 3.1, Algorithm 1
-//	while (remain_time > 1e-6)
+	fpreal remain_time = timestep;
+	while (remain_time > 1e-6)
 	{
-		calculate_non_pressure_force(DFSPH_particles);
 		fpreal dt_CFL = calculate_CFL_dt(DFSPH_particles, remain_time);
+		calculate_non_pressure_force(DFSPH_particles);
 		DFSPH_particles->advect_velocity(dt_CFL);
 		correct_density_error(DFSPH_particles, akinci_boundaries);
 		DFSPH_particles->advect_position(dt_CFL);
@@ -36,84 +36,6 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM
 		correct_divergence_error(DFSPH_particles, akinci_boundaries);
 		remain_time -= dt_CFL;
 	}
-
-
-
-
-
-
-//	/// ========== 1. init neighborhoods ==========
-//	// perform neighbor search [done by `GAS_Hina_BuildNeighborLists`]
-//
-//	/// ========== 2. compute densities and factors alpha ==========
-//	// compute densities [done by `GAS_Hina_UpdateDensityAkinci`]
-//	// compute alpha factors
-//	calculate_alpha(DFSPH_particles, akinci_boundaries);
-//
-//
-//	/// ========== 3. start simulation loop ==========
-//	// 3.1 apply CFL condition
-//	fpreal dt_CFL = calculate_CFL_dt(DFSPH_particles, timestep);
-//
-//	// 3.2 predict velocities v_i*
-//	UT_Vector3 gravity = {0, -9.8, 0}; // TODO: enable more external forces
-//	{
-//		GA_FOR_ALL_PTOFF(gdp_fluid, pt_off)
-//			{
-//				UT_Vector3 v = velocity_handle.get(pt_off);
-//				fpreal m = mass_handle.get(pt_off);
-//				UT_Vector3 f = m * gravity;
-//				UT_Vector3 a = f / m;
-//				UT_Vector3 v_star = v + a * dt_CFL;
-//				DFSPH_particles->velocity_cache[pt_off] = v_star;
-//			}
-//	}
-//	// compute Drho/Dt
-//	{
-//		GA_FOR_ALL_PTOFF(gdp_fluid, pt_off)
-//			{
-//				fpreal Drho = 0; // self Drho is 0
-//				int num_neighbors = 0;
-//				UT_Vector3 x_i = gdp_fluid->getPos3(pt_off);
-//				UT_Vector3 v_i = DFSPH_particles->velocity_cache[pt_off];
-//				fpreal m_i = mass_handle.get(pt_off);
-//				fpreal V_i = volume_handle.get(pt_off);
-//				DFSPH_particles->for_each_neighbor_self(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
-//				{
-//					UT_Vector3 x_j = n_pos;
-//					UT_Vector3 v_j = DFSPH_particles->velocity_cache[n_off];
-//					fpreal m_j = mass_handle.get(n_off);
-//					fpreal V_j = volume_handle.get(n_off);
-//					Drho += m_j * (v_i - v_j).dot(kernel.gradient(x_i - x_j));
-//					++num_neighbors;
-//				});
-//				for (const auto &pair: akinci_boundaries)
-//				{
-//					UT_String name = pair.first;
-//					SIM_Hina_Akinci2012BoundaryParticles *akinci_boundary = pair.second;
-//					SIM_GeometryAutoReadLock _(akinci_boundary);
-//					const GU_Detail *gdp_boundary = _.getGdp();
-//					GA_ROHandleV3 velocity_handle_boundary = gdp_boundary->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
-//					GA_ROHandleF volume_handle_boundary = gdp_boundary->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
-//					GA_ROHandleF mass_handle_boundary = gdp_boundary->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
-//					akinci_boundary->for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
-//					{
-//						UT_Vector3 x_j = n_pos;
-//						UT_Vector3 v_j = velocity_handle_boundary.get(n_off);
-//						fpreal m_j = mass_handle_boundary.get(n_off);
-//						fpreal V_j = volume_handle_boundary.get(n_off);
-//						Drho += m_j * (v_i - v_j).dot(kernel.gradient(x_i - x_j));
-//						++num_neighbors;
-//					}, name);
-//				}
-//				Drho = std::max(Drho, 0.);
-//				if (num_neighbors < 15)
-//					Drho = 0;
-//				DFSPH_particles->Drho_cache[pt_off] = Drho;
-//				Drho_handle.set(pt_off, Drho);
-//			}
-//	}
-
 	return true;
 }
 fpreal GAS_Hina_DFSPHSolver::calculate_CFL_dt(SIM_Hina_DFSPHParticles *fluid, fpreal t_max)
