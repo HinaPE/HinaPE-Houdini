@@ -32,6 +32,7 @@ SIM_HINA_GEOMETRY_CLASS(
 		virtual void commit(); // auto commit at `GAS_Hina_SubStep`
 		virtual void calculate_mass(); // init phase, call once
 		virtual void calculate_volume(); // after density is calculated, update every step
+		size_t size() const;
 		void for_each_offset(const std::function<void(const GA_Offset &)> &func);
 		void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);
 		void for_each_neighbor_others(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func);

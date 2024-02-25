@@ -204,6 +204,10 @@ void SIM_Hina_Particles::calculate_volume() // deprecated
 		V.second = volume;
 	}
 }
+size_t SIM_Hina_Particles::size() const
+{
+	return offset2index.size();
+}
 void SIM_Hina_Particles::for_each_offset(const std::function<void(const GA_Offset &)> &func)
 {
 	for (const auto &pair: offset2index)
