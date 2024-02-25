@@ -206,6 +206,29 @@ void SIM_Hina_Particles::calculate_volume() // deprecated
 		V.second = volume;
 	}
 }
+void SIM_Hina_Particles::advect_position(fpreal dt)
+{
+	for_each_offset(
+			[&](const GA_Offset &pt_off)
+			{
+				UT_Vector3 &pos = position_cache[pt_off];
+				const UT_Vector3 &vel = velocity_cache[pt_off];
+				pos += vel * dt;
+			}
+	);
+}
+void SIM_Hina_Particles::advect_velocity(fpreal dt)
+{
+	for_each_offset(
+			[&](const GA_Offset &pt_off)
+			{
+				UT_Vector3 &vel = velocity_cache[pt_off];
+				const UT_Vector3 &force = force_cache[pt_off];
+				const fpreal mass = mass_cache[pt_off];
+				vel += force / mass * dt;
+			}
+	);
+}
 size_t SIM_Hina_Particles::size() const
 {
 	return offset2index.size();

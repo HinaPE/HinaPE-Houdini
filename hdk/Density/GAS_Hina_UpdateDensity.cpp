@@ -7,12 +7,12 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 		true,
 		false,
 		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
-				static std::array<PRM_Name, 4> Kernels = {\
+		static std::array<PRM_Name, 4> Kernels = {\
             PRM_Name("0", "Poly64"), \
             PRM_Name("1", "Spiky"), \
             PRM_Name("2", "CubicSpline"), \
             PRM_Name(nullptr), \
-}; \
+		}; \
         static PRM_Name KernelName("Kernel", "Kernel"); \
         static PRM_Default KernelNameDefault(2, "CubicSpline"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Kernels.data()); \
@@ -25,8 +25,13 @@ bool GAS_Hina_UpdateDensity::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 {
 	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
 	CHECK_NULL_RETURN_BOOL(particles)
-	HinaPE::CubicSplineKernel<false> kernel(particles->getTargetSpacing() * particles->getKernelRadiusOverTargetSpacing());
 
+	calculate_density(particles);
+	return true;
+}
+void GAS_Hina_UpdateDensity::calculate_density(SIM_Hina_Particles *particles)
+{
+	HinaPE::CubicSplineKernel<false> kernel(particles->getTargetSpacing() * particles->getKernelRadiusOverTargetSpacing());
 	particles->for_each_offset(
 			[&](const GA_Offset &pt_off)
 			{
@@ -46,5 +51,4 @@ bool GAS_Hina_UpdateDensity::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 				});
 				particles->density_cache[pt_off] = rho;
 			});
-	return true;
 }

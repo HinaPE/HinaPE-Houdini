@@ -29,6 +29,12 @@ bool GAS_Hina_UpdateDensityAkinci::_solve(SIM_Engine &engine, SIM_Object *obj, S
 	SIM_Hina_Particles *particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles);
 	CHECK_NULL_RETURN_BOOL(particles)
 	std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> akinci_boundaries = FetchAllAkinciBoundaries(obj);
+
+	calculate_density(particles, akinci_boundaries);
+	return true;
+}
+void GAS_Hina_UpdateDensityAkinci::calculate_density(SIM_Hina_Particles *particles, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries)
+{
 	HinaPE::CubicSplineKernel<false> kernel(particles->getTargetSpacing() * particles->getKernelRadiusOverTargetSpacing());
 
 	particles->for_each_offset(
@@ -60,5 +66,4 @@ bool GAS_Hina_UpdateDensityAkinci::_solve(SIM_Engine &engine, SIM_Object *obj, S
 				}
 				particles->density_cache[pt_off] = rho;
 			});
-	return true;
 }
