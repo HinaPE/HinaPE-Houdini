@@ -31,8 +31,8 @@ void resize(HinaPE::AkinciBoundaryCPU &t)
 	t.neighbor_others.resize(t.size);
 }
 
-void HinaPE::parallel_for(size_t n, const std::function<void(size_t)> &f) { tbb::parallel_for(size_t(0), n, [&](size_t i) { f(i); }); }
-//void HinaPE::parallel_for(size_t n, const std::function<void(size_t)> &f) { serial_for(n, f); }
+//void HinaPE::parallel_for(size_t n, const std::function<void(size_t)> &f) { tbb::parallel_for(size_t(0), n, [&](size_t i) { f(i); }); }
+void HinaPE::parallel_for(size_t n, const std::function<void(size_t)> &f) { serial_for(n, f); }
 void HinaPE::serial_for(size_t n, const std::function<void(size_t)> &f) { for (size_t i = 0; i < n; ++i) { f(i); }}
 HinaPE::DFSPHSolverCPU::DFSPHSolverCPU(real radius) : NeighborBuilder(radius), Kernel(radius) {}
 void HinaPE::DFSPHSolverCPU::Init()
@@ -59,12 +59,12 @@ void HinaPE::DFSPHSolverCPU::Solve(HinaPE::real dt)
 {
 	compute_non_pressure_force();
 	advect_vel(dt);
-//	correct_density_error(dt);
+	correct_density_error(dt);
 	advect_pos(dt);
 	build_neighbors();
 	compute_density();
 	compute_alpha();
-//	correct_divergence_error(dt);
+	correct_divergence_error(dt);
 }
 void HinaPE::DFSPHSolverCPU::build_neighbors(bool new_fluid_particles)
 {
@@ -108,7 +108,11 @@ void HinaPE::DFSPHSolverCPU::for_each_neighbor_static_boundary(size_t pt_idx, co
 
 void HinaPE::DFSPHSolverCPU::advect_pos(HinaPE::real dt) { parallel_for(Fluid.size, [&](size_t i) { Fluid.x[i] += Fluid.v[i] * dt; }); }
 void HinaPE::DFSPHSolverCPU::advect_vel(HinaPE::real dt) { parallel_for(Fluid.size, [&](size_t i) { Fluid.v[i] += Fluid.f[i] / Fluid.m[i] * dt; }); }
-void HinaPE::DFSPHSolverCPU::compute_non_pressure_force() { parallel_for(Fluid.size, [&](size_t i) { Fluid.f[i] = Fluid.m[i] * Vector(0, -9.8f, 0); }); }
+void HinaPE::DFSPHSolverCPU::compute_non_pressure_force()
+{
+	parallel_for(Fluid.size, [&](size_t i) { Fluid.f[i] = Fluid.m[i] * Vector(0, -9.8f, 0); });
+	parallel_for(Fluid.size, [&](size_t i) { Fluid.v[i] *= 0.99f; });
+}
 void HinaPE::DFSPHSolverCPU::compute_akinci_volume_mass()
 {
 	serial_for(StaticBoundaries.size(), [&](size_t boundary_set_idx)
@@ -181,155 +185,180 @@ void HinaPE::DFSPHSolverCPU::compute_alpha()
 					real m_j = StaticBoundaries[boundary_idx].m[j];
 					Vector grad = m_j * Kernel.gradient(x_i - x_j);
 					grad_sum += grad;
-					grad_square_sum += grad.length2();
+//					grad_square_sum += grad.length2(); // no need for akinci boundary
 				});
 		grad_sum_square = grad_sum.length2();
 		real denominator = grad_square_sum + grad_sum_square;
-		if (denominator < 1e-6)
-			denominator = 1e-6;
-		alpha = rho_i / denominator;
+		if (denominator > 1e-6)
+			alpha = rho_i / denominator;
+		else
+			alpha = 0;
 		Fluid.alpha[i] = alpha;
 	});
 }
-void HinaPE::DFSPHSolverCPU::compute_kappa_density(real dt)
-{
-	parallel_for(Fluid.size, [&](size_t i)
-	{
-		real alpha = Fluid.alpha[i];
-		real rho_star = Fluid.rho_adv[i];
-		real kappa = (rho_star - FluidRestDensity) * alpha / (dt * dt);
-		Fluid.kappa_density[i] = kappa;
-	});
-}
-void HinaPE::DFSPHSolverCPU::compute_kappa_divergence(real dt)
-{
-	parallel_for(Fluid.size, [&](size_t i)
-	{
-		real alpha = Fluid.alpha[i];
-		real d_rho = Fluid.d_rho[i];
-		real kappa = d_rho * alpha / dt;
-		Fluid.kappa_divergence[i] = kappa;
-	});
-}
-void HinaPE::DFSPHSolverCPU::compute_density_error(real dt)
-{
-	Fluid.avg_density_adv = 0;
-	Fluid.avg_d_density = 0;
-	parallel_for(Fluid.size, [&](size_t i)
-	{
-		real d_density = 0;
-		real density_adv = 0;
-		Vector x_i = Fluid.x[i];
-		Vector v_i = Fluid.v[i];
-		real m_i = Fluid.m[i];
-		real rho = Fluid.rho[i];
-		for_each_neighbor_fluid(
-				i, [&](size_t j, Vector x_j)
-				{
-					Vector v_j = Fluid.v[j];
-					real m_j = Fluid.m[j];
-					d_density += m_j * (v_i - v_j).dot(Kernel.gradient(x_i - x_j));
-				});
-		for_each_neighbor_static_boundary(
-				i, [&](size_t j, Vector x_j, size_t boundary_idx)
-				{
-					Vector v_j = StaticBoundaries[boundary_idx].v[j];
-					real m_j = StaticBoundaries[boundary_idx].m[j];
-					d_density += m_j * (v_i - v_j).dot(Kernel.gradient(x_i - x_j));
-				});
-		density_adv = rho + dt * d_density;
-		density_adv = std::max(density_adv, FluidRestDensity);
-		Fluid.rho_adv[i] = density_adv;
-		Fluid.d_rho[i] = d_density;
-		Fluid.avg_density_adv += density_adv;
-		Fluid.avg_d_density += d_density;
-	});
-	Fluid.avg_density_adv /= Fluid.size;
-	Fluid.avg_d_density /= Fluid.size;
-}
 void HinaPE::DFSPHSolverCPU::correct_density_error(real dt)
 {
-	compute_density_error(dt);
+	compute_density_adv(dt);
+
 	int iter = 0;
-	real max_error_d = 0.01f;
-	while ((Fluid.avg_density_adv - FluidRestDensity) > max_error_d && iter < 100)
+	int max_iter = 100;
+	real eta = 0.05 * 0.01 * FluidRestDensity;
+	while (iter < max_iter)
 	{
-		compute_kappa_density(dt);
+		// pressure solve iteration kernel
 		parallel_for(Fluid.size, [&](size_t i)
 		{
-			Vector sum{0, 0, 0};
 			Vector x_i = Fluid.x[i];
-			real m_i = Fluid.m[i];
-			real rho_i = Fluid.rho[i];
-			real kappa_i = Fluid.kappa_density[i];
-
+			real b_i = Fluid.rho_adv[i] - 1.f;
+			real k_i = b_i * Fluid.alpha[i] / (dt * dt);
 			for_each_neighbor_fluid(
 					i, [&](size_t j, Vector x_j)
 					{
-						real m_j = Fluid.m[j];
-						real rho_j = Fluid.rho[j];
-						real kappa_j = Fluid.kappa_density[j];
-						Vector grad = m_j * (kappa_i / rho_i + kappa_j / rho_j) * Kernel.gradient(x_i - x_j);
-						sum += grad;
+						real b_j = Fluid.rho_adv[j] - 1.f;
+						real k_j = b_j * Fluid.alpha[j] / (dt * dt);
+						real V_j = Fluid.V[j];
+						if (std::abs(k_i + k_j) > 1e-5)
+						{
+							Vector grad = V_j * (k_i + k_j) * Kernel.gradient(x_i - x_j);
+							Fluid.v[i] -= dt * grad;
+						}
 					});
-
 			for_each_neighbor_static_boundary(
 					i, [&](size_t j, Vector x_j, size_t boundary_idx)
 					{
-						real m_j = StaticBoundaries[boundary_idx].m[j];
-						real rho_j = StaticBoundaries[boundary_idx].rho[j];
-						real kappa_j = 0;
-						Vector grad = m_j * (kappa_i / rho_i + kappa_j / rho_j) * Kernel.gradient(x_i - x_j);
-						sum += grad;
-					});
+						real V_j = StaticBoundaries[boundary_idx].V[j];
+						Vector grad = V_j * Kernel.gradient(x_i - x_j);
 
-			Fluid.v[i] -= dt * sum;
+						Vector v_change = dt * 1.f * k_i * grad;
+						Fluid.v[i] -= v_change;
+						// TODO: if is dynamic rigid body, handle accelerations
+					});
 		});
-		compute_density_error(dt);
+		compute_density_adv(dt);
+		compute_avg_density_error_den();
+//		std::cout << "den::Iter::" << iter << "error" << Fluid.avg_density_error << std::endl;
+		if (Fluid.avg_density_error < eta)
+			break;
 		++iter;
 	}
 }
 void HinaPE::DFSPHSolverCPU::correct_divergence_error(real dt)
 {
+	compute_density_change(dt);
+	int iter = 0;
+	int max_iter = 100;
+	real eta = 0.1 * 0.01 * FluidRestDensity / dt;
+	while (iter < max_iter)
+	{
+		// divergence solver iteration (Perform Jacobi iteration)
+		parallel_for(Fluid.size, [&](size_t i)
+		{
+			Vector x_i = Fluid.x[i];
+			real b_i = Fluid.rho_adv[i];
+			real k_i = b_i * Fluid.alpha[i] / dt;
+			Vector dv{0, 0, 0};
+			for_each_neighbor_fluid(
+					i, [&](size_t j, Vector x_j)
+					{
+						real b_j = Fluid.rho_adv[j];
+						real k_j = b_j * Fluid.alpha[j] / dt;
+						real V_j = Fluid.V[j];
+						if (std::abs(k_i + k_j) > 1e-5)
+						{
+							Vector grad = V_j * (k_i + k_j) * Kernel.gradient(x_i - x_j);
+							dv -= dt * grad;
+						}
+					});
+			for_each_neighbor_static_boundary(
+					i, [&](size_t j, Vector x_j, size_t boundary_idx)
+					{
+						real V_j = StaticBoundaries[boundary_idx].V[j];
+						Vector grad = V_j * Kernel.gradient(x_i - x_j);
+
+						Vector v_change = dt * 1.f * k_i * grad;
+						dv -= v_change;
+						// TODO: if is dynamic rigid body, handle accelerations
+					});
+			Fluid.v[i] += dv;
+		});
+		compute_density_change(dt);
+		compute_avg_density_error_div();
+//		std::cout << "div::Iter::" << iter << "error" << Fluid.avg_density_error << std::endl;
+		if (Fluid.avg_density_error < eta)
+			break;
+		++iter;
+	}
+}
+void HinaPE::DFSPHSolverCPU::compute_density_adv(real dt)
+{
+	// Compute rho_adv
 	parallel_for(Fluid.size, [&](size_t i)
 	{
-		compute_density_error(dt);
+		real delta = 0;
+		Vector x_i = Fluid.x[i];
+		Vector v_i = Fluid.v[i];
+		real V_i = Fluid.V[i];
+		for_each_neighbor_fluid(
+				i, [&](size_t j, Vector x_j)
+				{
+					Vector v_j = Fluid.v[j];
+					real V_j = Fluid.V[j];
+					delta += V_j * (v_i - v_j).dot(Kernel.gradient(x_i - x_j));
+				});
 
-		int iter = 0;
-		fpreal max_error_v = 10.;
-		while (Fluid.avg_d_density > max_error_v && iter < 100)
-		{
-			compute_kappa_divergence(dt);
-			parallel_for(Fluid.size, [&](size_t i)
-			{
-				Vector sum{0, 0, 0};
-				Vector x_i = Fluid.x[i];
-				real m_i = Fluid.m[i];
-				real rho_i = Fluid.rho[i];
-				real kappa_i = Fluid.kappa_divergence[i];
-
-				for_each_neighbor_fluid(
-						i, [&](size_t j, Vector x_j)
-						{
-							real m_j = Fluid.m[j];
-							real rho_j = Fluid.rho[j];
-							real kappa_j = Fluid.kappa_divergence[j];
-							Vector grad = m_j * (kappa_i / rho_i + kappa_j / rho_j) * Kernel.gradient(x_i - x_j);
-							sum += grad;
-						});
-
-				for_each_neighbor_static_boundary(
-						i, [&](size_t j, Vector x_j, size_t boundary_idx)
-						{
-							real m_j = StaticBoundaries[boundary_idx].m[j];
-							real rho_j = StaticBoundaries[boundary_idx].rho[j];
-							real kappa_j = 0;
-							Vector grad = m_j * (kappa_i / rho_i + kappa_j / rho_j) * Kernel.gradient(x_i - x_j);
-							sum += grad;
-						});
-
-				Fluid.v[i] -= dt * sum;
-			});
-		}
+		for_each_neighbor_static_boundary(
+				i, [&](size_t j, Vector x_j, size_t boundary_idx)
+				{
+					Vector v_j = StaticBoundaries[boundary_idx].v[j];
+					real V_j = StaticBoundaries[boundary_idx].V[j];
+					delta += V_j * (v_i - v_j).dot(Kernel.gradient(x_i - x_j));
+				});
+		Fluid.rho_adv[i] = (Fluid.rho[i] / FluidRestDensity) + dt * delta;
+		Fluid.rho_adv[i] = std::max(Fluid.rho_adv[i], 1.f);
 	});
+}
+void HinaPE::DFSPHSolverCPU::compute_density_change(real dt)
+{
+	// Compute velocity of density change
+	parallel_for(Fluid.size, [&](size_t i)
+	{
+		real density_adv = 0;
+		Vector x_i = Fluid.x[i];
+		Vector v_i = Fluid.v[i];
+		real V_i = Fluid.V[i];
+		for_each_neighbor_fluid(
+				i, [&](size_t j, Vector x_j)
+				{
+					Vector v_j = Fluid.v[j];
+					real V_j = Fluid.V[j];
+					density_adv += V_j * (v_i - v_j).dot(Kernel.gradient(x_i - x_j));
+				});
+		for_each_neighbor_static_boundary(
+				i, [&](size_t j, Vector x_j, size_t boundary_idx)
+				{
+					Vector v_j = StaticBoundaries[boundary_idx].v[j];
+					real V_j = StaticBoundaries[boundary_idx].V[j];
+					density_adv += V_j * (v_i - v_j).dot(Kernel.gradient(x_i - x_j));
+				});
+		density_adv = std::max(density_adv, 0.f); // only correct positive divergence
+		Fluid.rho_adv[i] = density_adv;
+	});
+}
+void HinaPE::DFSPHSolverCPU::compute_avg_density_error_den()
+{
+	real density_error = 0;
+	serial_for(Fluid.size, [&](size_t i)
+	{
+		density_error += FluidRestDensity * (Fluid.rho_adv[i] - 1.f);
+	});
+	Fluid.avg_density_error = density_error / Fluid.size;
+}
+void HinaPE::DFSPHSolverCPU::compute_avg_density_error_div()
+{
+	real density_error = 0;
+	serial_for(Fluid.size, [&](size_t i)
+	{
+		density_error += FluidRestDensity * Fluid.rho_adv[i];
+	});
+	Fluid.avg_density_error = density_error / Fluid.size;
 }

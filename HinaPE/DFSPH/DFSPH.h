@@ -31,6 +31,8 @@ struct DFSPHFluid
 
 	real avg_density_adv;
 	real avg_d_density;
+
+	real avg_density_error;
 };
 
 template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
@@ -106,11 +108,16 @@ struct DFSPHSolverCPU
 	void compute_akinci_volume_mass();
 	void compute_density();
 	void compute_alpha();
-	void compute_kappa_density(real dt);
-	void compute_kappa_divergence(real dt);
-	void compute_density_error(real dt);
+//	void compute_kappa_density(real dt);
+//	void compute_kappa_divergence(real dt);
+//	void compute_density_error(real dt);
 	void correct_density_error(real dt);
 	void correct_divergence_error(real dt);
+
+	void compute_density_adv(real dt);
+	void compute_density_change(real dt);
+	void compute_avg_density_error_den();
+	void compute_avg_density_error_div();
 
 	DFSPHFluidCPU Fluid;
 	std::vector<AkinciBoundaryCPU> StaticBoundaries;
