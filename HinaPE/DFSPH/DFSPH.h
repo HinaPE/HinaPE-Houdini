@@ -108,9 +108,6 @@ struct DFSPHSolverCPU
 	void compute_akinci_volume_mass();
 	void compute_density();
 	void compute_alpha();
-//	void compute_kappa_density(real dt);
-//	void compute_kappa_divergence(real dt);
-//	void compute_density_error(real dt);
 	void correct_density_error(real dt);
 	void correct_divergence_error(real dt);
 
@@ -118,6 +115,8 @@ struct DFSPHSolverCPU
 	void compute_density_change(real dt);
 	void compute_avg_density_error_den();
 	void compute_avg_density_error_div();
+
+	void enforce_boundary();
 
 	DFSPHFluidCPU Fluid;
 	std::vector<AkinciBoundaryCPU> StaticBoundaries;

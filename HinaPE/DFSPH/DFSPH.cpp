@@ -61,6 +61,7 @@ void HinaPE::DFSPHSolverCPU::Solve(HinaPE::real dt)
 	advect_vel(dt);
 	correct_density_error(dt);
 	advect_pos(dt);
+	enforce_boundary();
 	build_neighbors();
 	compute_density();
 	compute_alpha();
@@ -361,4 +362,44 @@ void HinaPE::DFSPHSolverCPU::compute_avg_density_error_div()
 		density_error += FluidRestDensity * Fluid.rho_adv[i];
 	});
 	Fluid.avg_density_error = density_error / Fluid.size;
+}
+void HinaPE::DFSPHSolverCPU::enforce_boundary()
+{
+	real bound = .99f;
+	real damping = .5f;
+	parallel_for(Fluid.size, [&](size_t i)
+	{
+		Vector x_i = Fluid.x[i];
+
+		if (x_i.x() > bound)
+		{
+			Fluid.x[i].x() = bound;
+			Fluid.v[i].x() *= -damping;
+		}
+		if (x_i.x() < -bound)
+		{
+			Fluid.x[i].x() = -bound;
+			Fluid.v[i].x() *= -damping;
+		}
+		if (x_i.y() > bound)
+		{
+			Fluid.x[i].y() = bound;
+			Fluid.v[i].y() *= -damping;
+		}
+		if (x_i.y() < -bound)
+		{
+			Fluid.x[i].y() = -bound;
+			Fluid.v[i].y() *= -damping;
+		}
+		if (x_i.z() > bound)
+		{
+			Fluid.x[i].z() = bound;
+			Fluid.v[i].z() *= -damping;
+		}
+		if (x_i.z() < -bound)
+		{
+			Fluid.x[i].z() = -bound;
+			Fluid.v[i].z() *= -damping;
+		}
+	});
 }
