@@ -46,24 +46,33 @@ bool GAS_Hina_DFSPH_Solver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 
 		DFSPH_particles->load();
 
-		std::map<UT_String, SIM_Hina_Akinci_Particles *> akinci_boundaries = FetchAllAkinciBoundariesAndApply(obj, [&](SIM_Object *obj_boundary, SIM_Hina_Akinci_Particles *boundary_akinci, const UT_String &boundary_name)
+		std::map<UT_String, SIM_Hina_Akinci_Particles *> akinci_boundaries = FetchAllAkinciBoundariesAndApply(obj, [&](SIM_Object *obj_boundary, SIM_Hina_Akinci_Particles *akinci_boundary, const UT_String &boundary_name)
 		{
-			boundary_akinci->load_sop(obj_boundary);
-
-			SolverPtr->StaticBoundaries.emplace_back();
-			boundary_akinci->x = &SolverPtr->StaticBoundaries.back().x;
-			boundary_akinci->v = &SolverPtr->StaticBoundaries.back().v;
-			boundary_akinci->f = &SolverPtr->StaticBoundaries.back().f;
-			boundary_akinci->m = &SolverPtr->StaticBoundaries.back().m;
-			boundary_akinci->V = &SolverPtr->StaticBoundaries.back().V;
-			boundary_akinci->rho = &SolverPtr->StaticBoundaries.back().rho;
-			boundary_akinci->neighbor_this = &SolverPtr->Fluid.neighbor_this;
-			boundary_akinci->neighbor_others = &SolverPtr->Fluid.neighbor_others;
-
-			boundary_akinci->load();
+			akinci_boundary->load_sop(obj_boundary);
 		});
 
+		SolverPtr->StaticBoundaries.resize(akinci_boundaries.size());
+		int iter = 0;
+		for (auto &akinci_boundary: akinci_boundaries)
+		{
+			akinci_boundary.second->x = &(SolverPtr->StaticBoundaries[iter].x);
+			akinci_boundary.second->v = &(SolverPtr->StaticBoundaries[iter].v);
+			akinci_boundary.second->f = &(SolverPtr->StaticBoundaries[iter].f);
+			akinci_boundary.second->m = &(SolverPtr->StaticBoundaries[iter].m);
+			akinci_boundary.second->V = &(SolverPtr->StaticBoundaries[iter].V);
+			akinci_boundary.second->rho = &(SolverPtr->StaticBoundaries[iter].rho);
+			akinci_boundary.second->neighbor_this = &(SolverPtr->StaticBoundaries[iter].neighbor_this);
+			akinci_boundary.second->neighbor_others = &(SolverPtr->StaticBoundaries[iter].neighbor_others);
+
+			akinci_boundary.second->load();
+
+			++iter;
+		}
+
 		SolverPtr->Init();
+
+		for (auto &akinci_boundary: akinci_boundaries)
+			akinci_boundary.second->commit();
 		inited = true;
 	}
 	DFSPH_particles->load(); // update fluid data if dirty

@@ -52,6 +52,7 @@ void HinaPE::DFSPHSolverCPU::Init()
 	NeighborBuilder.init(x_sets);
 
 	build_neighbors();
+	compute_akinci_volume_mass();
 	compute_density();
 }
 void HinaPE::DFSPHSolverCPU::Solve(HinaPE::real dt)
@@ -99,13 +100,37 @@ void HinaPE::DFSPHSolverCPU::build_neighbors(bool new_fluid_particles)
 void HinaPE::DFSPHSolverCPU::for_each_neighbor_fluid(size_t pt_idx, const std::function<void(size_t, Vector)> &f) const { NeighborBuilder.for_each_neighbor(0, 0, pt_idx, f); }
 void HinaPE::DFSPHSolverCPU::for_each_neighbor_static_boundary(size_t pt_idx, const std::function<void(size_t, Vector, size_t)> &f) const
 {
-	for (size_t i = 0; i < StaticBoundaries.size(); ++i)
-		NeighborBuilder.for_each_neighbor(0, i + 1, pt_idx, [&](size_t j, Vector x) { f(j, x, i); });
+	serial_for(StaticBoundaries.size(), [&](size_t i)
+	{
+		NeighborBuilder.for_each_neighbor(0, i + 1, pt_idx, [&](size_t j, Vector x_j) { f(j, x_j, i); });
+	});
 }
 
 void HinaPE::DFSPHSolverCPU::advect_pos(HinaPE::real dt) { parallel_for(Fluid.size, [&](size_t i) { Fluid.x[i] += Fluid.v[i] * dt; }); }
 void HinaPE::DFSPHSolverCPU::advect_vel(HinaPE::real dt) { parallel_for(Fluid.size, [&](size_t i) { Fluid.v[i] += Fluid.f[i] / Fluid.m[i] * dt; }); }
 void HinaPE::DFSPHSolverCPU::compute_non_pressure_force() { parallel_for(Fluid.size, [&](size_t i) { Fluid.f[i] = Fluid.m[i] * Vector(0, -9.8f, 0); }); }
+void HinaPE::DFSPHSolverCPU::compute_akinci_volume_mass()
+{
+	serial_for(StaticBoundaries.size(), [&](size_t boundary_set_idx)
+	{
+		serial_for(StaticBoundaries[boundary_set_idx].size, [&](size_t boundary_pt_idx)
+		{
+			real volume = 0;
+			real mass = 0;
+			Vector x_i = StaticBoundaries[boundary_set_idx].x[boundary_pt_idx];
+			real rho0 = StaticBoundaries[boundary_set_idx].rho[boundary_pt_idx];
+			volume += Kernel.kernel(0); // self is also a neighbor
+			NeighborBuilder.for_each_neighbor(boundary_set_idx + 1, boundary_set_idx + 1, boundary_pt_idx, [&](size_t j, Vector x_j)
+			{
+				volume += Kernel.kernel((x_i - x_j).length());
+			});
+			volume = 1. / volume;
+			mass = volume * rho0;
+			StaticBoundaries[boundary_set_idx].V[boundary_pt_idx] = volume;
+			StaticBoundaries[boundary_set_idx].m[boundary_pt_idx] = mass;
+		});
+	});
+}
 void HinaPE::DFSPHSolverCPU::compute_density()
 {
 	parallel_for(Fluid.size, [&](size_t i)
@@ -127,6 +152,7 @@ void HinaPE::DFSPHSolverCPU::compute_density()
 					rho += m_j * Kernel.kernel((x_i - x_j).length());
 				});
 		Fluid.rho[i] = rho;
+		Fluid.V[i] = Fluid.m[i] / rho;
 	});
 }
 void HinaPE::DFSPHSolverCPU::compute_alpha()

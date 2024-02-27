@@ -103,7 +103,7 @@ struct DFSPHSolverCPU
 	void advect_pos(real dt);
 	void advect_vel(real dt);
 	void compute_non_pressure_force();
-	void compute_mass();
+	void compute_akinci_volume_mass();
 	void compute_density();
 	void compute_alpha();
 	void compute_kappa_density(real dt);

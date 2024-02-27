@@ -4,6 +4,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		Akinci_Particles,
 		Particles,
 		true,
+		HINA_FLOAT_PARAMETER(SolidDensity, 1000.) \
 		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Akinci_Particles)
 )
 void SIM_Hina_Akinci_Particles::_init_Akinci_Particles()
@@ -45,12 +46,15 @@ void SIM_Hina_Akinci_Particles::load_sop(SIM_Object *boundary_obj)
 		{
 			SIM_GeometryAutoWriteLock lock(this);
 			GU_Detail &gdp = lock.getGdp();
+			GA_RWHandleF density_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DENSITY);
+			fpreal rest_density = this->getSolidDensity();
 			GA_Offset pt_off;
 			for (auto &pair: positions)
 			{
 				pt_off = gdp.appendPoint();
 				this->offset_map[pt_off] = pair.first;
 				gdp.setPos3(pt_off, pair.second);
+				density_handle.set(pt_off, rest_density);
 			}
 		}
 		_inited = true;
@@ -78,10 +82,13 @@ void SIM_Hina_Akinci_Particles::load_sop(SIM_Object *boundary_obj)
 		{
 			SIM_GeometryAutoWriteLock lock(this);
 			GU_Detail &gdp = lock.getGdp();
+			GA_RWHandleF density_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DENSITY);
+			fpreal rest_density = this->getSolidDensity();
 			GA_Offset pt_off;
 			GA_FOR_ALL_PTOFF(&gdp, pt_off)
 				{
 					gdp.setPos3(pt_off, positions[offset_map[pt_off]]);
+					density_handle.set(pt_off, rest_density);
 				}
 		}
 	}

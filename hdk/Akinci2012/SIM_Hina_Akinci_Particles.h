@@ -6,6 +6,7 @@
 SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		Akinci_Particles,
 		Particles,
+		HINA_GETSET_PARAMETER(SolidDensity, GETSET_DATA_FUNCS_F)
 		void load_sop(SIM_Object *boundary_obj);
 
 		std::map<GA_Offset, GA_Offset> offset_map; // key: this particles set (Boundary Hina Particles), value: boundary particles set (From SOP)

@@ -75,27 +75,54 @@ void SIM_Hina_Particles::load()
 	const GU_Detail *gdp = lock.getGdp();
 	GA_ROHandleV3 pos_handle = gdp->getP();
 	GA_ROHandleV3 vel_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VELOCITY);
+	GA_ROHandleV3 force_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_FORCE);
 	GA_ROHandleF mass_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_MASS);
+	GA_ROHandleF volume_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_VOLUME);
+	GA_ROHandleF density_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DENSITY);
+	GA_ROHandleI self_n_sum_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF);
+	GA_ROHandleI other_n_sum_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS);
 	GA_Offset pt_off;
-	(*x).resize(gdp->getNumPoints());
-	(*v).resize(gdp->getNumPoints());
-	(*m).resize(gdp->getNumPoints());
+	size_t sz = gdp->getNumPoints();
+	(*x).resize(sz);
+	(*v).resize(sz);
+	(*f).resize(sz);
+	(*m).resize(sz);
+	(*V).resize(sz);
+	(*rho).resize(sz);
+	(*neighbor_this).resize(sz);
+	(*neighbor_others).resize(sz);
 	GA_FOR_ALL_PTOFF(gdp, pt_off)
 		{
-			GA_Size index = gdp->pointIndex(pt_off);
+			GA_Size pt_idx = gdp->pointIndex(pt_off);
 			UT_Vector3 pos = pos_handle.get(pt_off);
 			UT_Vector3 vel = vel_handle.get(pt_off);
+			UT_Vector3 force = force_handle.get(pt_off);
 			fpreal mass = mass_handle.get(pt_off);
-			offset2index[pt_off] = index;
-			index2offset[index] = pt_off;
-			(*x)[index] = pos;
-			(*v)[index] = vel;
-			(*m)[index] = mass;
+			fpreal volume = volume_handle.get(pt_off);
+			fpreal density = density_handle.get(pt_off);
+			int fn_sum = self_n_sum_handle.get(pt_off);
+			int bn_sum = other_n_sum_handle.get(pt_off);
+			offset2index[pt_off] = pt_idx;
+			index2offset[pt_idx] = pt_off;
+			(*x)[pt_idx] = pos;
+			(*v)[pt_idx] = vel;
+			(*f)[pt_idx] = force;
+			(*m)[pt_idx] = mass;
+			(*V)[pt_idx] = volume;
+			(*rho)[pt_idx] = density;
+			(*neighbor_this)[pt_idx] = fn_sum;
+			(*neighbor_others)[pt_idx] = bn_sum;
 		}
 	gdp_dirty = false;
 }
 void SIM_Hina_Particles::commit()
 {
+	if (x == nullptr || v == nullptr || m == nullptr || f == nullptr || V == nullptr || rho == nullptr || neighbor_this == nullptr || neighbor_others == nullptr)
+	{
+		std::cout << "SIM_Hina_Particles::load() called with nullptr" << std::endl;
+		return;
+	}
+
 	SIM_GeometryAutoWriteLock lock(this);
 	GU_Detail &gdp = lock.getGdp();
 	GA_RWHandleV3 pos_handle = gdp.getP();
@@ -110,13 +137,14 @@ void SIM_Hina_Particles::commit()
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
-			UT_Vector3 pos = (*x)[offset2index[pt_off]];
-			UT_Vector3 vel = (*v)[offset2index[pt_off]];
-			UT_Vector3 force = (*f)[offset2index[pt_off]];
+			size_t pt_idx = offset2index[pt_off];
+			UT_Vector3 pos = (*x)[pt_idx];
+			UT_Vector3 vel = (*v)[pt_idx];
+			UT_Vector3 force = (*f)[pt_idx];
 			fpreal force_n = force.length();
-			fpreal mass = (*m)[offset2index[pt_off]];
-			fpreal volume = (*V)[offset2index[pt_off]];
-			fpreal density = (*rho)[offset2index[pt_off]];
+			fpreal mass = (*m)[pt_idx];
+			fpreal volume = (*V)[pt_idx];
+			fpreal density = (*rho)[pt_idx];
 			pos_handle.set(pt_off, pos);
 			vel_handle.set(pt_off, vel);
 			force_handle.set(pt_off, force);
@@ -125,8 +153,8 @@ void SIM_Hina_Particles::commit()
 			volume_handle.set(pt_off, volume);
 			density_handle.set(pt_off, density);
 
-			int fn_sum = (*neighbor_this)[offset2index[pt_off]];
-			int bn_sum = (*neighbor_others)[offset2index[pt_off]];
+			int fn_sum = (*neighbor_this)[pt_idx];
+			int bn_sum = (*neighbor_others)[pt_idx];
 			self_n_sum_handle.set(pt_off, fn_sum);
 			other_n_sum_handle.set(pt_off, bn_sum);
 		}
