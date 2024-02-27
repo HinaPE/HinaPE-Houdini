@@ -1,0 +1,13 @@
+include "BasicTypes.fbs";
+
+namespace CubbyFlow.fbs;
+
+table VectorGrid3
+{
+    resolution:Vector3UZ;
+    gridSpacing:Vector3D;
+    origin:Vector3D;
+    data:[double];
+}
+
+root_type VectorGrid3;
