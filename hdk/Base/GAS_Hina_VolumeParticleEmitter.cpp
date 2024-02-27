@@ -10,18 +10,20 @@
 #include <CUDA_CubbyFlow/Core/Utils/Logging.hpp>
 #include <CUDA_CubbyFlow/Core/Geometry/TriangleMesh3.hpp>
 #include <CUDA_CubbyFlow/Core/Geometry/ImplicitSurfaceSet.hpp>
+#include "HinaPE/kernels.h"
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		VolumeParticleEmitter,
 		true,
 		false,
-		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles) \
         HINA_FLOAT_VECTOR_PARAMETER(FluidDomain, 3, 2, 2, 2) \
         HINA_FLOAT_PARAMETER(TargetSpacing, .02) \
         HINA_FLOAT_PARAMETER(Jitter, .0) \
         HINA_INT_PARAMETER(MaxNumOfParticles, 100000) \
         HINA_BOOL_PARAMETER(IsOneShot, true) \
         HINA_BOOL_PARAMETER(IsEmitterMove, false) \
+
+		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles) \
 )
 
 fpreal _compute_mass(fpreal TargetSpacing, fpreal TargetDensity, fpreal KernelRadius)
@@ -129,12 +131,12 @@ bool GAS_Hina_VolumeParticleEmitter::_solve(SIM_Engine &engine, SIM_Object *obj,
 	// Fetch Existing Particles
 	UT_Vector3Array exist_positions;
 	{
-		SIM_GeometryAutoWriteLock lock(particles);
-		GU_Detail &gdp = lock.getGdp();
+		SIM_GeometryAutoReadLock lock(particles);
+		const GU_Detail *gdp = lock.getGdp();
 		GA_Offset pt_pff;
-		GA_FOR_ALL_PTOFF(&gdp, pt_pff)
+		GA_FOR_ALL_PTOFF(gdp, pt_pff)
 			{
-				exist_positions.append(gdp.getPos3(pt_pff));
+				exist_positions.append(gdp->getPos3(pt_pff));
 			}
 	}
 
@@ -225,5 +227,6 @@ bool GAS_Hina_VolumeParticleEmitter::_solve(SIM_Engine &engine, SIM_Object *obj,
 		vel_handle.set(pt_off, vel);
 		mass_handle.set(pt_off, mass);
 	}
+	particles->gdp_dirty = true;
 	return true;
 }

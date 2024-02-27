@@ -2,7 +2,7 @@
 #define HINAPE_SIM_HINA_PARTICLES_H
 
 #include <SIM_Hina_Generator.h>
-#include <HinaPE/DFSPH/DFSPH.h>
+#include <HinaPE/common.h>
 
 SIM_HINA_GEOMETRY_CLASS(
 		Particles,
@@ -13,12 +13,15 @@ SIM_HINA_GEOMETRY_CLASS(
 		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
 		HINA_GETSET_PARAMETER(Gravity, GETSET_DATA_FUNCS_V3)
 
+		bool gdp_dirty; // has new particles emitted
 		virtual void load();
 		virtual void commit(); // auto commit by `GAS_Hina_SubStep`
 		std::map<GA_Offset, GA_Size> offset2index;
 		std::map<GA_Size, GA_Offset> index2offset;
 		HinaPE::CPUVectorArray *x, *v, *f;
 		HinaPE::CPUScalarArray *m, *V, *rho;
+
+		HinaPE::CPUScalarArray *neighbor_this, *neighbor_others;
 )
 
 #endif //HINAPE_SIM_HINA_PARTICLES_H

@@ -7,9 +7,9 @@
 
 namespace HinaPE
 {
-
 void parallel_for(size_t n, const std::function<void(size_t)> &f);
 void serial_for(size_t n, const std::function<void(size_t)> &f);
+
 
 template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
 struct DFSPHFluid
@@ -19,7 +19,6 @@ struct DFSPHFluid
 	Vector3Array v;
 	Vector3Array f;
 	ScalarArray m;
-	ScalarArray inv_m;
 	ScalarArray V;
 	ScalarArray rho;
 	ScalarArray alpha;
@@ -27,6 +26,9 @@ struct DFSPHFluid
 	ScalarArray kappa_divergence;
 	ScalarArray rho_adv;
 	ScalarArray d_rho;
+
+	ScalarArray neighbor_this;
+	ScalarArray neighbor_others;
 
 	real avg_density_adv;
 	real avg_d_density;
@@ -38,50 +40,47 @@ struct AkinciBoundary
 	size_t size;
 	Vector3Array x;
 	Vector3Array v;
+	Vector3Array f;
 	ScalarArray m;
 	ScalarArray V;
 	ScalarArray rho;
+
+	ScalarArray neighbor_this;
+	ScalarArray neighbor_others;
 };
 
 template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
 struct NeighborBuilder
 {
 	NeighborBuilder(real radius) { searcher = std::make_unique<cuNSearch::NeighborhoodSearch>(radius); }
-	void init(const std::vector<Vector3Array *> &x_sets, real radius)
+	void init(const std::vector<Vector3Array *> &x_sets)
 	{
 		for (const auto &x: x_sets)
-			searcher->add_point_set(x->front().data(), x->size(), true, true, true);
+			size_t idx = searcher->add_point_set(x->front().data(), x->size(), true, true, true);
 	}
 	void update_all() { searcher->update_point_sets(); }
 	void update_set(int i) { searcher->update_point_set(i); }
 	void resize_set(int i, Vector3Array *x) { searcher->resize_point_set(i, x->front().data(), x->size()); }
 	void build() { searcher->find_neighbors(); }
-	void for_each_neighbor(size_t this_set_idx, size_t target_set_idx, const std::function<void(size_t, Vector3)> &f) const
+	void for_each_neighbor(size_t this_set_idx, size_t target_set_idx, size_t this_pt_idx, const std::function<void(size_t, Vector3)> &f) const
 	{
 		auto &this_set = searcher->point_set(this_set_idx);
 		auto &target_set = searcher->point_set(target_set_idx);
-		parallel_for(this_set.n_points(), [&](size_t i)
+		size_t n = this_set.n_neighbors(target_set_idx, this_pt_idx);
+		parallel_for(n, [&](size_t n_idx)
 		{
-			size_t n = this_set.n_neighbors(target_set_idx, i);
-			serial_for(n, [&](size_t _)
-			{
-				size_t j = this_set.neighbor(target_set_idx, i, _);
-				Vector3 x = {target_set.GetPoints()[3 * j + 0],
-							 target_set.GetPoints()[3 * j + 1],
-							 target_set.GetPoints()[3 * j + 2]};
-				f(j, x);
-			});
+			size_t j = this_set.neighbor(target_set_idx, this_pt_idx, n_idx);
+			Vector3 x = {target_set.GetPoints()[3 * j + 0],
+						 target_set.GetPoints()[3 * j + 1],
+						 target_set.GetPoints()[3 * j + 2]};
+			f(j, x);
 		});
 	}
-
-//	size_t neighbor_sum(int i)
-//	{
-//		auto &set = searcher->point_set(i);
-//		size_t sum = 0;
-//		for (size_t j = 0; j < set.n_points(); ++j)
-//			sum += set.n_neighbors(0, j);
-//		return sum;
-//	}
+	size_t n_neighbors(size_t this_set_idx, size_t target_set_idx, int pt_idx)
+	{
+		const auto &this_set = searcher->point_set(this_set_idx);
+		return this_set.n_neighbors(target_set_idx, pt_idx);
+	}
 private:
 	std::unique_ptr<cuNSearch::NeighborhoodSearch> searcher;
 };
@@ -96,15 +95,16 @@ using NeighborBuilderGPU = NeighborBuilder<GPUVectorArray, GPUScalarArray, Vecto
 struct DFSPHSolverCPU
 {
 	DFSPHSolverCPU(real radius);
-	void Init(const CPUVectorArray &fluid, const CPUVectorArray &static_boundary);
+	void Init();
 	void Solve(real dt);
 
 	void build_neighbors(bool new_fluid_particles = false);
-	void for_each_neighbor_fluid(const std::function<void(size_t, Vector)> &f) const;
-	void for_each_neighbor_static_boundary(const std::function<void(size_t, Vector)> &f) const;
+	void for_each_neighbor_fluid(size_t, const std::function<void(size_t, Vector)> &f) const;
+	void for_each_neighbor_static_boundary(size_t, const std::function<void(size_t, Vector, size_t)> &f) const;
 	void advect_pos(real dt);
 	void advect_vel(real dt);
 	void compute_non_pressure_force();
+	void compute_mass();
 	void compute_density();
 	void compute_alpha();
 	void compute_kappa_density(real dt);
@@ -114,7 +114,7 @@ struct DFSPHSolverCPU
 	void correct_divergence_error(real dt);
 
 	DFSPHFluidCPU Fluid;
-	AkinciBoundaryCPU StaticBoundary;
+	std::vector<AkinciBoundaryCPU> StaticBoundaries;
 	NeighborBuilderCPU NeighborBuilder;
 	CubicSplineKernel<false> Kernel;
 };

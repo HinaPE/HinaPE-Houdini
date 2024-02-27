@@ -18,7 +18,7 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
         static PRM_Default KernelNameDefault(2, "CubicSpline"); \
         static PRM_ChoiceList CL(PRM_CHOICELIST_SINGLE, Kernels.data()); \
         PRMS.emplace_back(PRM_ORD, 1, &KernelName, &KernelNameDefault, &CL); \
-		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
+        TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
 )
 void SIM_Hina_Particles::_init_Particles()
 {
@@ -30,6 +30,8 @@ void SIM_Hina_Particles::_init_Particles()
 	this->m = nullptr;
 	this->V = nullptr;
 	this->rho = nullptr;
+	this->neighbor_this = nullptr;
+	this->neighbor_others = nullptr;
 }
 void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 {
@@ -41,6 +43,8 @@ void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 	this->m = src->m;
 	this->V = src->V;
 	this->rho = src->rho;
+	this->neighbor_this = src->neighbor_this;
+	this->neighbor_others = src->neighbor_others;
 }
 void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 {
@@ -56,7 +60,10 @@ void SIM_Hina_Particles::_setup_gdp(GU_Detail *gdp) const
 }
 void SIM_Hina_Particles::load()
 {
-	if (x == nullptr || v == nullptr || m == nullptr || f == nullptr || V == nullptr || rho == nullptr)
+	if (!gdp_dirty)
+		return;
+
+	if (x == nullptr || v == nullptr || m == nullptr || f == nullptr || V == nullptr || rho == nullptr || neighbor_this == nullptr || neighbor_others == nullptr)
 	{
 		std::cout << "SIM_Hina_Particles::load() called with nullptr" << std::endl;
 		return;
@@ -83,6 +90,7 @@ void SIM_Hina_Particles::load()
 			(*v)[index] = vel;
 			(*m)[index] = mass;
 		}
+	gdp_dirty = false;
 }
 void SIM_Hina_Particles::commit()
 {
@@ -115,11 +123,9 @@ void SIM_Hina_Particles::commit()
 			volume_handle.set(pt_off, volume);
 			density_handle.set(pt_off, density);
 
-//			int fn_sum = neighbor_lists_cache[pt_off].size();
-//			int bn_sum = 0;
-//			for (auto &pair: other_neighbor_lists_cache)
-//				bn_sum += pair.second[pt_off].size();
-//			self_n_sum_handle.set(pt_off, fn_sum);
-//			other_n_sum_handle.set(pt_off, bn_sum);
+			int fn_sum = (*neighbor_this)[offset2index[pt_off]];
+			int bn_sum = (*neighbor_others)[offset2index[pt_off]];
+			self_n_sum_handle.set(pt_off, fn_sum);
+			other_n_sum_handle.set(pt_off, bn_sum);
 		}
 }

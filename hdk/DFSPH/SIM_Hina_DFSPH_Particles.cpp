@@ -6,8 +6,22 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		true,
 		TARGET_PARTICLE_GEOMETRY(SIM_Hina_DFSPH_Particles)
 )
-void SIM_Hina_DFSPH_Particles::_init_DFSPH_Particles() {}
-void SIM_Hina_DFSPH_Particles::_makeEqual_DFSPH_Particles(const SIM_Hina_DFSPH_Particles *src) {}
+void SIM_Hina_DFSPH_Particles::_init_DFSPH_Particles()
+{
+	this->alpha = nullptr;
+	this->kappa_density = nullptr;
+	this->kappa_divergence = nullptr;
+	this->rho_adv = nullptr;
+	this->d_rho = nullptr;
+}
+void SIM_Hina_DFSPH_Particles::_makeEqual_DFSPH_Particles(const SIM_Hina_DFSPH_Particles *src)
+{
+	this->alpha = src->alpha;
+	this->kappa_density = src->kappa_density;
+	this->kappa_divergence = src->kappa_divergence;
+	this->rho_adv = src->rho_adv;
+	this->d_rho = src->d_rho;
+}
 void SIM_Hina_DFSPH_Particles::_setup_gdp(GU_Detail *gdp) const
 {
 	SIM_Hina_Particles::_setup_gdp(gdp);

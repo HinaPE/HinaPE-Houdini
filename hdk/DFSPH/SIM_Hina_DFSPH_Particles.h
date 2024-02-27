@@ -2,6 +2,7 @@
 #define HINAPE_SIM_HINA_DFSPH_PARTICLES_H
 
 #include <Base/SIM_Hina_Particles.h>
+#include <HinaPE/DFSPH/DFSPH.h>
 
 SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		DFSPH_Particles,

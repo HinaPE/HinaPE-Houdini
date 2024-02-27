@@ -86,3 +86,43 @@ void SIM_Hina_Akinci_Particles::load_sop(SIM_Object *boundary_obj)
 		}
 	}
 }
+
+std::map<UT_String, SIM_Hina_Akinci_Particles *> FetchAllAkinciBoundaries(SIM_Object *fluid_obj)
+{
+	std::map<UT_String, SIM_Hina_Akinci_Particles *> res;
+	SIM_ObjectArray affectors;
+	fluid_obj->getAffectors(affectors, "SIM_RelationshipCollide");
+	exint num_affectors = affectors.entries();
+	for (int i = 0; i < num_affectors; ++i)
+	{
+		SIM_Object *obj_collider = affectors(i);
+		if (obj_collider->getName().equal(fluid_obj->getName()))
+			continue;
+		UT_String boundary_obj_name = obj_collider->getName();
+		SIM_Hina_Akinci_Particles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci_Particles::DATANAME, SIM_Hina_Akinci_Particles);
+		if (boundary_akinci)
+			res[boundary_obj_name] = boundary_akinci;
+	}
+	return res;
+}
+std::map<UT_String, SIM_Hina_Akinci_Particles *> FetchAllAkinciBoundariesAndApply(SIM_Object *fluid_obj, const std::function<void(SIM_Object *, SIM_Hina_Akinci_Particles *, const UT_String &)> &func)
+{
+	std::map<UT_String, SIM_Hina_Akinci_Particles *> res;
+	SIM_ObjectArray affectors;
+	fluid_obj->getAffectors(affectors, "SIM_RelationshipCollide");
+	exint num_affectors = affectors.entries();
+	for (int i = 0; i < num_affectors; ++i)
+	{
+		SIM_Object *obj_collider = affectors(i);
+		if (obj_collider->getName().equal(fluid_obj->getName()))
+			continue;
+		UT_String boundary_obj_name = obj_collider->getName();
+		SIM_Hina_Akinci_Particles *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Akinci_Particles::DATANAME, SIM_Hina_Akinci_Particles);
+		if (boundary_akinci)
+		{
+			res[boundary_obj_name] = boundary_akinci;
+			func(obj_collider, boundary_akinci, boundary_obj_name);
+		}
+	}
+	return res;
+}
