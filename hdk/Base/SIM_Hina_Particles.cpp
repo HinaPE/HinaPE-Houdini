@@ -22,6 +22,7 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
 )
 void SIM_Hina_Particles::_init_Particles()
 {
+	this->gdp_dirty = true;
 	this->offset2index.clear();
 	this->index2offset.clear();
 	this->x = nullptr;
@@ -35,6 +36,7 @@ void SIM_Hina_Particles::_init_Particles()
 }
 void SIM_Hina_Particles::_makeEqual_Particles(const SIM_Hina_Particles *src)
 {
+	this->gdp_dirty = src->gdp_dirty;
 	this->offset2index = src->offset2index;
 	this->index2offset = src->index2offset;
 	this->x = src->x;

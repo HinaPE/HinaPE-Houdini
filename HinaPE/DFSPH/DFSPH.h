@@ -10,7 +10,6 @@ namespace HinaPE
 void parallel_for(size_t n, const std::function<void(size_t)> &f);
 void serial_for(size_t n, const std::function<void(size_t)> &f);
 
-
 template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
 struct DFSPHFluid
 {
@@ -56,7 +55,7 @@ struct NeighborBuilder
 	void init(const std::vector<Vector3Array *> &x_sets)
 	{
 		for (const auto &x: x_sets)
-			size_t idx = searcher->add_point_set(x->front().data(), x->size(), true, true, true);
+			searcher->add_point_set(x->front().data(), x->size(), true, true, true);
 	}
 	void update_all() { searcher->update_point_sets(); }
 	void update_set(int i) { searcher->update_point_set(i); }

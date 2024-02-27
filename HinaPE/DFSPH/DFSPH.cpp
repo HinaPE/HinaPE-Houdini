@@ -90,9 +90,8 @@ void HinaPE::DFSPHSolverCPU::build_neighbors(bool new_fluid_particles)
 			StaticBoundaries[boundary_set_idx].neighbor_others[boundary_pt_idx] = NeighborBuilder.n_neighbors(boundary_set_idx + 1, 0, boundary_pt_idx);
 			serial_for(StaticBoundaries.size(), [&](size_t other_boundary_set_idx)
 			{
-				if (other_boundary_set_idx == boundary_set_idx)
-					return;
-				StaticBoundaries[boundary_set_idx].neighbor_others[boundary_pt_idx] += NeighborBuilder.n_neighbors(boundary_set_idx + 1, other_boundary_set_idx + 1, boundary_pt_idx);
+				if (other_boundary_set_idx != boundary_set_idx)
+					StaticBoundaries[boundary_set_idx].neighbor_others[boundary_pt_idx] += NeighborBuilder.n_neighbors(boundary_set_idx + 1, other_boundary_set_idx + 1, boundary_pt_idx);
 			});
 		});
 	});
