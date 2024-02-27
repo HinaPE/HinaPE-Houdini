@@ -25,17 +25,21 @@ bool GAS_Hina_DFSPHSolver::_solve(SIM_Engine &engine, SIM_Object *fluid_obj, SIM
 	GAS_Hina_UpdateDensityAkinci::calculate_density(DFSPH_particles, akinci_boundaries);
 	calculate_alpha(DFSPH_particles, akinci_boundaries);
 	fpreal remain_time = timestep;
-	while (remain_time > 1e-6)
+	while (remain_time > 1e-7)
 	{
 		fpreal dt_CFL = calculate_CFL_dt(DFSPH_particles, remain_time);
+		std::cout << "dt_CFL: " << dt_CFL << std::endl;
+		if (dt_CFL < 1e-7)
+			break;
 		calculate_non_pressure_force(DFSPH_particles);
 		DFSPH_particles->advect_velocity(dt_CFL);
 		correct_density_error(DFSPH_particles, akinci_boundaries, dt_CFL);
 		DFSPH_particles->advect_position(dt_CFL);
+		DFSPH_particles->force_keep_boundary();
 		DFSPH_particles->neighbor_lists_builder->update_search_engine(DFSPH_particles, akinci_boundaries);
 		GAS_Hina_UpdateDensityAkinci::calculate_density(DFSPH_particles, akinci_boundaries);
 		calculate_alpha(DFSPH_particles, akinci_boundaries);
-		correct_divergence_error(DFSPH_particles, akinci_boundaries, dt_CFL);
+//		correct_divergence_error(DFSPH_particles, akinci_boundaries, dt_CFL);
 		remain_time -= dt_CFL;
 	}
 	return true;
@@ -121,35 +125,22 @@ void GAS_Hina_DFSPHSolver::calculate_alpha(SIM_Hina_DFSPHParticles *fluid, std::
 }
 void GAS_Hina_DFSPHSolver::correct_divergence_error(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries, fpreal dt)
 {
-
-}
-void GAS_Hina_DFSPHSolver::correct_density_error(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries, fpreal dt)
-{
 	fpreal kernel_radius = fluid->getTargetSpacing() * fluid->getKernelRadiusOverTargetSpacing();
 	HinaPE::CubicSplineKernel<false> kernel(kernel_radius);
 
-	// Calculate average density through euler integration
 	_compute_density_change(fluid, akinci_boundaries, dt);
-	printf("iter: %d, avg_derived_density: %f, avg_density_adv: %f\n", 0, avg_derived_density, avg_density_adv);
-
-	// Lower calculations of ki/kj by adding scaling directly
-	fluid->for_each_offset(
-			[&](const GA_Offset &pt_off)
-			{
-				fpreal alpha = fluid->alpha_cache[pt_off];
-				fpreal kappa = 1. / (dt * dt) * alpha;
-			}
-	);
 
 	int iter = 0;
-	fpreal weakly_rest_water_density = 1000.1;
-	while (avg_density_adv > weakly_rest_water_density && iter < 100) // weakly compressible
+	fpreal max_error_v = 10.;
+	while (avg_d_density > max_error_v && iter < 100) // weakly compressible
 	{
+		std::cout << "divergence::iter:" << iter << ", avg_derived_density: " << avg_d_density << ", avg_density_adv:" << avg_density_adv << std::endl;
 		fluid->for_each_offset(
 				[&](const GA_Offset &pt_off)
 				{
-					UT_Vector3 sum = {0, 0, 0};
-					fpreal kappa = (fluid->density_adv_cache[pt_off] - weakly_rest_water_density) * fluid->alpha_cache[pt_off] / (dt * dt);
+					fpreal alpha = fluid->alpha_cache[pt_off];
+					fpreal Drho_dt = fluid->d_density_cache[pt_off];
+					fpreal kappa = Drho_dt * alpha / dt;
 					fluid->kappa_cache[pt_off] = kappa;
 				}
 		);
@@ -161,10 +152,10 @@ void GAS_Hina_DFSPHSolver::correct_density_error(SIM_Hina_DFSPHParticles *fluid,
 					fpreal m_i = fluid->mass_cache[pt_off];
 					fpreal rho_i = fluid->density_cache[pt_off];
 					fpreal kappa_i = fluid->kappa_cache[pt_off];
-					{
-						// self contribution
-						sum += m_i * (kappa_i / rho_i + kappa_i / rho_i) * kernel.gradient(UT_Vector3(0., 0., 0.));
-					}
+
+					// self contribution
+					sum += m_i * (kappa_i / rho_i + kappa_i / rho_i) * kernel.gradient(UT_Vector3(0., 0., 0.)); // TODO: take care of this
+					// fluid neighbors contribution
 					fluid->for_each_neighbor_self(
 							pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
 							{
@@ -175,24 +166,89 @@ void GAS_Hina_DFSPHSolver::correct_density_error(SIM_Hina_DFSPHParticles *fluid,
 								sum += m_j * (kappa_i / rho_i + kappa_j / rho_j) * kernel.gradient(x_i - x_j);
 							}
 					);
-					// TODO: consider akinci boundaries neighbors contribution
-//					for (const auto &pair: akinci_boundaries)
-//					{
-//						fluid->for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
-//						{
-//							UT_Vector3 x_j = n_pos;
-//							fpreal m_j = pair.second->mass_cache[n_off];
-//							fpreal rho_j = 1000.f;
-//							fpreal kappa_j = fluid->kappa_cache[n_off];
-//						}, pair.first);
-//					}
+					// akinci boundaries neighbors contribution
+					for (const auto &pair: akinci_boundaries)
+					{
+						fluid->for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+						{
+							UT_Vector3 x_j = n_pos;
+							fpreal m_j = pair.second->mass_cache[n_off];
+							fpreal rho_j = 1000.f;
+							fpreal kappa_j = fluid->kappa_cache[n_off];
+							sum += m_j * (kappa_i / rho_i + kappa_j / rho_j) * kernel.gradient(x_i - x_j);
+						}, pair.first);
+					}
+
 					fluid->velocity_cache[pt_off] -= dt * sum;
 					fluid->force_keep_boundary();
 				}
 		);
 		_compute_density_change(fluid, akinci_boundaries, dt);
 		++iter;
-		printf("iter: %d, avg_derived_density: %f, avg_density_adv: %f\n", iter, avg_derived_density, avg_density_adv);
+	}
+}
+void GAS_Hina_DFSPHSolver::correct_density_error(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries, fpreal dt)
+{
+	fpreal kernel_radius = fluid->getTargetSpacing() * fluid->getKernelRadiusOverTargetSpacing();
+	HinaPE::CubicSplineKernel<false> kernel(kernel_radius);
+
+	_compute_density_change(fluid, akinci_boundaries, dt);
+
+	int iter = 0;
+	fpreal max_error_d = 0.01;
+	while ((avg_density_adv - 1000.) > max_error_d && iter < 100) // weakly compressible
+	{
+		std::cout << "density::iter:" << iter << ", avg_derived_density: " << avg_d_density << ", avg_density_adv:" << avg_density_adv << std::endl;
+		fluid->for_each_offset(
+				[&](const GA_Offset &pt_off)
+				{
+					fpreal alpha = fluid->alpha_cache[pt_off];
+					fpreal rho_star = fluid->density_adv_cache[pt_off];
+					fpreal kappa = (rho_star - 1000.) * alpha / (dt * dt);
+					fluid->kappa_cache[pt_off] = kappa;
+				}
+		);
+		fluid->for_each_offset(
+				[&](const GA_Offset &pt_off)
+				{
+					UT_Vector3 sum = {0, 0, 0};
+					UT_Vector3 x_i = fluid->position_cache[pt_off];
+					fpreal m_i = fluid->mass_cache[pt_off];
+					fpreal rho_i = fluid->density_cache[pt_off];
+					fpreal kappa_i = fluid->kappa_cache[pt_off];
+
+					// self contribution
+					sum += m_i * (kappa_i / rho_i + kappa_i / rho_i) * kernel.gradient(UT_Vector3(0., 0., 0.)); // TODO: take care of this
+					// fluid neighbors contribution
+					fluid->for_each_neighbor_self(
+							pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+							{
+								UT_Vector3 x_j = n_pos;
+								fpreal m_j = fluid->mass_cache[n_off];
+								fpreal rho_j = fluid->density_cache[n_off];
+								fpreal kappa_j = fluid->kappa_cache[n_off];
+								sum += m_j * (kappa_i / rho_i + kappa_j / rho_j) * kernel.gradient(x_i - x_j);
+							}
+					);
+					// akinci boundaries neighbors contribution
+					for (const auto &pair: akinci_boundaries)
+					{
+						fluid->for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+						{
+							UT_Vector3 x_j = n_pos;
+							fpreal m_j = pair.second->mass_cache[n_off];
+							fpreal rho_j = 1000.f;
+							fpreal kappa_j = fluid->kappa_cache[n_off];
+							sum += m_j * (kappa_i / rho_i + kappa_j / rho_j) * kernel.gradient(x_i - x_j);
+						}, pair.first);
+					}
+
+					fluid->velocity_cache[pt_off] -= dt * sum;
+					fluid->force_keep_boundary();
+				}
+		);
+		_compute_density_change(fluid, akinci_boundaries, dt);
+		++iter;
 	}
 }
 void GAS_Hina_DFSPHSolver::_compute_density_change(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries, fpreal dt)
@@ -201,12 +257,12 @@ void GAS_Hina_DFSPHSolver::_compute_density_change(SIM_Hina_DFSPHParticles *flui
 	HinaPE::CubicSplineKernel<false> kernel(kernel_radius);
 
 	avg_density_adv = 0;
-	avg_derived_density = 0;
-	fpreal density_adv = 0;
+	avg_d_density = 0;
 	fluid->for_each_offset(
 			[&](const GA_Offset &pt_off)
 			{
 				fpreal d_density = 0;
+				fpreal density_adv = 0;
 				UT_Vector3 x_i = fluid->position_cache[pt_off];
 				UT_Vector3 v_i = fluid->velocity_cache[pt_off];
 				fluid->for_each_neighbor_self(
@@ -218,14 +274,24 @@ void GAS_Hina_DFSPHSolver::_compute_density_change(SIM_Hina_DFSPHParticles *flui
 							d_density += m_j * dot(v_i - v_j, kernel.gradient(x_i - x_j));
 						}
 				);
+				for (const auto &pair: akinci_boundaries)
+				{
+					fluid->for_each_neighbor_others(pt_off, [&](const GA_Offset &n_off, const UT_Vector3 &n_pos)
+					{
+						UT_Vector3 x_j = n_pos;
+						UT_Vector3 v_j = pair.second->velocity_cache[n_off];
+						fpreal m_j = pair.second->mass_cache[n_off];
+						d_density += m_j * dot(v_i - v_j, kernel.gradient(x_i - x_j));
+					}, pair.first);
+				}
 				density_adv = fluid->density_cache[pt_off] + dt * d_density;
 				density_adv = std::max(density_adv, 1000.);
-				avg_derived_density += d_density;
+				avg_d_density += d_density;
 				avg_density_adv += density_adv;
 				fluid->density_adv_cache[pt_off] = density_adv;
 				fluid->d_density_cache[pt_off] = d_density;
 			}
 	);
-	avg_derived_density /= fluid->size();
+	avg_d_density /= fluid->size();
 	avg_density_adv /= fluid->size();
 }

@@ -19,7 +19,7 @@ GAS_HINA_SUBSOLVER_CLASS(
 private:
 		void _compute_density_change(SIM_Hina_DFSPHParticles *fluid, std::map<UT_String, SIM_Hina_Akinci2012BoundaryParticles *> &akinci_boundaries, fpreal dt);
 		fpreal avg_density_adv;
-		fpreal avg_derived_density;
+		fpreal avg_d_density;
 )
 
 #endif //HINAPE_GAS_HINA_DFSPHSOLVER_H

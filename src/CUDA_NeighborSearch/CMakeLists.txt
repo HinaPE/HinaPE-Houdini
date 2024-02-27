@@ -19,9 +19,9 @@ target_include_directories(
 )
 file(COPY ${CMAKE_CURRENT_BINARY_DIR}/cuNSearch/cuNSearch_export.h DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_compile_options(
-        CUDA_NeighborSearch
-        PUBLIC
-        -DCUNSEARCH_USE_DOUBLE_PRECISION
-)
+#target_compile_options(
+#        CUDA_NeighborSearch
+#        PUBLIC
+#        -DCUNSEARCH_USE_DOUBLE_PRECISION
+#)
 endif ()

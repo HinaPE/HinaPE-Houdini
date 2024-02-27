@@ -56,7 +56,7 @@ struct CubicSplineKernel
 		const fpreal eps = 1e-6;
 		fpreal r_l = r.length();
 		if (r_l >= h) return UT_Vector3(0, 0, 0);
-		if (r_l < eps) r_l = eps; // note: r's length can be 0!
+		if (r_l < eps) return UT_Vector3(0, 0, 0);
 		UT_Vector3 r_u = r / r_l;
 
 		UT_Vector3 res = derivative(r_l) * r_u;

@@ -23,7 +23,7 @@ private:
 		void _update_particle_set(const UT_String& name, SIM_Hina_Particles* particles);
 		void _update_neighbor_cache(std::map<UT_String, SIM_Hina_Particles *>& target, bool init = false); // TODO: very time comsuming
 		cuNSearch::NeighborhoodSearch* nsearch;
-		std::map<UT_String, std::vector<std::array<fpreal, 3>>> cached_positions;
+		std::map<UT_String, std::vector<std::array<float, 3>>> cached_positions;
 		std::map<UT_String, unsigned int> cached_point_set_indices;
 )
 
