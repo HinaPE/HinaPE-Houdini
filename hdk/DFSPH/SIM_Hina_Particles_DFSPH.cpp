@@ -9,22 +9,26 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 SIM_Hina_Particles_DFSPH::~SIM_Hina_Particles_DFSPH()
 {
 	this->factor = nullptr;
+	this->k = nullptr;
 	this->density_adv = nullptr;
 }
 void SIM_Hina_Particles_DFSPH::_init_Particles_DFSPH()
 {
 	this->factor = nullptr;
+	this->k = nullptr;
 	this->density_adv = nullptr;
 }
 void SIM_Hina_Particles_DFSPH::_makeEqual_Particles_DFSPH(const SIM_Hina_Particles_DFSPH *src)
 {
 	this->factor = src->factor;
+	this->k = src->k;
 	this->density_adv = src->density_adv;
 }
 void SIM_Hina_Particles_DFSPH::_setup_gdp(GU_Detail *gdp) const
 {
 	SIM_Hina_Particles::_setup_gdp(gdp);
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_DFSPH_FACTOR, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
+	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_DFSPH_KAPPA_DENSITY, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_DFSPH_DENSITY_ADV, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 }
 void SIM_Hina_Particles_DFSPH::commit()
@@ -44,13 +48,16 @@ void SIM_Hina_Particles_DFSPH::commit()
 	SIM_GeometryAutoWriteLock lock(this);
 	GU_Detail &gdp = lock.getGdp();
 	GA_RWHandleF factor_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DFSPH_FACTOR);
+	GA_RWHandleF k_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DFSPH_KAPPA_DENSITY);
 	GA_RWHandleF density_adv_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DFSPH_DENSITY_ADV);
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
 			fpreal fc = (*factor)[offset2index[pt_off]];
+			fpreal kappa = (*k)[offset2index[pt_off]];
 			fpreal da = (*density_adv)[offset2index[pt_off]];
 			factor_handle.set(pt_off, fc);
+			k_handle.set(pt_off, kappa);
 			density_adv_handle.set(pt_off, da);
 		}
 }

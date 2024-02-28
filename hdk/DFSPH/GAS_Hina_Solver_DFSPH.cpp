@@ -73,16 +73,17 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
 	SolverPtr->FLUID_PARTICLE_RADIUS = spacing / 2.;
 	SolverPtr->GRAVITY = gravity;
 
-	DFSPH_particles->x = &SolverPtr->Fluid.x;
-	DFSPH_particles->v = &SolverPtr->Fluid.v;
-	DFSPH_particles->a = &SolverPtr->Fluid.a;
-	DFSPH_particles->m = &SolverPtr->Fluid.m;
-	DFSPH_particles->V = &SolverPtr->Fluid.V;
-	DFSPH_particles->rho = &SolverPtr->Fluid.rho;
-	DFSPH_particles->nt = &SolverPtr->Fluid.neighbor_this;
-	DFSPH_particles->no = &SolverPtr->Fluid.neighbor_others;
-	DFSPH_particles->factor = &SolverPtr->Fluid.factor;
-	DFSPH_particles->density_adv = &SolverPtr->Fluid.density_adv;
+	DFSPH_particles->x = &SolverPtr->Fluid->x;
+	DFSPH_particles->v = &SolverPtr->Fluid->v;
+	DFSPH_particles->a = &SolverPtr->Fluid->a;
+	DFSPH_particles->m = &SolverPtr->Fluid->m;
+	DFSPH_particles->V = &SolverPtr->Fluid->V;
+	DFSPH_particles->rho = &SolverPtr->Fluid->rho;
+	DFSPH_particles->nt = &SolverPtr->Fluid->neighbor_this;
+	DFSPH_particles->no = &SolverPtr->Fluid->neighbor_others;
+	DFSPH_particles->factor = &SolverPtr->Fluid->factor;
+	DFSPH_particles->k = &SolverPtr->Fluid->k;
+	DFSPH_particles->density_adv = &SolverPtr->Fluid->density_adv;
 
 	inited = true;
 }

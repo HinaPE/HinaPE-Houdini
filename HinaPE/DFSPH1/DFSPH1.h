@@ -28,6 +28,7 @@ using FluidEmitter = IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>
 struct DFSPH1FluidCPU : public FluidCPU
 {
 	ScalarArrayCPU factor;
+	ScalarArrayCPU k;
 	ScalarArrayCPU density_adv;
 };
 
@@ -45,8 +46,8 @@ struct DFSPH1Solver : public DFSPPH1Param
 {
 	DFSPH1Solver(real, Vector);
 	void Solve(real dt);
-	DFSPH1FluidCPU Fluid;
-	std::vector<AkinciBoundaryCPU> Boundaries;
+	std::shared_ptr<DFSPH1FluidCPU> Fluid;
+	std::vector<std::shared_ptr<AkinciBoundaryCPU>> Boundaries;
 
 protected:
 	void build_neighbors();
