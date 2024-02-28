@@ -2,24 +2,13 @@
 #define HINAPE_DFSPH_H
 
 #include "common.h"
-#include "kernels.h"
 #include "cuNSearch.h"
 
 namespace HinaPE
 {
-void parallel_for(size_t n, const std::function<void(size_t)> &f);
-void serial_for(size_t n, const std::function<void(size_t)> &f);
-
 template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
-struct DFSPHFluid
+struct DFSPHFluid : public IFluid<Vector3Array, ScalarArray, Vector3, real>
 {
-	size_t size;
-	Vector3Array x;
-	Vector3Array v;
-	Vector3Array f;
-	ScalarArray m;
-	ScalarArray V;
-	ScalarArray rho;
 	ScalarArray alpha;
 	ScalarArray kappa_density;
 	ScalarArray kappa_divergence;
@@ -121,7 +110,45 @@ struct DFSPHSolverCPU
 	DFSPHFluidCPU Fluid;
 	std::vector<AkinciBoundaryCPU> StaticBoundaries;
 	NeighborBuilderCPU NeighborBuilder;
-	CubicSplineKernel<false> Kernel;
+	real bound;
+};
+
+template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
+struct DFSPHFluidSPlisHSPlasH: public IFluid<Vector3Array, ScalarArray, Vector3, real>
+{
+	ScalarArray factor;
+	ScalarArray density_adv;
+	ScalarArray pressure_rho2;
+	ScalarArray pressure_rho2_V;
+	Vector3Array pressure_acc;
+
+	ScalarArray neighbor_this;
+	ScalarArray neighbor_others;
+};
+using DFSPHFluidSPlisHSPlasHCPU = DFSPHFluidSPlisHSPlasH<CPUVectorArray, CPUScalarArray, Vector, real>;
+using DFSPHFluidSPlisHSPlasHGPU = DFSPHFluidSPlisHSPlasH<GPUVectorArray, GPUScalarArray, Vector, real>;
+
+struct DFSPHSolverSPlisHSPlasH
+{
+	DFSPHSolverSPlisHSPlasH(real radius);
+
+	void build_neighbors();
+	void for_each_neighbor_fluid(size_t, const std::function<void(size_t, Vector)> &f) const;
+	void for_each_neighbor_static_boundary(size_t, const std::function<void(size_t, Vector, size_t)> &f) const;
+
+	void precompute_values();
+	void compute_densities();
+	void compute_DFSPH_factors();
+	void divergence_solve(real dt);
+	void compute_non_pressure_force();
+	void update_CFL_timestep();
+	void advect_vel();
+	void pressure_solve();
+	void advect_pos();
+
+	DFSPHFluidSPlisHSPlasHCPU Fluid;
+	std::vector<AkinciBoundaryCPU> StaticBoundaries;
+	NeighborBuilderCPU NeighborBuilder;
 };
 }
 

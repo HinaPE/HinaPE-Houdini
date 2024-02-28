@@ -70,6 +70,7 @@ bool GAS_Hina_DFSPH_Solver::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 		}
 
 		SolverPtr->Init();
+		SolverPtr->bound = DFSPH_particles->getFluidDomain().x(); // TODO: remove here
 
 		for (auto &akinci_boundary: akinci_boundaries)
 			akinci_boundary.second->commit();

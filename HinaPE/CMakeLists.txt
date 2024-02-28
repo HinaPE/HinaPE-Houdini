@@ -8,7 +8,7 @@ add_subdirectory(3rd_party/CUDA_CubbyFlow)
 add_subdirectory(3rd_party/CUDA_NeighborSearch)
 add_subdirectory(3rd_party/TreeNSearch)
 
-file(GLOB HINAPE_COMMON common.h kernels.h)
+file(GLOB HINAPE_COMMON common.h)
 file(GLOB_RECURSE HINAPE_DFSPH_SOURCE DFSPH/*.h DFSPH/*.cpp DFSPH/*.cu DFSPH/*.cuh)
 
 

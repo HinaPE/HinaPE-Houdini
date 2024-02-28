@@ -10,7 +10,7 @@
 #include <CUDA_CubbyFlow/Core/Utils/Logging.hpp>
 #include <CUDA_CubbyFlow/Core/Geometry/TriangleMesh3.hpp>
 #include <CUDA_CubbyFlow/Core/Geometry/ImplicitSurfaceSet.hpp>
-#include "HinaPE/kernels.h"
+#include "HinaPE/common.h"
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		VolumeParticleEmitter,
@@ -40,7 +40,7 @@ fpreal _compute_mass(fpreal TargetSpacing, fpreal TargetDensity, fpreal KernelRa
 	pointsGenerator.Generate(sampleBound, TargetSpacing, &points);
 
 	double maxNumberDensity = 0.0;
-	HinaPE::CubicSplineKernel<false> kernel(KernelRadius);
+	HinaPE::CubicKernel::set_radius(KernelRadius);
 
 	for (size_t i = 0; i < points.Length(); ++i)
 	{
@@ -50,7 +50,7 @@ fpreal _compute_mass(fpreal TargetSpacing, fpreal TargetDensity, fpreal KernelRa
 		for (size_t j = 0; j < points.Length(); ++j)
 		{
 			const Vector3D &neighborPoint = points[j];
-			sum += kernel.kernel(neighborPoint.DistanceTo(point));
+			sum += HinaPE::CubicKernel::W(neighborPoint.DistanceTo(point));
 		}
 
 		maxNumberDensity = std::max(maxNumberDensity, sum);
