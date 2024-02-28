@@ -2,26 +2,23 @@
 #define HINAPE_SIM_HINA_PARTICLES_H
 
 #include <SIM_Hina_Generator.h>
-#include <HinaPE/common.h>
+
+using real = float;
+using Vector = UT_Vector3T<real>;
+using ScalarArrayCPU = std::vector<real>;
+using VectorArrayCPU = std::vector<Vector>;
 
 SIM_HINA_GEOMETRY_CLASS(
 		Particles,
-		HINA_GETSET_PARAMETER(FluidDomain, GETSET_DATA_FUNCS_V3)
-		HINA_GETSET_PARAMETER(TargetSpacing, GETSET_DATA_FUNCS_F)
-		HINA_GETSET_PARAMETER(KernelRadiusOverTargetSpacing, GETSET_DATA_FUNCS_F)
-		HINA_GETSET_PARAMETER(TargetDensity, GETSET_DATA_FUNCS_F)
-		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
-		HINA_GETSET_PARAMETER(Gravity, GETSET_DATA_FUNCS_V3)
 
-		bool gdp_dirty; // has new particles emitted
-		virtual void load();
-		virtual void commit(); // auto commit by `GAS_Hina_SubStep`
+		bool gdp_dirty;
 		std::map<GA_Offset, GA_Size> offset2index;
 		std::map<GA_Size, GA_Offset> index2offset;
-		HinaPE::CPUVectorArray *x, *v, *f;
-		HinaPE::CPUScalarArray *m, *V, *rho;
+		virtual void load();
+		virtual void commit(); // auto commit by `GAS_CFL_SubStep`
 
-		HinaPE::CPUScalarArray *neighbor_this, *neighbor_others;
+		VectorArrayCPU *x, *v, *a;
+		ScalarArrayCPU *m, *V, *rho, *nt, *no;
 )
 
 #endif //HINAPE_SIM_HINA_PARTICLES_H

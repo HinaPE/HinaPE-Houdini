@@ -1,6 +1,7 @@
 #include "DFSPH1.h"
 
 #include <numeric>
+#include <utility>
 #include <execution>
 
 HinaPE::DFSPH1Solver::DFSPH1Solver(HinaPE::real _r, HinaPE::Vector _b)
@@ -10,7 +11,7 @@ HinaPE::DFSPH1Solver::DFSPH1Solver(HinaPE::real _r, HinaPE::Vector _b)
 	constexpr size_t n = 50000;
 	Fluid.x.reserve(n);
 	Fluid.v.reserve(n);
-	Fluid.f.reserve(n);
+	Fluid.a.reserve(n);
 	Fluid.m.reserve(n);
 	Fluid.V.reserve(n);
 	Fluid.rho.reserve(n);
@@ -26,11 +27,12 @@ void HinaPE::DFSPH1Solver::Solve(HinaPE::real dt)
 	build_neighbors();
 	compute_density();
 	compute_factor();
-	divergence_solve(dt);
-	non_pressure_force();
-	predict_velocity(dt);
-	pressure_solve(dt);
-	advect(dt);
+//	divergence_solve(dt);
+//	non_pressure_force();
+//	predict_velocity(dt);
+//	pressure_solve(dt);
+//	advect(dt);
+//	enforce_boundary();
 }
 void HinaPE::DFSPH1Solver::build_neighbors()
 {
@@ -132,7 +134,7 @@ void HinaPE::DFSPH1Solver::non_pressure_force()
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)
 			{
-				Vector dv{0, -9.8, 0};
+				Vector dv = GRAVITY;
 
 				_for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
 				{
@@ -168,7 +170,7 @@ void HinaPE::DFSPH1Solver::predict_velocity(HinaPE::real dt)
 	_for_each_fluid_particle(
 			[&](size_t i, Vector)
 			{
-				Fluid.v[i] += dt * Fluid.f[i] / Fluid.m[i];
+				Fluid.v[i] += dt * Fluid.a[i];
 			});
 }
 void HinaPE::DFSPH1Solver::pressure_solve(HinaPE::real dt)
@@ -211,6 +213,47 @@ void HinaPE::DFSPH1Solver::advect(HinaPE::real dt)
 				Fluid.x[i] += dt * Fluid.v[i];
 			});
 }
+void HinaPE::DFSPH1Solver::enforce_boundary()
+{
+	_for_each_fluid_particle(
+			[&](size_t i, Vector x_i)
+			{
+				Vector collision_normal{0, 0, 0};
+				if (x_i.x() > MaxBound.x())
+				{
+					Fluid.x[i].x() = MaxBound.x();
+					collision_normal.x() += 1;
+				}
+				if (x_i.x() < -MaxBound.x())
+				{
+					Fluid.x[i].x() = -MaxBound.x();
+					collision_normal.x() -= 1;
+				}
+				if (x_i.y() > MaxBound.y())
+				{
+					Fluid.x[i].y() = MaxBound.y();
+					collision_normal.y() += 1;
+				}
+				if (x_i.y() < -MaxBound.y())
+				{
+					Fluid.x[i].y() = -MaxBound.y();
+					collision_normal.y() -= 1;
+				}
+				if (x_i.z() > MaxBound.z())
+				{
+					Fluid.x[i].z() = MaxBound.z();
+					collision_normal.z() += 1;
+				}
+				if (x_i.z() < -MaxBound.z())
+				{
+					Fluid.x[i].z() = -MaxBound.z();
+					collision_normal.z() -= 1;
+				}
+				collision_normal.normalize();
+				constexpr real c_f = static_cast<real>(0.5f);
+				Fluid.v[i] -= (1. + c_f) * Fluid.v[i].dot(collision_normal) * collision_normal;
+			});
+}
 
 void HinaPE::DFSPH1Solver::_for_each_fluid_particle(const std::function<void(size_t i, Vector x_i)> &f)
 {
@@ -232,9 +275,10 @@ void HinaPE::DFSPH1Solver::_resize()
 	if (Fluid.size == Fluid.x.size())
 		return;
 
+	size_t pre_size = Fluid.size;
 	Fluid.size = Fluid.x.size();
 	Fluid.v.resize(Fluid.size);
-	Fluid.f.resize(Fluid.size);
+	Fluid.a.resize(Fluid.size);
 	Fluid.m.resize(Fluid.size);
 	Fluid.V.resize(Fluid.size);
 	Fluid.rho.resize(Fluid.size);
@@ -245,7 +289,19 @@ void HinaPE::DFSPH1Solver::_resize()
 	Fluid.factor.resize(Fluid.size);
 	Fluid.density_adv.resize(Fluid.size);
 
-	NeighborBuilder.resize_set(0, &Fluid.x);
+	if (pre_size == 0) // first time resize
+	{
+		real d = 2 * FLUID_PARTICLE_RADIUS;
+		std::fill(Fluid.V.begin(), Fluid.V.end(), .8 * d * d * d);
+		std::transform(Fluid.V.begin(), Fluid.V.end(), Fluid.m.begin(), [&](real V) { return V * FLUID_REST_DENSITY; });
+
+		std::vector<VectorArrayCPU *> x_sets;
+		x_sets.emplace_back(&Fluid.x);
+		for (auto &static_boundary: Boundaries)
+			x_sets.emplace_back(&static_boundary.x);
+		NeighborBuilder.init(x_sets);
+	} else
+		NeighborBuilder.resize_set(0, &Fluid.x);
 }
 void HinaPE::DFSPH1Solver::_compute_density_change()
 {

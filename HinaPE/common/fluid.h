@@ -29,7 +29,7 @@ struct IFluid
 	size_t size;
 	Vector3Array x;
 	Vector3Array v;
-	Vector3Array f;
+	Vector3Array a;
 	ScalarArray m;
 	ScalarArray V;
 	ScalarArray rho;
@@ -54,16 +54,8 @@ struct IAkinciBoundary
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct IFluidEmitter
 {
-	static void Link(std::weak_ptr<IFluid<real, Vector3, ScalarArray, Vector3Array>> target) { TargetFluid = target; }
-	static std::weak_ptr<IFluid<real, Vector3, ScalarArray, Vector3Array>> TargetFluid;
-
-	static void UseCubbyVolumeEmitter(CubbyFlow::ImplicitSurfaceSet3Ptr Implicit, real TargetSpacing, real MaxParticles)
+	static void UseCubbyVolumeEmitter(Vector3Array* TARGET, CubbyFlow::ImplicitSurfaceSet3Ptr Implicit, real TargetSpacing, real MaxParticles)
 	{
-		if (TargetFluid.expired())
-			return;
-
-		auto FluidPtr = TargetFluid.lock();
-
 		CubbyFlow::Logging::Mute();
 		const double maxJitterDist = 0;
 
@@ -77,8 +69,8 @@ struct IFluidEmitter
 				2. * TargetSpacing);
 
 		CubbyFlow::Array1<CubbyFlow::Vector3D> pos_array;
-		for (int i = 0; i < FluidPtr->x.size(); ++i)
-			pos_array.Append({FluidPtr->x[i].z(), FluidPtr->x[i].z(), FluidPtr->x[i].z()});
+		for (int i = 0; i < TARGET->size(); ++i)
+			pos_array.Append({(*TARGET)[i].z(), (*TARGET)[i].z(), (*TARGET)[i].z()});
 		neighbor_searcher.Build(pos_array);
 
 		auto points_gen = std::make_shared<CubbyFlow::BccLatticePointGenerator>();
@@ -96,12 +88,21 @@ struct IFluidEmitter
 
 			if (Implicit->IsInside(candidate) && !neighbor_searcher.HasNearbyPoint(candidate, TargetSpacing))
 			{
-				if (FluidPtr->x.size() >= MaxParticles)
+				if (TARGET->size() >= MaxParticles)
 					return false;
-				FluidPtr->x.push_back({candidate.x, candidate.y, candidate.z});
+				TARGET->push_back({candidate.x, candidate.y, candidate.z});
 			}
 			return true;
 		});
+	}
+
+	static void UseFluidBlock(Vector3Array* TARGET, const Vector3 &Start, const Vector3 &End, const real TargetSpacing)
+	{
+		TARGET->clear();
+		for (real x = Start.x(); x <= End.x(); x += TargetSpacing)
+			for (real y = Start.y(); y <= End.y(); y += TargetSpacing)
+				for (real z = Start.z(); z <= End.z(); z += TargetSpacing)
+					TARGET->emplace_back(x, y, z);
 	}
 };
 

@@ -24,23 +24,29 @@ using AkinciBoundaryCPU = IAkinciBoundary<real, Vector, ScalarArrayCPU, VectorAr
 using NeighborBuilder = NeighborBuilderGPU<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 using FluidEmitter = IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 
-constexpr real FLUID_REST_DENSITY = 1000.0f;
-constexpr real FLUID_PARTICLE_RADIUS = 0.01;
-constexpr real FLUID_SURFACE_TENSION = 0.01;
-constexpr real FLUID_VISCOSITY = 0.01;
-constexpr real BOUNDARY_VISCOSITY = 0;
 
 struct DFSPH1FluidCPU : public FluidCPU
 {
-	VectorArrayCPU a;
 	ScalarArrayCPU factor;
 	ScalarArrayCPU density_adv;
 };
 
-struct DFSPH1Solver
+struct DFSPPH1Param
+{
+	real FLUID_REST_DENSITY = 1000.0f;
+	real FLUID_PARTICLE_RADIUS = 0.01;
+	real FLUID_SURFACE_TENSION = 0.01;
+	real FLUID_VISCOSITY = 0.01;
+	real BOUNDARY_VISCOSITY = 0;
+	Vector GRAVITY = Vector(0, -9.8, 0);
+};
+
+struct DFSPH1Solver : public DFSPPH1Param
 {
 	DFSPH1Solver(real, Vector);
 	void Solve(real dt);
+	DFSPH1FluidCPU Fluid;
+	std::vector<AkinciBoundaryCPU> Boundaries;
 
 protected:
 	void build_neighbors();
@@ -51,14 +57,13 @@ protected:
 	void predict_velocity(real dt);
 	void pressure_solve(real dt);
 	void advect(real dt);
+	void enforce_boundary();
 
 private:
 	void _for_each_fluid_particle(const std::function<void(size_t, Vector)> &);
 	void _for_each_neighbor_fluid(size_t, const std::function<void(size_t, Vector)> &);
 	void _for_each_neighbor_boundaries(size_t, const std::function<void(size_t, Vector, size_t)> &);
 	void _resize();
-	DFSPH1FluidCPU Fluid;
-	std::vector<AkinciBoundaryCPU> Boundaries;
 	NeighborBuilder NeighborBuilder;
 	Vector MaxBound;
 
