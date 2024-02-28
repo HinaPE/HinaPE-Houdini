@@ -239,8 +239,6 @@ void SIM_FluidParticle::commit(SIM_GeometryCopy *geo) const {
         GA_Offset pt_off;
         GA_FOR_ALL_PTOFF(&gdp, pt_off)
         {
-            GA_Size index = gdp.pointIndex(pt_off);
-
             UT_Vector3 pos = pbfParticle->positions[pt_off];
             UT_Vector3 vel = pbfParticle->velocities[pt_off];
             UT_Vector3 force = pbfParticle->forces[pt_off];

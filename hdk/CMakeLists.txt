@@ -23,6 +23,8 @@ add_library(
         Neighbor/GAS_BuildNeighborLists.h
         Density/GAS_ParticleDensity.cpp
         Density/GAS_ParticleDensity.h
+        Viscosity/GAS_ParticleViscosity.cpp
+        Viscosity/GAS_ParticleViscosity.h
 )
 
 # Link Houdini Toolkit
