@@ -8,13 +8,15 @@ add_subdirectory(3rd_party/CUDA_CubbyFlow)
 add_subdirectory(3rd_party/CUDA_NeighborSearch)
 add_subdirectory(3rd_party/TreeNSearch)
 
-file(GLOB HINAPE_COMMON common.h)
+file(GLOB HINAPE_COMMON common.h common/fluid.h common/neighbors.h common/kernels.h)
 file(GLOB_RECURSE HINAPE_DFSPH_SOURCE DFSPH/*.h DFSPH/*.cpp DFSPH/*.cu DFSPH/*.cuh)
+file(GLOB_RECURSE HINAPE_DFSPH1_SOURCE DFSPH1/*.h DFSPH1/*.cpp DFSPH1/*.cu DFSPH1/*.cuh)
 
 
 add_library(HinaPE STATIC
         ${HINAPE_COMMON}
         ${HINAPE_DFSPH_SOURCE}
+        ${HINAPE_DFSPH1_SOURCE}
 )
 target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini tbb CUDA_NeighborSearch TreeNSearch CUDA_CubbyFlow)
 target_link_directories(

@@ -25,21 +25,6 @@ struct DFSPHFluid : public IFluid<Vector3Array, ScalarArray, Vector3, real>
 };
 
 template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
-struct AkinciBoundary
-{
-	size_t size;
-	Vector3Array x;
-	Vector3Array v;
-	Vector3Array f;
-	ScalarArray m;
-	ScalarArray V;
-	ScalarArray rho;
-
-	ScalarArray neighbor_this;
-	ScalarArray neighbor_others;
-};
-
-template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
 struct NeighborBuilder
 {
 	NeighborBuilder(real radius) { searcher = std::make_unique<cuNSearch::NeighborhoodSearch>(radius); }
@@ -77,8 +62,6 @@ private:
 
 using DFSPHFluidCPU = DFSPHFluid<CPUVectorArray, CPUScalarArray, Vector, real>;
 using DFSPHFluidGPU = DFSPHFluid<GPUVectorArray, GPUScalarArray, Vector, real>;
-using AkinciBoundaryCPU = AkinciBoundary<CPUVectorArray, CPUScalarArray, Vector, real>;
-using AkinciBoundaryGPU = AkinciBoundary<GPUVectorArray, GPUScalarArray, Vector, real>;
 using NeighborBuilderCPU = NeighborBuilder<CPUVectorArray, CPUScalarArray, Vector, real>;
 using NeighborBuilderGPU = NeighborBuilder<GPUVectorArray, GPUScalarArray, Vector, real>;
 

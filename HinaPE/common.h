@@ -104,7 +104,28 @@ struct IFluid
 	ScalarArray m;
 	ScalarArray V;
 	ScalarArray rho;
+	ScalarArray neighbor_this;
+	ScalarArray neighbor_others;
 };
+using IFluidCPU = IFluid<CPUVectorArray, CPUScalarArray, Vector, real>;
+using IFluidGPU = IFluid<GPUVectorArray, GPUScalarArray, Vector, real>;
+
+template<typename Vector3Array, typename ScalarArray, typename Vector3, typename real>
+struct AkinciBoundary
+{
+	size_t size;
+	Vector3Array x;
+	Vector3Array v;
+	Vector3Array f;
+	ScalarArray m;
+	ScalarArray V;
+	ScalarArray rho;
+
+	ScalarArray neighbor_this;
+	ScalarArray neighbor_others;
+};
+using AkinciBoundaryCPU = AkinciBoundary<CPUVectorArray, CPUScalarArray, Vector, real>;
+using AkinciBoundaryGPU = AkinciBoundary<GPUVectorArray, GPUScalarArray, Vector, real>;
 }
 
 #endif //HINAPE_COMMON_H
