@@ -28,8 +28,9 @@ const SIM_DopDescription *GAS_CFL_SubStep::getDopDescription()
 
 SIM_Solver::SIM_Result GAS_CFL_SubStep::solveObjectsSubclass(SIM_Engine &engine, SIM_ObjectArray &objects, SIM_ObjectArray &newobjects, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep)
 {
-	float sub_time = getMAX_SUBSTEP();
-	for (int i = 0; i < sub_time; ++i)
+	float mas_step = getMAX_SUBSTEP();
+	fpreal sub_time = timestep / mas_step;
+	for (int i = 0; i < mas_step; ++i)
 	{
 		SIM_Solver::SIM_Result res = GAS_SubStep::solveObjectsSubclass(engine, objects, newobjects, feedbacktoobjects, sub_time);
 		for (int j = 0; j < objects.size(); ++j)

@@ -8,7 +8,7 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 		false,
 		HINA_FLOAT_VECTOR_PARAMETER(FluidDomain, 3, 1., 1., 1.) \
         HINA_FLOAT_PARAMETER(TargetSpacing, .02) \
-        HINA_FLOAT_PARAMETER(KernelRadius, .36) \
+        HINA_FLOAT_PARAMETER(KernelRadius, .04) \
         HINA_FLOAT_PARAMETER(TargetDensity, 1000.) \
         HINA_FLOAT_VECTOR_PARAMETER(Gravity, 3, 0, -9.8, 0) \
 		HINA_INT_PARAMETER(MaxNumOfParticles, 100000) \
@@ -27,6 +27,12 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
         PRMS.emplace_back(PRM_ORD, 1, &KernelName, &KernelNameDefault, &CL); \
         TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_DFSPH)
 )
+GAS_Hina_Solver_DFSPH::~GAS_Hina_Solver_DFSPH()
+{
+	this->SolverPtr = nullptr;
+	this->inited = false;
+	this->emitted = false;
+}
 void GAS_Hina_Solver_DFSPH::_init()
 {
 	this->SolverPtr = nullptr;

@@ -63,7 +63,7 @@ public: \
     __VA_ARGS__ \
 protected: \
     explicit SIM_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
-    ~SIM_Hina_##NAME() override = default; \
+    ~SIM_Hina_##NAME() override; \
     void initializeSubclass() override; \
     void makeEqualSubclass(const SIM_Data *source) override; \
     GU_ConstDetailHandle getGeometrySubclass() const final; \
@@ -129,7 +129,7 @@ public: \
     __VA_ARGS__ \
 protected: \
     explicit SIM_Hina_##DERIVED_NAME(const SIM_DataFactory *factory) : SIM_Hina_##PARENT_NAME(factory) {} \
-    ~SIM_Hina_##DERIVED_NAME() override = default; \
+    ~SIM_Hina_##DERIVED_NAME() override; \
     void initializeSubclass() override; \
     void makeEqualSubclass(const SIM_Data *source) override; \
     static const SIM_DopDescription *getDopDescription(); \
@@ -186,7 +186,7 @@ mutable UT_WorkBuffer error_msg; \
 __VA_ARGS__ \
 protected: \
 GAS_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
-~GAS_Hina_##NAME() override = default; \
+~GAS_Hina_##NAME() override; \
 bool solveGasSubclass(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep) override; \
 void initializeSubclass() override; \
 void makeEqualSubclass(const SIM_Data *source) override; \
@@ -280,17 +280,17 @@ static std::array<PRM_Default, SIZE> Default##NAME{__VA_ARGS__};  \
 PRMS.emplace_back(PRM_FLT, SIZE, &NAME, Default##NAME.data());
 
 #define HINA_GEOMETRY_ATTRIBUTE_COLOR "Cd"
-#define HINA_GEOMETRY_ATTRIBUTE_VELOCITY "vel"
-#define HINA_GEOMETRY_ATTRIBUTE_FORCE "force"
+#define HINA_GEOMETRY_ATTRIBUTE_VELOCITY "v"
+#define HINA_GEOMETRY_ATTRIBUTE_FORCE "f"
 #define HINA_GEOMETRY_ATTRIBUTE_ACCELERATION "a"
-#define HINA_GEOMETRY_ATTRIBUTE_FORCE_NORM "force_n"
-#define HINA_GEOMETRY_ATTRIBUTE_MASS "mass"
-#define HINA_GEOMETRY_ATTRIBUTE_DENSITY "density"
-#define HINA_GEOMETRY_ATTRIBUTE_PRESSURE "pressure"
-#define HINA_GEOMETRY_ATTRIBUTE_VOLUME "volume"
-#define HINA_GEOMETRY_ATTRIBUTE_NEIGHBORS "neighbors"
-#define HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF "self_n_sum"
-#define HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS "others_n_sum"
+#define HINA_GEOMETRY_ATTRIBUTE_FORCE_NORM "f_n"
+#define HINA_GEOMETRY_ATTRIBUTE_MASS "m"
+#define HINA_GEOMETRY_ATTRIBUTE_DENSITY "den"
+#define HINA_GEOMETRY_ATTRIBUTE_PRESSURE "pres"
+#define HINA_GEOMETRY_ATTRIBUTE_VOLUME "vol"
+#define HINA_GEOMETRY_ATTRIBUTE_NEIGHBORS "nbs"
+#define HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF "n_sum_s"
+#define HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS "n_sum_o"
 #define HINA_GEOMETRY_ATTRIBUTE_DFSPH_FACTOR "df_factor"
 #define HINA_GEOMETRY_ATTRIBUTE_DFSPH_KAPPA_DENSITY "df_kappa_density"
 #define HINA_GEOMETRY_ATTRIBUTE_DFSPH_KAPPA_DIVERGENCE "df_kappa_divergence"
