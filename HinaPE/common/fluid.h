@@ -44,12 +44,13 @@ struct IAkinciBoundary
 	size_t size;
 	Vector3Array x;
 	Vector3Array v;
-	Vector3Array f;
+	Vector3Array a;
 	ScalarArray m;
 	ScalarArray V;
 	ScalarArray rho;
 
 	ScalarArray neighbor_this;
+	ScalarArray neighbor_others;
 };
 
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>

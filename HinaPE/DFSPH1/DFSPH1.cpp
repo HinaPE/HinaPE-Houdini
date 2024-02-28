@@ -43,6 +43,7 @@ void HinaPE::DFSPH1Solver::build_neighbors()
 	NeighborBuilder.update_set(0);
 	NeighborBuilder.build();
 
+	// This can be deleted for performance
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)
 			{
@@ -53,6 +54,8 @@ void HinaPE::DFSPH1Solver::build_neighbors()
 					Fluid->neighbor_others[i] += NeighborBuilder.n_neighbors(0, b_set + 1, i);
 				});
 			});
+
+	_compute_akinci_volume();
 }
 void HinaPE::DFSPH1Solver::compute_density()
 {
@@ -232,10 +235,13 @@ void HinaPE::DFSPH1Solver::enforce_boundary()
 					Fluid->x[i].x() = -MaxBound.x();
 					collision_normal.x() -= 1;
 				}
-				if (x_i.y() > MaxBound.y())
+				if (!TOP_OPEN)
 				{
-					Fluid->x[i].y() = MaxBound.y();
-					collision_normal.y() += 1;
+					if (x_i.y() > MaxBound.y())
+					{
+						Fluid->x[i].y() = MaxBound.y();
+						collision_normal.y() += 1;
+					}
 				}
 				if (x_i.y() < -MaxBound.y())
 				{
@@ -266,11 +272,11 @@ void HinaPE::DFSPH1Solver::_for_each_neighbor_fluid(size_t i, const std::functio
 {
 	NeighborBuilder.for_each_neighbor(0, 0, i, f);
 }
-void HinaPE::DFSPH1Solver::_for_each_neighbor_boundaries(size_t, const std::function<void(size_t, Vector, size_t)> &f)
+void HinaPE::DFSPH1Solver::_for_each_neighbor_boundaries(size_t i, const std::function<void(size_t, Vector, size_t)> &f)
 {
 	serial_for(Boundaries.size(), [&](size_t b_set)
 	{
-		NeighborBuilder.for_each_neighbor(0, b_set + 1, 0, [&](size_t j, Vector x_j) { f(j, x_j, b_set); });
+		NeighborBuilder.for_each_neighbor(0, b_set + 1, i, [&](size_t j, Vector x_j) { f(j, x_j, b_set); });
 	});
 }
 void HinaPE::DFSPH1Solver::_resize()
@@ -307,6 +313,29 @@ void HinaPE::DFSPH1Solver::_resize()
 	}
 //	else
 //		NeighborBuilder.resize_set(0, &Fluid->x);
+}
+void HinaPE::DFSPH1Solver::_compute_akinci_volume()
+{
+	serial_for(Boundaries.size(), [&](size_t b_set)
+	{
+		parallel_for(Boundaries[b_set]->size, [&](size_t i)
+		{
+			real V = Kernel::W_zero();
+			Vector x_i = Boundaries[b_set]->x[i];
+			NeighborBuilder.for_each_neighbor(
+					b_set + 1, b_set + 1, i,
+					[&](size_t j, Vector x_j)
+					{
+						V += Kernel::W(x_i - x_j);
+					});
+			Boundaries[b_set]->V[i] = static_cast<real>(1.f) / V;
+			Boundaries[b_set]->m[i] = Boundaries[b_set]->V[i] * BOUNDARY_REST_DENSITY[b_set];
+			Boundaries[b_set]->neighbor_this[i] = NeighborBuilder.n_neighbors(b_set + 1, b_set + 1, i);
+			std::fill(Boundaries[b_set]->v.begin(), Boundaries[b_set]->v.end(), Vector{0, 0, 0});
+			std::fill(Boundaries[b_set]->a.begin(), Boundaries[b_set]->a.end(), Vector{0, 0, 0});
+		});
+		NeighborBuilder.disable_set_to_search_from(b_set + 1);
+	});
 }
 void HinaPE::DFSPH1Solver::_compute_density_change()
 {

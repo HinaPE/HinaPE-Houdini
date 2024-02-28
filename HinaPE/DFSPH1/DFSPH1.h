@@ -35,11 +35,13 @@ struct DFSPH1FluidCPU : public FluidCPU
 struct DFSPPH1Param
 {
 	real FLUID_REST_DENSITY = 1000.0f;
+	std::vector<real> BOUNDARY_REST_DENSITY;
 	real FLUID_PARTICLE_RADIUS = 0.01;
 	real FLUID_SURFACE_TENSION = 0.01;
 	real FLUID_VISCOSITY = 0.01;
 	real BOUNDARY_VISCOSITY = 0;
 	Vector GRAVITY = Vector(0, -9.8, 0);
+	bool TOP_OPEN = true;
 };
 
 struct DFSPH1Solver : public DFSPPH1Param
@@ -71,6 +73,7 @@ private:
 	friend class IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 
 private:
+	void _compute_akinci_volume();
 	void _compute_density_change();
 	void _compute_density_adv(real dt);
 	real _compute_density_error(const real offset);

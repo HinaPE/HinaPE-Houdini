@@ -78,7 +78,6 @@ void SIM_Hina_Particles::load()
 	GA_ROHandleF density_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DENSITY);
 	GA_ROHandleI self_n_sum_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_SELF);
 	GA_ROHandleI other_n_sum_handle = gdp->findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_NEIGHBOR_SUM_OTHERS);
-	GA_Offset pt_off;
 	size_t sz = gdp->getNumPoints();
 	(*x).resize(sz);
 	(*v).resize(sz);
@@ -88,6 +87,7 @@ void SIM_Hina_Particles::load()
 	(*rho).resize(sz);
 	(*nt).resize(sz);
 	(*no).resize(sz);
+	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(gdp, pt_off)
 		{
 			GA_Size pt_idx = gdp->pointIndex(pt_off);
@@ -147,15 +147,14 @@ void SIM_Hina_Particles::commit()
 				fpreal mass = (*m)[pt_idx];
 				fpreal volume = (*V)[pt_idx];
 				fpreal density = (*rho)[pt_idx];
+				int fn_sum = (*nt)[pt_idx];
+				int bn_sum = (*no)[pt_idx];
 				pos_handle.set(pt_off, pos);
 				vel_handle.set(pt_off, vel);
 				acc_handle.set(pt_off, acc);
 				mass_handle.set(pt_off, mass);
 				volume_handle.set(pt_off, volume);
 				density_handle.set(pt_off, density);
-
-				int fn_sum = (*nt)[pt_idx];
-				int bn_sum = (*no)[pt_idx];
 				self_n_sum_handle.set(pt_off, fn_sum);
 				other_n_sum_handle.set(pt_off, bn_sum);
 			}
@@ -173,15 +172,14 @@ void SIM_Hina_Particles::commit()
 			fpreal mass = (*m)[pt_idx];
 			fpreal volume = (*V)[pt_idx];
 			fpreal density = (*rho)[pt_idx];
+			int fn_sum = (*nt)[pt_idx];
+			int bn_sum = (*no)[pt_idx];
 			pos_handle.set(pt_off, pos);
 			vel_handle.set(pt_off, vel);
 			acc_handle.set(pt_off, acc);
 			mass_handle.set(pt_off, mass);
 			volume_handle.set(pt_off, volume);
 			density_handle.set(pt_off, density);
-
-			int fn_sum = (*nt)[pt_idx];
-			int bn_sum = (*no)[pt_idx];
 			self_n_sum_handle.set(pt_off, fn_sum);
 			other_n_sum_handle.set(pt_off, bn_sum);
 		}
