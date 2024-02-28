@@ -1,6 +1,6 @@
-set(HINA_TARGET SIM_HinaPE_Fluid)
+set(HINA_TARGET SIM_Celeste_Fluid)
 
-file(GLOB_RECURSE HINAPE_HEADER *.h)
+file(GLOB_RECURSE HINAPE_EADER *.h)
 file(GLOB_RECURSE HINAPE_SOURCE *.cpp)
 
 add_library(
@@ -8,6 +8,21 @@ add_library(
         SHARED
         ${HINAPE_HEADER}
         ${HINAPE_SOURCE}
+
+        Particles/Particles.h
+        Particles/PbfParticle.h
+        Particles/SIM_FluidParticle.cpp
+        Particles/SIM_FluidParticle.h
+        Particles/GAS_ConfigureFluidParticleData.cpp
+        Particles/GAS_ConfigureFluidParticleData.h
+        Emitter/GAS_VolumeParticleEmitter.cpp
+        Emitter/GAS_VolumeParticleEmitter.h
+        Solvers/GAS_ParticleIntegrator.cpp
+        Solvers/GAS_ParticleIntegrator.h
+        Neighbor/GAS_BuildNeighborLists.cpp
+        Neighbor/GAS_BuildNeighborLists.h
+        Density/GAS_ParticleDensity.cpp
+        Density/GAS_ParticleDensity.h
 )
 
 # Link Houdini Toolkit
