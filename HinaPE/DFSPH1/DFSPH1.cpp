@@ -30,7 +30,7 @@ void HinaPE::DFSPH1Solver::Solve(HinaPE::real dt)
 	build_neighbors();
 	compute_density();
 	compute_factor();
-//	divergence_solve(dt);
+	divergence_solve(dt);
 	non_pressure_force();
 	predict_velocity(dt);
 	pressure_solve(dt);
@@ -119,7 +119,7 @@ void HinaPE::DFSPH1Solver::divergence_solve(HinaPE::real dt)
 			break;
 		m_iterations_v += 1;
 	}
-	std::cout << "DFSPH - iteration V: " << m_iterations_v << " Avg density err: " << avg_density_err << std::endl;
+//	std::cout << "DFSPH - iteration V: " << m_iterations_v << " Avg density err: " << avg_density_err << std::endl;
 
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)
@@ -138,32 +138,32 @@ void HinaPE::DFSPH1Solver::non_pressure_force()
 			[&](size_t i, Vector x_i)
 			{
 				Vector dv = GRAVITY;
-//
-//				_for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
-//				{
-//					// Surface Tension
-//					const Vector r = x_i - x_j;
-//					const real r2 = r.dot(r);
-//					const real r1 = std::sqrt(r2);
-//					if (r2 > diameter2)
-//						dv -= FLUID_SURFACE_TENSION / Fluid->m[i] * Fluid->m[j] * r * Kernel::W(r1);
-//					else
-//						dv -= FLUID_SURFACE_TENSION / Fluid->m[i] * Fluid->m[j] * r * Kernel::W(diameter);
-//
-//					// Fluid Viscosity
-//					real v_xy = (Fluid->v[i] - Fluid->v[j]).dot(r);
-//					Vector f_v = d * FLUID_VISCOSITY * (Fluid->m[j] / (Fluid->rho[j])) * v_xy / (r2 + 0.01f * kr2) * Kernel::gradW(r);
-//					dv += f_v;
-//				});
-//				_for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
-//				{
-//					// Boundary Viscosity
-//					const Vector r = x_i - x_j;
-//					const real r2 = r.dot(r);
-//					real v_xy = (Fluid->v[i] - Fluid->v[j]).dot(r);
-//					Vector f_v = d * BOUNDARY_VISCOSITY * (FLUID_REST_DENSITY * Boundaries[b_set]->V[j] / Fluid->rho[i]) * v_xy / (r2 + 0.01f * kr2) * Kernel::gradW(r);
-//					dv += f_v;
-//				});
+
+				_for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
+				{
+					// Surface Tension
+					const Vector r = x_i - x_j;
+					const real r2 = r.dot(r);
+					const real r1 = std::sqrt(r2);
+					if (r2 > diameter2)
+						dv -= FLUID_SURFACE_TENSION / Fluid->m[i] * Fluid->m[j] * r * Kernel::W(r1);
+					else
+						dv -= FLUID_SURFACE_TENSION / Fluid->m[i] * Fluid->m[j] * r * Kernel::W(diameter);
+
+					// Fluid Viscosity
+					real v_xy = (Fluid->v[i] - Fluid->v[j]).dot(r);
+					Vector f_v = d * FLUID_VISCOSITY * (Fluid->m[j] / (Fluid->rho[j])) * v_xy / (r2 + 0.01f * kr2) * Kernel::gradW(r);
+					dv += f_v;
+				});
+				_for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
+				{
+					// Boundary Viscosity
+					const Vector r = x_i - x_j;
+					const real r2 = r.dot(r);
+					real v_xy = (Fluid->v[i] - Fluid->v[j]).dot(r);
+					Vector f_v = d * BOUNDARY_VISCOSITY * (FLUID_REST_DENSITY * Boundaries[b_set]->V[j] / Fluid->rho[i]) * v_xy / (r2 + 0.01f * kr2) * Kernel::gradW(r);
+					dv += f_v;
+				});
 
 				Fluid->a[i] = dv;
 			});
@@ -200,7 +200,7 @@ void HinaPE::DFSPH1Solver::pressure_solve(HinaPE::real dt)
 			break;
 		m_iterations += 1;
 	}
-	std::cout << "DFSPH - iteration: " << m_iterations << " Avg density err: " << avg_density_err << std::endl;
+//	std::cout << "DFSPH - iteration: " << m_iterations << " Avg density err: " << avg_density_err << std::endl;
 
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)

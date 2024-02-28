@@ -13,11 +13,12 @@
 #include <CUDA_CubbyFlow/Core/Geometry/TriangleMesh3.hpp>
 #include <CUDA_CubbyFlow/Core/Geometry/ImplicitSurfaceSet.hpp>
 #include <CUDA_CubbyFlow/Core/Utils/Logging.hpp>
+#include "tbb/tbb.h"
 
 namespace HinaPE
 {
 inline void serial_for(size_t n, const std::function<void(size_t)> &f) { for (size_t i = 0; i < n; ++i) { f(i); }}
-#if true
+#if false
 inline void parallel_for(size_t n, const std::function<void(size_t)> &f) { serial_for(n, f); }
 #else
 inline void parallel_for(size_t n, const std::function<void(size_t)> &f){ tbb::parallel_for(size_t(0), n, [&](size_t i) { f(i); }); }
