@@ -467,6 +467,15 @@ void SIM_FluidParticle::check_data() const {
     }*/
 }
 
+void SIM_FluidParticle::check_AABB() const {
+    std::cout << "AABB size: " << pbfParticle->mQueryAABB.size() << std::endl;
+
+    /*for (const auto &pair: pbfParticle->mQueryAABB)
+    {
+        std::cout << "AABB " << pair.first << ": " << pair.second.v0 << "," << pair.second.v1 << std::endl;
+    }*/
+}
+
 
 
 

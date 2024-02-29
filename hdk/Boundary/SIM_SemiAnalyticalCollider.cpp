@@ -85,4 +85,27 @@ void SIM_SemiAnalyticalCollider::check_data() {
     }
 }
 
+void SIM_SemiAnalyticalCollider::for_each_triangle(const std::function<void(const GA_Offset &, const std::vector<size_t> &)> &func) {
+    // Iterate over all entries in the faces map.
+    for(const auto &face : boundary->faces)
+        // Call the provided function with the current face's offset and indices.
+        func(face.first, face.second);
+}
+
+void SIM_SemiAnalyticalCollider::check_AABB() {
+    if(!boundary)
+    {
+        std::cout << "Boundary is nullptr" << std::endl;
+    }
+
+    std::cout << "AABB size: " << boundary->mQueriedAABB.size() << std::endl;
+
+    for(int i = 0; i < boundary->mQueriedAABB.size(); i++)
+    {
+        std::cout << "AABB " << i << ": " << boundary->mQueriedAABB[i].v0 << "," << boundary->mQueriedAABB[i].v1 << std::endl;
+    }
+}
+
+
+
 

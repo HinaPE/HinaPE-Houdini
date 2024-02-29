@@ -220,10 +220,10 @@ bool GAS_VolumeParticleEmitter::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_T
             }
     }
 
-    if(exist_positions.size() == 0)
+    /*if(exist_positions.size() == 0)
     {
         std::cout << "exist_positions.size() = " << exist_positions.size() << std::endl;
-    }
+    }*/
 
     // Generate New Particles
     UT_Vector3Array new_positions;
@@ -291,7 +291,7 @@ bool GAS_VolumeParticleEmitter::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_T
         });
         //std::cout << "222222" << std::endl;
         new_particles = new_positions.size();
-        std::cout << "new_particles = " << new_particles << std::endl;
+        //std::cout << "new_particles = " << new_particles << std::endl;
     }
 
     SIM_GeometryAutoWriteLock lock(geo);

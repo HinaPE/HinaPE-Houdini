@@ -47,15 +47,15 @@ void GAS_SetAABB::makeEqualSubclass(const SIM_Data *source) {
     SIM_Data::makeEqualSubclass(source);
 }
 
-const char *GAS_SetAABB::DATANAME = "TriangleNeighborList";
+const char *GAS_SetAABB::DATANAME = "SetAABB";
 const SIM_DopDescription *GAS_SetAABB::getDopDescription() {
     static std::array<PRM_Template, 1> PRMS{
             PRM_Template()
     };
 
     static SIM_DopDescription DESC(true,
-                                   "triangle_neighbor_list",
-                                   "Triangle Neighbor List",
+                                   "set_aabb",
+                                   "Set AABB",
                                    DATANAME,
                                    classname(),
                                    PRMS.data());
@@ -95,6 +95,9 @@ bool GAS_SetAABB::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_
         return false;
     }
 
+/*    particle->pbfParticle->mQueryAABB.clear();
+    collider->boundary->mQueriedAABB.clear();*/
+
     fpreal kernel_radius = particle->getTargetSpacing() * particle->getKernelRadiusOverTargetSpacing() * 0.9;
 
     // set up point aabb
@@ -109,14 +112,23 @@ bool GAS_SetAABB::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_
             });
 
     // set up triangle aabb
-    int num_triangles = collider->boundary->faces.size();
-    for(int i = 0; i < num_triangles; i++)
-    {
-        const auto &triangle = collider->boundary->faces[i];
+    collider->for_each_triangle([&](const GA_Offset &prim_off,const std::vector<size_t> &triangle){
+
+        if(triangle.empty()) {
+            std::cout << "Warning: triangle is empty" << std::endl;
+            return; // Skip computation for this triangle
+        }
 
         size_t v0 = triangle[0];
         size_t v1 = triangle[1];
         size_t v2 = triangle[2];
+
+        if (v0 >= collider->boundary->vertices.size() ||
+            v1 >= collider->boundary->vertices.size() ||
+            v2 >= collider->boundary->vertices.size()) {
+            std::cout << "Warning: index out of bounds" << std::endl;
+            return; // Skip computation for this triangle
+        }
 
         UT_Vector3 V0 = collider->boundary->vertices[v0];
         UT_Vector3 V1 = collider->boundary->vertices[v1];
@@ -135,8 +147,11 @@ bool GAS_SetAABB::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_
         );
 
         AlignedBox triangle_aabb(aabb_min, aabb_max);
-        collider->boundary->mQueriedAABB[i] = triangle_aabb;
-    }
+        collider->boundary->mQueriedAABB[prim_off] = triangle_aabb;
+    });
+
+    //particle->check_AABB();
+    //collider->check_AABB();
     return true;
 }
 

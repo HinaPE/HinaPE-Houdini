@@ -44,6 +44,7 @@ public:
     void for_each_offset(const std::function<void(const GA_Offset &)> &func);
     void for_each_neighbor_self(const GA_Offset &pt_off, const std::function<void(const GA_Offset &, const UT_Vector3 &)> &func) const;
     void check_data() const;
+    void check_AABB() const;
 
 protected:
     explicit SIM_FluidParticle(const SIM_DataFactory *factory) : SIM_Data(factory), SIM_OptionsUser(this) {}

@@ -20,6 +20,8 @@ public:
 
     //////////
     void check_data();
+    void check_AABB();
+    void for_each_triangle(const std::function<void(const GA_Offset &, const std::vector<size_t> &)> &func);
 
 protected:
     SIM_SemiAnalyticalCollider(const SIM_DataFactory *factory) : SIM_Collider(factory) {}

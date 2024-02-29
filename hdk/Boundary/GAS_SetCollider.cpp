@@ -143,7 +143,7 @@ bool GAS_SetCollider::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, 
             }
         }
     }
-    collider->check_data();
+    //collider->check_data();
 
     return true;
 }

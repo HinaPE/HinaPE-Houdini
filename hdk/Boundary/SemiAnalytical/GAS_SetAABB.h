@@ -22,7 +22,7 @@ protected:
 DECLARE_STANDARD_GETCASTTOTYPE();
 DECLARE_DATAFACTORY(GAS_SetAABB,
                     GAS_SubSolver,
-                    "TriangleNeighborList",
+                    "SetAABB",
                     getDopDescription());
 
 private:
