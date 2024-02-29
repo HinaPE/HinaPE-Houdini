@@ -19,7 +19,7 @@
 namespace HinaPE
 {
 inline void serial_for(size_t n, const std::function<void(size_t)> &f) { for (size_t i = 0; i < n; ++i) { f(i); }}
-inline void parallel_for(size_t n, const std::function<void(size_t)> &f){ tbb::parallel_for(size_t(0), n, [&](size_t i) { f(i); }); }
+inline void parallel_for(size_t n, const std::function<void(size_t)> &f) { tbb::parallel_for(size_t(0), n, [&](size_t i) { f(i); }); }
 
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct IFluid
@@ -51,9 +51,15 @@ struct IAkinciBoundary
 };
 
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
+struct IBenderBoundary
+{
+	Discregrid::CubicLagrangeDiscreteGrid *grid;
+};
+
+template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct IFluidEmitter
 {
-	static void UseCubbyVolumeEmitter(Vector3Array* TARGET, CubbyFlow::ImplicitSurfaceSet3Ptr Implicit, real TargetSpacing, real MaxParticles)
+	static void UseCubbyVolumeEmitter(Vector3Array *TARGET, CubbyFlow::ImplicitSurfaceSet3Ptr Implicit, real TargetSpacing, real MaxParticles)
 	{
 		CubbyFlow::Logging::Mute();
 		const double maxJitterDist = 0;
@@ -95,7 +101,7 @@ struct IFluidEmitter
 		});
 	}
 
-	static void UseFluidBlock(Vector3Array* TARGET, const Vector3 &Start, const Vector3 &End, const real TargetSpacing)
+	static void UseFluidBlock(Vector3Array *TARGET, const Vector3 &Start, const Vector3 &End, const real TargetSpacing)
 	{
 		TARGET->clear();
 		for (real x = Start.x(); x <= End.x(); x += TargetSpacing)

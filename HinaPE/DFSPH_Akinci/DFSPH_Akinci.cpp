@@ -1,15 +1,15 @@
-#include "DFSPH1.h"
+#include "DFSPH_Akinci.h"
 
 #include <numeric>
 #include <utility>
 #include <execution>
 
-HinaPE::DFSPH1Solver::DFSPH1Solver(HinaPE::real _r, HinaPE::Vector _b)
+HinaPE::DFSPH_AkinciSolver::DFSPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector _b)
 		: NeighborBuilder(_r), MaxBound(_b / 2.), VolumeInited(false)
 {
 	Kernel::set_radius(_r);
 	constexpr size_t n = 50000;
-	Fluid = std::make_shared<DFSPH1FluidCPU>();
+	Fluid = std::make_shared<DFSPH_AkinciFluidCPU>();
 
 	Fluid->x.reserve(n);
 	Fluid->v.reserve(n);
@@ -25,7 +25,7 @@ HinaPE::DFSPH1Solver::DFSPH1Solver(HinaPE::real _r, HinaPE::Vector _b)
 	Fluid->k.reserve(n);
 	Fluid->density_adv.reserve(n);
 }
-void HinaPE::DFSPH1Solver::Solve(HinaPE::real dt)
+void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 {
 	build_neighbors();
 	compute_density();
@@ -37,7 +37,7 @@ void HinaPE::DFSPH1Solver::Solve(HinaPE::real dt)
 	advect(dt);
 	enforce_boundary();
 }
-void HinaPE::DFSPH1Solver::build_neighbors()
+void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 {
 	_resize();
 	NeighborBuilder.update_set(0);
@@ -57,7 +57,7 @@ void HinaPE::DFSPH1Solver::build_neighbors()
 
 	_compute_akinci_volume();
 }
-void HinaPE::DFSPH1Solver::compute_density()
+void HinaPE::DFSPH_AkinciSolver::compute_density()
 {
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)
@@ -74,7 +74,7 @@ void HinaPE::DFSPH1Solver::compute_density()
 				Fluid->rho[i] = rho_i * FLUID_REST_DENSITY;
 			});
 }
-void HinaPE::DFSPH1Solver::compute_factor()
+void HinaPE::DFSPH_AkinciSolver::compute_factor()
 {
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)
@@ -99,7 +99,7 @@ void HinaPE::DFSPH1Solver::compute_factor()
 					Fluid->factor[i] = 0;
 			});
 }
-void HinaPE::DFSPH1Solver::divergence_solve(HinaPE::real dt)
+void HinaPE::DFSPH_AkinciSolver::divergence_solve(HinaPE::real dt)
 {
 	_compute_density_change();
 	real inv_dt = static_cast<real>(1.) / dt;
@@ -130,7 +130,7 @@ void HinaPE::DFSPH1Solver::divergence_solve(HinaPE::real dt)
 				Fluid->factor[i] *= dt;
 			});
 }
-void HinaPE::DFSPH1Solver::non_pressure_force()
+void HinaPE::DFSPH_AkinciSolver::non_pressure_force()
 {
 	constexpr real d = 10;
 	const real diameter = 2 * FLUID_PARTICLE_RADIUS;
@@ -171,7 +171,7 @@ void HinaPE::DFSPH1Solver::non_pressure_force()
 				Fluid->a[i] = dv;
 			});
 }
-void HinaPE::DFSPH1Solver::predict_velocity(HinaPE::real dt)
+void HinaPE::DFSPH_AkinciSolver::predict_velocity(HinaPE::real dt)
 {
 	_for_each_fluid_particle(
 			[&](size_t i, Vector)
@@ -179,7 +179,7 @@ void HinaPE::DFSPH1Solver::predict_velocity(HinaPE::real dt)
 				Fluid->v[i] += dt * Fluid->a[i];
 			});
 }
-void HinaPE::DFSPH1Solver::pressure_solve(HinaPE::real dt)
+void HinaPE::DFSPH_AkinciSolver::pressure_solve(HinaPE::real dt)
 {
 	const real dt2 = dt * dt;
 	const real inv_dt2 = static_cast<real>(1.) / dt2;
@@ -211,7 +211,7 @@ void HinaPE::DFSPH1Solver::pressure_solve(HinaPE::real dt)
 				Fluid->factor[i] *= dt2;
 			});
 }
-void HinaPE::DFSPH1Solver::advect(HinaPE::real dt)
+void HinaPE::DFSPH_AkinciSolver::advect(HinaPE::real dt)
 {
 	_for_each_fluid_particle(
 			[&](size_t i, Vector)
@@ -219,7 +219,7 @@ void HinaPE::DFSPH1Solver::advect(HinaPE::real dt)
 				Fluid->x[i] += dt * Fluid->v[i];
 			});
 }
-void HinaPE::DFSPH1Solver::enforce_boundary()
+void HinaPE::DFSPH_AkinciSolver::enforce_boundary()
 {
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)
@@ -264,22 +264,22 @@ void HinaPE::DFSPH1Solver::enforce_boundary()
 			});
 }
 
-void HinaPE::DFSPH1Solver::_for_each_fluid_particle(const std::function<void(size_t i, Vector x_i)> &f)
+void HinaPE::DFSPH_AkinciSolver::_for_each_fluid_particle(const std::function<void(size_t i, Vector x_i)> &f)
 {
 	parallel_for(Fluid->size, [&](size_t i) { f(i, Fluid->x[i]); });
 }
-void HinaPE::DFSPH1Solver::_for_each_neighbor_fluid(size_t i, const std::function<void(size_t, Vector)> &f)
+void HinaPE::DFSPH_AkinciSolver::_for_each_neighbor_fluid(size_t i, const std::function<void(size_t, Vector)> &f)
 {
 	NeighborBuilder.for_each_neighbor(0, 0, i, f);
 }
-void HinaPE::DFSPH1Solver::_for_each_neighbor_boundaries(size_t i, const std::function<void(size_t, Vector, size_t)> &f)
+void HinaPE::DFSPH_AkinciSolver::_for_each_neighbor_boundaries(size_t i, const std::function<void(size_t, Vector, size_t)> &f)
 {
 	serial_for(Boundaries.size(), [&](size_t b_set)
 	{
 		NeighborBuilder.for_each_neighbor(0, b_set + 1, i, [&](size_t j, Vector x_j) { f(j, x_j, b_set); });
 	});
 }
-void HinaPE::DFSPH1Solver::_resize()
+void HinaPE::DFSPH_AkinciSolver::_resize()
 {
 	size_t pre_size = Fluid->size;
 	if (Fluid->size != Fluid->x.size())
@@ -314,7 +314,7 @@ void HinaPE::DFSPH1Solver::_resize()
 //	else
 //		NeighborBuilder.resize_set(0, &Fluid->x);
 }
-void HinaPE::DFSPH1Solver::_compute_akinci_volume()
+void HinaPE::DFSPH_AkinciSolver::_compute_akinci_volume()
 {
 	if (VolumeInited)
 		return;
@@ -342,7 +342,7 @@ void HinaPE::DFSPH1Solver::_compute_akinci_volume()
 
 	VolumeInited = true;
 }
-void HinaPE::DFSPH1Solver::_compute_density_change()
+void HinaPE::DFSPH_AkinciSolver::_compute_density_change()
 {
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)
@@ -359,7 +359,7 @@ void HinaPE::DFSPH1Solver::_compute_density_change()
 				Fluid->density_adv[i] = std::max(density_adv, static_cast<real>(0));
 			});
 }
-void HinaPE::DFSPH1Solver::_compute_density_adv(real dt)
+void HinaPE::DFSPH_AkinciSolver::_compute_density_adv(real dt)
 {
 	_for_each_fluid_particle(
 			[&](size_t i, Vector x_i)
@@ -377,7 +377,7 @@ void HinaPE::DFSPH1Solver::_compute_density_adv(real dt)
 				Fluid->density_adv[i] = std::max(density_adv, static_cast<real>(1.));
 			});
 }
-HinaPE::real HinaPE::DFSPH1Solver::_compute_density_error(const real offset)
+HinaPE::real HinaPE::DFSPH_AkinciSolver::_compute_density_error(const real offset)
 {
 	real density_err = 0;
 	// Important! DO NOT USE PARALLEL FOR HERE
@@ -387,21 +387,21 @@ HinaPE::real HinaPE::DFSPH1Solver::_compute_density_error(const real offset)
 	});
 	return density_err;
 }
-HinaPE::real HinaPE::DFSPH1Solver::_divergence_solver_iteration(HinaPE::real dt)
+HinaPE::real HinaPE::DFSPH_AkinciSolver::_divergence_solver_iteration(HinaPE::real dt)
 {
 	_divergence_solver_iteration_kernel(dt);
 	_compute_density_change();
 	real density_err = _compute_density_error(static_cast<real>(0.));
 	return density_err / Fluid->size;
 }
-HinaPE::real HinaPE::DFSPH1Solver::_pressure_solve_iteration(HinaPE::real dt)
+HinaPE::real HinaPE::DFSPH_AkinciSolver::_pressure_solve_iteration(HinaPE::real dt)
 {
 	_pressure_solve_iteration_kernel(dt);
 	_compute_density_adv(dt);
 	real density_err = _compute_density_error(static_cast<real>(FLUID_REST_DENSITY));
 	return density_err / Fluid->size;
 }
-void HinaPE::DFSPH1Solver::_divergence_solver_iteration_kernel(real dt)
+void HinaPE::DFSPH_AkinciSolver::_divergence_solver_iteration_kernel(real dt)
 {
 	// Perform Jacobi iteration
 	_for_each_fluid_particle(
@@ -434,7 +434,7 @@ void HinaPE::DFSPH1Solver::_divergence_solver_iteration_kernel(real dt)
 				Fluid->v[i] += dv;
 			});
 }
-void HinaPE::DFSPH1Solver::_pressure_solve_iteration_kernel(real dt)
+void HinaPE::DFSPH_AkinciSolver::_pressure_solve_iteration_kernel(real dt)
 {
 	// Compute pressure forces
 	_for_each_fluid_particle(

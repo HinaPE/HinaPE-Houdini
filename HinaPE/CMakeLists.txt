@@ -14,14 +14,14 @@ option(BUILD_CMD_EXECUTABLE OFF)
 add_subdirectory(3rd_party/Discregrid)
 
 file(GLOB HINAPE_COMMON common/fluid.h common/neighbors.h common/kernels.h)
-file(GLOB_RECURSE HINAPE_DFSPH1_SOURCE DFSPH1/*.h DFSPH1/*.cpp)
-#file(GLOB_RECURSE HINAPE_DFSPH2_SOURCE DFSPH2/*.h DFSPH2/*.cpp DFSPH2/*.cu DFSPH2/*.cuh)
+file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp)
+file(GLOB_RECURSE HINAPE_DFSPH_BENDER_SOURCE DFSPH_Bender/*.h DFSPH_Bender/*.cpp)
 
 
 add_library(HinaPE STATIC
         ${HINAPE_COMMON}
-        ${HINAPE_DFSPH1_SOURCE}
-#        ${HINAPE_DFSPH2_SOURCE}
+        ${HINAPE_DFSPH_AKINCI_SOURCE}
+        ${HINAPE_DFSPH_BENDER_SOURCE}
 )
 target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini tbb CUDA_CubbyFlow CUDA_NeighborSearch Discregrid TreeNSearch)
 target_link_directories(

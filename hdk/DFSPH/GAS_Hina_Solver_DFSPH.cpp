@@ -79,7 +79,7 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 	Vector gravity = getGravity();
 	bool top_open = getTopOpen();
 
-	SolverPtr = std::make_shared<HinaPE::DFSPH1Solver>(kernel_radius, domain);
+	SolverPtr = std::make_shared<HinaPE::DFSPH_AkinciSolver>(kernel_radius, domain);
 	SolverPtr->FLUID_REST_DENSITY = rest_density;
 	SolverPtr->FLUID_PARTICLE_RADIUS = spacing / 2.;
 	SolverPtr->GRAVITY = gravity;

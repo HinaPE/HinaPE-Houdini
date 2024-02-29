@@ -1,8 +1,8 @@
-#ifndef HINAPE_DFSPH1_H
-#define HINAPE_DFSPH1_H
+#ifndef HINAPE_DFSPH_AKINCI_H
+#define HINAPE_DFSPH_AKINCI_H
 
 /**
- * DFSPH implementation, SPH_Taichi version
+ * DFSPH implementation, Akinci Boundary
  * https://github.com/erizmr/SPH_Taichi
  */
 
@@ -24,14 +24,14 @@ using NeighborBuilder = NeighborBuilderGPU<real, Vector, ScalarArrayCPU, VectorA
 using FluidEmitter = IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 
 
-struct DFSPH1FluidCPU : public FluidCPU
+struct DFSPH_AkinciFluidCPU : public FluidCPU
 {
 	ScalarArrayCPU factor;
 	ScalarArrayCPU k;
 	ScalarArrayCPU density_adv;
 };
 
-struct DFSPPH1Param
+struct DFSPH_AkinciParam
 {
 	real FLUID_REST_DENSITY = 1000.0f;
 	std::vector<real> BOUNDARY_REST_DENSITY;
@@ -43,11 +43,11 @@ struct DFSPPH1Param
 	bool TOP_OPEN = true;
 };
 
-struct DFSPH1Solver : public DFSPPH1Param
+struct DFSPH_AkinciSolver : public DFSPH_AkinciParam
 {
-	DFSPH1Solver(real, Vector);
+	DFSPH_AkinciSolver(real, Vector);
 	void Solve(real dt);
-	std::shared_ptr<DFSPH1FluidCPU> Fluid;
+	std::shared_ptr<DFSPH_AkinciFluidCPU> Fluid;
 	std::vector<std::shared_ptr<AkinciBoundaryCPU>> Boundaries;
 
 protected:
@@ -82,4 +82,4 @@ private:
 };
 }
 
-#endif //HINAPE_DFSPH1_H
+#endif //HINAPE_DFSPH_AKINCI_H
