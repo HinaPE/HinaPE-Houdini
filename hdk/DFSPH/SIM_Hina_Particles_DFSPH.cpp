@@ -6,12 +6,6 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		true,
 		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_DFSPH)
 )
-SIM_Hina_Particles_DFSPH::~SIM_Hina_Particles_DFSPH()
-{
-	this->factor = nullptr;
-	this->k = nullptr;
-	this->density_adv = nullptr;
-}
 void SIM_Hina_Particles_DFSPH::_init_Particles_DFSPH()
 {
 	this->factor = nullptr;

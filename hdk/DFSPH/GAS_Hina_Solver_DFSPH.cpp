@@ -37,21 +37,17 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
         PRMS.emplace_back(PRM_ORD, 1, &KernelName, &KernelNameDefault, &CLKernel); \
         TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_DFSPH)
 )
-GAS_Hina_Solver_DFSPH::~GAS_Hina_Solver_DFSPH()
-{
-	this->SolverPtr = nullptr;
-	this->inited = false;
-	this->emitted = false;
-}
 void GAS_Hina_Solver_DFSPH::_init()
 {
-	this->SolverPtr = nullptr;
+	this->DFSPH_AkinciSolverPtr = nullptr;
+	this->DFSPH_BenderSolverPtr = nullptr;
 	this->inited = false;
 	this->emitted = false;
 }
 void GAS_Hina_Solver_DFSPH::_makeEqual(const GAS_Hina_Solver_DFSPH *src)
 {
-	this->SolverPtr = src->SolverPtr;
+	this->DFSPH_AkinciSolverPtr = src->DFSPH_AkinciSolverPtr;
+	this->DFSPH_BenderSolverPtr = src->DFSPH_BenderSolverPtr;
 	this->inited = src->inited;
 	this->emitted = src->emitted;
 }
@@ -66,7 +62,8 @@ bool GAS_Hina_Solver_DFSPH::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 	if (!emitted)
 		emit_data(DFSPH_particles);
 
-	SolverPtr->Solve(timestep);
+	if (DFSPH_AkinciSolverPtr)
+		DFSPH_AkinciSolverPtr->Solve(timestep);
 
 	return true;
 }
@@ -79,45 +76,45 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 	Vector gravity = getGravity();
 	bool top_open = getTopOpen();
 
-	SolverPtr = std::make_shared<HinaPE::DFSPH_AkinciSolver>(kernel_radius, domain);
-	SolverPtr->FLUID_REST_DENSITY = rest_density;
-	SolverPtr->FLUID_PARTICLE_RADIUS = spacing / 2.;
-	SolverPtr->GRAVITY = gravity;
-	SolverPtr->TOP_OPEN = top_open;
-
-	DFSPH_particles->x = &SolverPtr->Fluid->x;
-	DFSPH_particles->v = &SolverPtr->Fluid->v;
-	DFSPH_particles->a = &SolverPtr->Fluid->a;
-	DFSPH_particles->m = &SolverPtr->Fluid->m;
-	DFSPH_particles->V = &SolverPtr->Fluid->V;
-	DFSPH_particles->rho = &SolverPtr->Fluid->rho;
-	DFSPH_particles->nt = &SolverPtr->Fluid->neighbor_this;
-	DFSPH_particles->no = &SolverPtr->Fluid->neighbor_others;
-	DFSPH_particles->factor = &SolverPtr->Fluid->factor;
-	DFSPH_particles->k = &SolverPtr->Fluid->k;
-	DFSPH_particles->density_adv = &SolverPtr->Fluid->density_adv;
-
 	int boundary_handling = getBoundaryHandling();
 	switch (boundary_handling)
 	{
 		case 0: // Akinci2012
 		{
+			DFSPH_AkinciSolverPtr = std::make_shared<HinaPE::DFSPH_AkinciSolver>(kernel_radius, domain);
+			DFSPH_AkinciSolverPtr->FLUID_REST_DENSITY = rest_density;
+			DFSPH_AkinciSolverPtr->FLUID_PARTICLE_RADIUS = spacing / 2.;
+			DFSPH_AkinciSolverPtr->GRAVITY = gravity;
+			DFSPH_AkinciSolverPtr->TOP_OPEN = top_open;
+
+			DFSPH_particles->x = &DFSPH_AkinciSolverPtr->Fluid->x;
+			DFSPH_particles->v = &DFSPH_AkinciSolverPtr->Fluid->v;
+			DFSPH_particles->a = &DFSPH_AkinciSolverPtr->Fluid->a;
+			DFSPH_particles->m = &DFSPH_AkinciSolverPtr->Fluid->m;
+			DFSPH_particles->V = &DFSPH_AkinciSolverPtr->Fluid->V;
+			DFSPH_particles->rho = &DFSPH_AkinciSolverPtr->Fluid->rho;
+			DFSPH_particles->nt = &DFSPH_AkinciSolverPtr->Fluid->neighbor_this;
+			DFSPH_particles->no = &DFSPH_AkinciSolverPtr->Fluid->neighbor_others;
+			DFSPH_particles->factor = &DFSPH_AkinciSolverPtr->Fluid->factor;
+			DFSPH_particles->k = &DFSPH_AkinciSolverPtr->Fluid->k;
+			DFSPH_particles->density_adv = &DFSPH_AkinciSolverPtr->Fluid->density_adv;
+
 			std::vector<SIM_Hina_Particles_Akinci *> akinci_boundaries = FetchAllAkinciBoundaries(obj);
 			for (auto &akinci_boundary: akinci_boundaries)
 			{
-				SolverPtr->Boundaries.emplace_back(std::make_shared<HinaPE::AkinciBoundaryCPU>());
-				akinci_boundary->x = &SolverPtr->Boundaries.back()->x;
-				akinci_boundary->v = &SolverPtr->Boundaries.back()->v;
-				akinci_boundary->a = &SolverPtr->Boundaries.back()->a;
-				akinci_boundary->m = &SolverPtr->Boundaries.back()->m;
-				akinci_boundary->V = &SolverPtr->Boundaries.back()->V;
-				akinci_boundary->rho = &SolverPtr->Boundaries.back()->rho;
-				akinci_boundary->nt = &SolverPtr->Boundaries.back()->neighbor_this;
-				akinci_boundary->no = &SolverPtr->Boundaries.back()->neighbor_others;
+				DFSPH_AkinciSolverPtr->Boundaries.emplace_back(std::make_shared<HinaPE::AkinciBoundaryCPU>());
+				akinci_boundary->x = &DFSPH_AkinciSolverPtr->Boundaries.back()->x;
+				akinci_boundary->v = &DFSPH_AkinciSolverPtr->Boundaries.back()->v;
+				akinci_boundary->a = &DFSPH_AkinciSolverPtr->Boundaries.back()->a;
+				akinci_boundary->m = &DFSPH_AkinciSolverPtr->Boundaries.back()->m;
+				akinci_boundary->V = &DFSPH_AkinciSolverPtr->Boundaries.back()->V;
+				akinci_boundary->rho = &DFSPH_AkinciSolverPtr->Boundaries.back()->rho;
+				akinci_boundary->nt = &DFSPH_AkinciSolverPtr->Boundaries.back()->neighbor_this;
+				akinci_boundary->no = &DFSPH_AkinciSolverPtr->Boundaries.back()->neighbor_others;
 
 				akinci_boundary->load(); // load from gdp to HinaPE
-				SolverPtr->Boundaries.back()->size = akinci_boundary->x->size();
-				SolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));
+				DFSPH_AkinciSolverPtr->Boundaries.back()->size = akinci_boundary->x->size();
+				DFSPH_AkinciSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));
 			}
 		}
 			break;
@@ -127,6 +124,23 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 			break;
 		case 2: // Bender2019
 		{
+			DFSPH_BenderSolverPtr = std::make_shared<HinaPE::DFSPH_BenderSolver>(kernel_radius, domain);
+			DFSPH_BenderSolverPtr->FLUID_REST_DENSITY = rest_density;
+			DFSPH_BenderSolverPtr->FLUID_PARTICLE_RADIUS = spacing / 2.;
+			DFSPH_BenderSolverPtr->GRAVITY = gravity;
+			DFSPH_BenderSolverPtr->TOP_OPEN = top_open;
+
+			DFSPH_particles->x = &DFSPH_BenderSolverPtr->Fluid->x;
+			DFSPH_particles->v = &DFSPH_BenderSolverPtr->Fluid->v;
+			DFSPH_particles->a = &DFSPH_BenderSolverPtr->Fluid->a;
+			DFSPH_particles->m = &DFSPH_BenderSolverPtr->Fluid->m;
+			DFSPH_particles->V = &DFSPH_BenderSolverPtr->Fluid->V;
+			DFSPH_particles->rho = &DFSPH_BenderSolverPtr->Fluid->rho;
+			DFSPH_particles->nt = &DFSPH_BenderSolverPtr->Fluid->neighbor_this;
+			DFSPH_particles->no = &DFSPH_BenderSolverPtr->Fluid->neighbor_others;
+			DFSPH_particles->factor = &DFSPH_BenderSolverPtr->Fluid->factor;
+			DFSPH_particles->k = &DFSPH_BenderSolverPtr->Fluid->k;
+			DFSPH_particles->density_adv = &DFSPH_BenderSolverPtr->Fluid->density_adv;
 		}
 			break;
 		case 3: // None

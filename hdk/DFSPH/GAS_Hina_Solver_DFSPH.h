@@ -4,6 +4,7 @@
 #include <SIM_Hina_Generator.h>
 #include <DFSPH/SIM_Hina_Particles_DFSPH.h>
 #include <HinaPE/DFSPH_Akinci/DFSPH_Akinci.h>
+#include <HinaPE/DFSPH_Bender/DFSPH_Bender.h>
 
 GAS_HINA_SUBSOLVER_CLASS(
 		Solver_DFSPH,
@@ -20,7 +21,8 @@ GAS_HINA_SUBSOLVER_CLASS(
 		HINA_GETSET_PARAMETER(Kernel, GETSET_DATA_FUNCS_I)
 		HINA_GETSET_PARAMETER(BoundaryHandling, GETSET_DATA_FUNCS_I)
 
-		std::shared_ptr<HinaPE::DFSPH_AkinciSolver> SolverPtr;
+		std::shared_ptr<HinaPE::DFSPH_AkinciSolver> DFSPH_AkinciSolverPtr;
+		std::shared_ptr<HinaPE::DFSPH_BenderSolver> DFSPH_BenderSolverPtr;
 		bool inited;
 		bool emitted;
 

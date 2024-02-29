@@ -8,10 +8,6 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
         HINA_BOOL_PARAMETER(IsDynamic, false) \
         TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_Akinci)
 )
-SIM_Hina_Particles_Akinci::~SIM_Hina_Particles_Akinci()
-{
-	this->_inited = false;
-}
 void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 {
 	this->_inited = false;

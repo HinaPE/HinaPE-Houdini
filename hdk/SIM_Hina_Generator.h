@@ -63,7 +63,7 @@ public: \
     __VA_ARGS__ \
 protected: \
     explicit SIM_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
-    ~SIM_Hina_##NAME() override; \
+    ~SIM_Hina_##NAME() override = default; \
     void initializeSubclass() override; \
     void makeEqualSubclass(const SIM_Data *source) override; \
     GU_ConstDetailHandle getGeometrySubclass() const final; \
@@ -129,7 +129,7 @@ public: \
     __VA_ARGS__ \
 protected: \
     explicit SIM_Hina_##DERIVED_NAME(const SIM_DataFactory *factory) : SIM_Hina_##PARENT_NAME(factory) {} \
-    ~SIM_Hina_##DERIVED_NAME() override; \
+    ~SIM_Hina_##DERIVED_NAME() override = default; \
     void initializeSubclass() override; \
     void makeEqualSubclass(const SIM_Data *source) override; \
     static const SIM_DopDescription *getDopDescription(); \
@@ -186,7 +186,7 @@ mutable UT_WorkBuffer error_msg; \
 __VA_ARGS__ \
 protected: \
 GAS_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
-~GAS_Hina_##NAME() override; \
+~GAS_Hina_##NAME() override = default; \
 bool solveGasSubclass(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep) override; \
 void initializeSubclass() override; \
 void makeEqualSubclass(const SIM_Data *source) override; \

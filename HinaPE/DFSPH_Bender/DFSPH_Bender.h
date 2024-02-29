@@ -24,10 +24,12 @@ using NeighborBuilder = NeighborBuilderGPU<real, Vector, ScalarArrayCPU, VectorA
 
 struct DFSPH_BenderFluidCPU : public FluidCPU
 {
-
+	ScalarArrayCPU factor;
+	ScalarArrayCPU k;
+	ScalarArrayCPU density_adv;
 };
 
-struct DFSPH_AkinciParam
+struct DFSPH_BenderSParam
 {
 	real FLUID_REST_DENSITY = 1000.0f;
 	std::vector<real> BOUNDARY_REST_DENSITY;
@@ -39,7 +41,7 @@ struct DFSPH_AkinciParam
 	bool TOP_OPEN = true;
 };
 
-struct DFSPH_BenderSolver : public DFSPH_AkinciParam
+struct DFSPH_BenderSolver : public DFSPH_BenderSParam
 {
 	DFSPH_BenderSolver(real, Vector);
 	void Solve(real dt);

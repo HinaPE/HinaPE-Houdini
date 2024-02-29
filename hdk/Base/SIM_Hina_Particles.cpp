@@ -5,20 +5,6 @@ SIM_HINA_GEOMETRY_IMPLEMENT(
 		false,
         TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
 )
-SIM_Hina_Particles::~SIM_Hina_Particles()
-{
-	this->gdp_dirty = true;
-	this->offset2index.clear();
-	this->index2offset.clear();
-	this->x = nullptr;
-	this->v = nullptr;
-	this->a = nullptr;
-	this->m = nullptr;
-	this->V = nullptr;
-	this->rho = nullptr;
-	this->nt = nullptr;
-	this->no = nullptr;
-}
 void SIM_Hina_Particles::_init_Particles()
 {
 	this->gdp_dirty = true;

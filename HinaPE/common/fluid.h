@@ -53,7 +53,11 @@ struct IAkinciBoundary
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct IBenderBoundary
 {
-	Discregrid::CubicLagrangeDiscreteGrid *grid;
+	IBenderBoundary()
+	{
+		Vmap = std::make_shared<Discregrid::CubicLagrangeDiscreteGrid>();
+	}
+	std::shared_ptr<Discregrid::DiscreteGrid> Vmap;
 };
 
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
