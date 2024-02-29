@@ -7,6 +7,12 @@
 #include "Solvers/GAS_ParticleIntegrator.h"
 #include "Neighbor/GAS_BuildNeighborLists.h"
 #include "Density/GAS_ParticleDensity.h"
+#include "Viscosity/GAS_ParticleViscosity.h"
+
+#include "Boundary/SIM_SemiAnalyticalCollider.h"
+#include "Boundary/GAS_ConfigureSemiAnalyticalCollider.h"
+#include "Boundary/GAS_SetCollider.h"
+
 
 void initializeSIM(void *)
 {
@@ -20,4 +26,9 @@ void initializeSIM(void *)
     IMPLEMENT_DATAFACTORY(GAS_ParticleIntegrator)
     IMPLEMENT_DATAFACTORY(GAS_BuildNeighborLists)
     IMPLEMENT_DATAFACTORY(GAS_ParticleDensity)
+    IMPLEMENT_DATAFACTORY(GAS_ParticleViscosity)
+
+    IMPLEMENT_DATAFACTORY(SIM_SemiAnalyticalCollider)
+    IMPLEMENT_DATAFACTORY(GAS_ConfigureSemiAnalyticalCollider)
+    IMPLEMENT_DATAFACTORY(GAS_SetCollider)
 }

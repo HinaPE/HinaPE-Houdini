@@ -25,6 +25,14 @@ add_library(
         Density/GAS_ParticleDensity.h
         Viscosity/GAS_ParticleViscosity.cpp
         Viscosity/GAS_ParticleViscosity.h
+        Boundary/SIM_SemiAnalyticalCollider.cpp
+        Boundary/SIM_SemiAnalyticalCollider.h
+        Boundary/SemiAnalyticalBoundary.h
+        Boundary/AlignedBox.h
+        Boundary/GAS_ConfigureSemiAnalyticalCollider.cpp
+        Boundary/GAS_ConfigureSemiAnalyticalCollider.h
+        Boundary/GAS_SetCollider.cpp
+        Boundary/GAS_SetCollider.h
 )
 
 # Link Houdini Toolkit

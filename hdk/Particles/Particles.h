@@ -19,6 +19,7 @@ struct ParticleState
 
 struct Triangle {
     GA_Offset prim_off;
+    UT_Vector3 prim_pos;
     ParticleState pt1,pt2,pt3;
 };
 
