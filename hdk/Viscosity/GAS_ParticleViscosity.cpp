@@ -95,7 +95,7 @@ bool GAS_ParticleViscosity::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time 
         return false;
     }
 
-    fpreal h = particleData->getTargetSpacing();
+    fpreal h = particleData->getTargetSpacing() * particleData->getKernelRadiusOverTargetSpacing();
     fpreal viscosity = getViscosity();
     int iterNum = getIteration();
 

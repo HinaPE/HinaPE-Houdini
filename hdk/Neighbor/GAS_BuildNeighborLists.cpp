@@ -61,7 +61,7 @@ const SIM_DopDescription *GAS_BuildNeighborLists::getDopDescription()
     static PRM_Name maxNumberOfNeighbors("MaxNumberOfNeighbors", "Max Number Of Neighbors");
     static PRM_Default maxNumberOfNeighborsDefault(0);
 
-    static PRM_Name kernelRadius("KernelRadius", "Kernel Radius");
+    static PRM_Name kernelRadius("KernelRadius", "Kernel Radius"); ///TODO: no need
     static PRM_Default kernelRadiusDefault(0.036);
 
     static std::array<PRM_Template, 3> PRMS{
@@ -117,7 +117,9 @@ bool GAS_BuildNeighborLists::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 
     if(!nsearch)
     {
-        nsearch = new cuNSearch::NeighborhoodSearch(getKernelRadius());
+        //fpreal kernel_radius = getKernelRadius();
+        fpreal kernel_radius = particleData->getTargetSpacing() * particleData->getKernelRadiusOverTargetSpacing();
+        nsearch = new cuNSearch::NeighborhoodSearch(kernel_radius);
         cached_positions.clear();
         cached_point_set_indices.clear();
 

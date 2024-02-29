@@ -6,6 +6,7 @@
 #define HINAPE_HOUDINI_PBFPARTICLE_H
 
 #include "Particles.h"
+#include "Boundary/AlignedBox.h"
 
 #include <iostream>
 #include <map>
@@ -17,6 +18,7 @@ public:
     ~PbfParticle() = default;
 public:
     std::map<GA_Offset,UT_Vector3> predicted_positions;
+    std::map<GA_Offset,AlignedBox> mQueryAABB;
 };
 
 using PbfParticlePtr = std::shared_ptr<PbfParticle>;

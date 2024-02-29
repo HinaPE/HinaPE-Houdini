@@ -19,13 +19,6 @@ public:
     SemiAnalyticalBoundary() = default;
     ~SemiAnalyticalBoundary() = default;
 
-    void initialize(){
-        vertices.clear();
-        faces.clear();
-
-        mQueriedAABB.clear();
-    }
-
 public:
     std::vector<UT_Vector3> vertices;
     std::vector<std::vector<size_t>> faces;

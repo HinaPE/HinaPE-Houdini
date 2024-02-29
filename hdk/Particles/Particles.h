@@ -29,16 +29,6 @@ public:
     FluidParticles() = default;
     ~FluidParticles() = default;
 
-    void initialize(){
-        positions.clear();
-        velocities.clear();
-        forces.clear();
-        densities.clear();
-        pressures.clear();
-
-        point_neighbors.clear();
-        triangle_neighbors.clear();
-    }
 public:
     std::map<GA_Offset,UT_Vector3> positions;
     std::map<GA_Offset,UT_Vector3> velocities;
