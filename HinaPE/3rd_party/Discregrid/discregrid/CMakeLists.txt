@@ -64,13 +64,13 @@ if(OPENMP_FOUND)
 endif()
 
 # Eigen library.
-find_package(Eigen3 REQUIRED)
+#find_package(Eigen3 REQUIRED)
 
 # Set include directories.
 include_directories(
 	include
 	include/Discregrid
-	${EIGEN3_INCLUDE_DIR}
+#	${EIGEN3_INCLUDE_DIR}
 	../extern
 )
 
@@ -104,6 +104,10 @@ endif()
 
 # Set link libraries.
 target_link_libraries(Discregrid
+)
+target_include_directories(Discregrid
+		PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/../../eigen-3.4.0
 )
 
 install(TARGETS Discregrid

@@ -5,7 +5,7 @@
 #include <execution>
 
 HinaPE::DFSPH1Solver::DFSPH1Solver(HinaPE::real _r, HinaPE::Vector _b)
-		: NeighborBuilder(_r), MaxBound(_b / 2.)
+		: NeighborBuilder(_r), MaxBound(_b / 2.), VolumeInited(false)
 {
 	Kernel::set_radius(_r);
 	constexpr size_t n = 50000;
@@ -164,7 +164,7 @@ void HinaPE::DFSPH1Solver::non_pressure_force()
 					const Vector r = x_i - x_j;
 					const real r2 = r.dot(r);
 					real v_xy = (Fluid->v[i] - Fluid->v[j]).dot(r);
-					Vector f_v = d * BOUNDARY_VISCOSITY * (FLUID_REST_DENSITY * Boundaries[b_set]->V[j] / Fluid->rho[i]) * v_xy / (r2 + 0.01f * kr2) * Kernel::gradW(r);
+					Vector f_v = d * BOUNDARY_VISCOSITY * (BOUNDARY_REST_DENSITY[b_set] * Boundaries[b_set]->V[j] / Fluid->rho[i]) * v_xy / (r2 + 0.01f * kr2) * Kernel::gradW(r);
 					dv += f_v;
 				});
 
@@ -301,8 +301,8 @@ void HinaPE::DFSPH1Solver::_resize()
 
 	if (pre_size == 0) // first time resize
 	{
-		real d = 2 * FLUID_PARTICLE_RADIUS;
-		std::fill(Fluid->V.begin(), Fluid->V.end(), .8 * d * d * d);
+		real d = static_cast<real>(2.f) * FLUID_PARTICLE_RADIUS;
+		std::fill(Fluid->V.begin(), Fluid->V.end(), static_cast<real>(.8f) * d * d * d);
 		std::transform(Fluid->V.begin(), Fluid->V.end(), Fluid->m.begin(), [&](real V) { return V * FLUID_REST_DENSITY; });
 
 		std::vector<VectorArrayCPU *> x_sets;
@@ -316,6 +316,9 @@ void HinaPE::DFSPH1Solver::_resize()
 }
 void HinaPE::DFSPH1Solver::_compute_akinci_volume()
 {
+	if (VolumeInited)
+		return;
+
 	serial_for(Boundaries.size(), [&](size_t b_set)
 	{
 		parallel_for(Boundaries[b_set]->size, [&](size_t i)
@@ -336,6 +339,8 @@ void HinaPE::DFSPH1Solver::_compute_akinci_volume()
 		});
 		NeighborBuilder.disable_set_to_search_from(b_set + 1);
 	});
+
+	VolumeInited = true;
 }
 void HinaPE::DFSPH1Solver::_compute_density_change()
 {

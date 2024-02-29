@@ -1,9 +1,0 @@
-#ifndef HINAPE_BENDER2019_H
-#define HINAPE_BENDER2019_H
-
-class Bender2019
-{
-
-};
-
-#endif //HINAPE_BENDER2019_H

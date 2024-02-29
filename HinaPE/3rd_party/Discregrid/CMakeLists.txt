@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 project(Discregrid)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../eigen-3.4.0)
 
 # Visual studio solution directories.
 set_property(GLOBAL PROPERTY USE_FOLDERS on)

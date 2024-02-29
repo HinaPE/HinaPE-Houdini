@@ -68,6 +68,7 @@ private:
 	void _resize();
 	NeighborBuilder NeighborBuilder;
 	Vector MaxBound;
+	bool VolumeInited;
 
 private:
 	void _compute_akinci_volume();

@@ -23,7 +23,7 @@ struct NeighborBuilderCPU : INeighborBuilder<real, Vector3, ScalarArray, Vector3
 {
 	NeighborBuilderCPU(real radius)
 	{
-		searcher = std::make_unique<tns::TreeNSearch>();
+		searcher = std::make_shared<tns::TreeNSearch>();
 		searcher->set_search_radius(radius);
 	}
 	void init(const std::vector<Vector3Array *> &x_sets) override { for (const auto &x: x_sets) searcher->add_point_set(x->front().data(), x->size(), true, true, true); }
@@ -49,13 +49,13 @@ struct NeighborBuilderCPU : INeighborBuilder<real, Vector3, ScalarArray, Vector3
 		return searcher->get_neighborlist(this_set_idx, target_set_idx, this_pt_idx).size();
 	}
 private:
-	std::unique_ptr<tns::TreeNSearch> searcher;
+	std::shared_ptr<tns::TreeNSearch> searcher;
 };
 
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct NeighborBuilderGPU : INeighborBuilder<real, Vector3, ScalarArray, Vector3Array>
 {
-	NeighborBuilderGPU(real radius) { searcher = std::make_unique<cuNSearch::NeighborhoodSearch>(radius); }
+	NeighborBuilderGPU(real radius) { searcher = std::make_shared<cuNSearch::NeighborhoodSearch>(radius); }
 	void init(const std::vector<Vector3Array *> &x_sets) override { for (const auto &x: x_sets) searcher->add_point_set(x->front().data(), x->size(), true, true, true); }
 	void update_set(int i) override { searcher->update_point_set(i); }
 	void disable_set_to_search_from(int i) override { searcher->set_active(i, false /* search neighbors */, true /* BE SEARCHED by other points sets*/); }
@@ -81,7 +81,7 @@ struct NeighborBuilderGPU : INeighborBuilder<real, Vector3, ScalarArray, Vector3
 		return this_set.n_neighbors(target_set_idx, pt_idx);
 	}
 private:
-	std::unique_ptr<cuNSearch::NeighborhoodSearch> searcher;
+	std::shared_ptr<cuNSearch::NeighborhoodSearch> searcher;
 };
 }
 
