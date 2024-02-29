@@ -73,8 +73,8 @@ void SIM_SemiAnalyticalCollider::check_data() {
     }
 
     // show first 10 faces
-    std::cout << "First 10 Faces: " << std::endl;
-    for(int i = 0; i < 10; i++)
+    std::cout << "First 20 Faces: " << std::endl;
+    for(int i = 0; i < 20; i++)
     {
         std::cout << "Face " << i << ": ";
         for(const auto& index : boundary->faces[i])

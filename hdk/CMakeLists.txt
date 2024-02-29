@@ -33,8 +33,8 @@ add_library(
         Boundary/GAS_ConfigureSemiAnalyticalCollider.h
         Boundary/GAS_SetCollider.cpp
         Boundary/GAS_SetCollider.h
-        Boundary/SemiAnalytical/GAS_TriangleNeighborList.cpp
-        Boundary/SemiAnalytical/GAS_TriangleNeighborList.h
+        Boundary/SemiAnalytical/GAS_SetAABB.cpp
+        Boundary/SemiAnalytical/GAS_SetAABB.h
 )
 
 # Link Houdini Toolkit

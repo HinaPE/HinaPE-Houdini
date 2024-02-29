@@ -116,9 +116,10 @@ bool GAS_SetCollider::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, 
             GA_FOR_ALL_PTOFF(gdp_source, pt_off)
                 {
                     const UT_Vector3 pos = gdp_source->getPos3(pt_off);
-                    collider->boundary->vertices.push_back(pos);
+                    collider->boundary->vertices[pt_off] = pos;
                 }
 
+            size_t triangleIndex = 0;
             const GEO_Primitive *prim;
             GA_FOR_ALL_PRIMITIVES(gdp_source, prim)
             {
@@ -136,15 +137,12 @@ bool GAS_SetCollider::Solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, 
                 for (size_t i = 1; i < polyIndices.size() - 1; ++i)
                 {
                     std::vector<size_t> triangulationIndices = {polyIndices[0], polyIndices[i + 1], polyIndices[i]}; // notice the normal
-                    collider->boundary->faces.push_back(triangulationIndices);
+                    collider->boundary->faces[triangleIndex++] = triangulationIndices;
                 }
 
             }
         }
-
-
     }
-
     collider->check_data();
 
     return true;

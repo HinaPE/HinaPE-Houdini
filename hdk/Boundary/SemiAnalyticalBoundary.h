@@ -20,10 +20,10 @@ public:
     ~SemiAnalyticalBoundary() = default;
 
 public:
-    std::vector<UT_Vector3> vertices;
-    std::vector<std::vector<size_t>> faces;
+    std::map<GA_Offset,UT_Vector3> vertices;
+    std::map<GA_Offset,std::vector<size_t>> faces;
 
-    std::vector<AlignedBox> mQueriedAABB;
+    std::map<GA_Offset,AlignedBox> mQueriedAABB;
 };
 
 using SemiAnalyticalBoundaryPtr = std::shared_ptr<SemiAnalyticalBoundary>;

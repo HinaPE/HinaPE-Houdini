@@ -12,6 +12,7 @@
 #include "Boundary/SIM_SemiAnalyticalCollider.h"
 #include "Boundary/GAS_ConfigureSemiAnalyticalCollider.h"
 #include "Boundary/GAS_SetCollider.h"
+#include "Boundary/SemiAnalytical/GAS_SetAABB.h"
 
 
 void initializeSIM(void *)
@@ -31,4 +32,5 @@ void initializeSIM(void *)
     IMPLEMENT_DATAFACTORY(SIM_SemiAnalyticalCollider)
     IMPLEMENT_DATAFACTORY(GAS_ConfigureSemiAnalyticalCollider)
     IMPLEMENT_DATAFACTORY(GAS_SetCollider)
+    IMPLEMENT_DATAFACTORY(GAS_SetAABB)
 }
