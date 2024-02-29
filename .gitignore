@@ -5,3 +5,4 @@ backup
 sim
 CubbyFlow.lib
 src/CUDA_NeighborSearch/include/cuNSearch_export.h
+!HinaPE/3rd_party/eigen-3.4.0
