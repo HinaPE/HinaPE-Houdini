@@ -117,7 +117,7 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 
 				akinci_boundary->load(); // load from gdp to HinaPE
 				SolverPtr->Boundaries.back()->size = akinci_boundary->x->size();
-				SolverPtr->BOUNDARY_REST_DENSITY.emplace_back(akinci_boundary->getSolidDensity());
+				SolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));
 			}
 		}
 			break;

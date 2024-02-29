@@ -29,6 +29,7 @@ const SIM_DopDescription *GAS_CFL_SubStep::getDopDescription()
 
 SIM_Solver::SIM_Result GAS_CFL_SubStep::solveObjectsSubclass(SIM_Engine &engine, SIM_ObjectArray &objects, SIM_ObjectArray &newobjects, SIM_ObjectArray &feedbacktoobjects, const SIM_Time &timestep)
 {
+	// TODO: Implement CFL substep
 	float mas_step = getMAX_SUBSTEP();
 	fpreal sub_time = timestep / mas_step;
 	for (int i = 0; i < mas_step; ++i)

@@ -10,7 +10,6 @@
 #include "common/kernels.h"
 #include "common/neighbors.h"
 #include <vector>
-//#include <thrust/universal_vector.h>
 #include <UT/UT_Vector3.h>
 namespace HinaPE
 {
@@ -69,8 +68,6 @@ private:
 	void _resize();
 	NeighborBuilder NeighborBuilder;
 	Vector MaxBound;
-
-	friend class IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 
 private:
 	void _compute_akinci_volume();
