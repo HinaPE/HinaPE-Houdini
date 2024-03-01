@@ -6,6 +6,7 @@
 #include <DFSPH/SIM_Hina_Particles_DFSPH.h>
 #include <HinaPE/DFSPH_Akinci/DFSPH_Akinci.h>
 #include <HinaPE/DFSPH_Bender/DFSPH_Bender.h>
+#include <HinaPE/CUDA/DFSPH_CUDA.h>
 
 GAS_HINA_SUBSOLVER_CLASS(
 		Solver_DFSPH,

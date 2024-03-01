@@ -16,6 +16,7 @@ target_link_libraries(
         PUBLIC
         Houdini
         HinaPE
+        HinaPE_CUDA
 )
 target_include_directories(
         ${SIM_HinaPE_TARGET}

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDLL)
-project(HinaPE LANGUAGES CXX CUDA)
+project(HinaPE LANGUAGES CXX C CUDA)
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(3rd_party/CUDA_CubbyFlow)
@@ -36,10 +36,31 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/../
 )
-target_compile_options(
-        HinaPE
-        PUBLIC
-        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
-        $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
-        $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true>
+
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+add_library(HinaPE_CUDA
+        CUDA/DFSPH_CUDA.cu
+        CUDA/DFSPH_CUDA.h
+
+        CUDA/include/CudaAllocator.h
+        CUDA/include/CudaTexture.h
+        CUDA/include/helper_cuda.h
+        CUDA/include/helper_string.h
+        CUDA/include/ticktock.h
+        CUDA/include/wangsrng.h
 )
+target_link_libraries(HinaPE_CUDA PUBLIC ${CUDA_LIBRARIES} CUDA_NeighborSearch)
+target_include_directories(HinaPE_CUDA
+        PUBLIC
+        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        CUDA/include
+        3rd_party/eigen-3.4.0
+)
+target_compile_options(HinaPE_CUDA PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>)
+target_compile_options(HinaPE_CUDA PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+
+add_executable(
+        test CUDA/test.cu
+)
+target_link_libraries(test PUBLIC HinaPE_CUDA)

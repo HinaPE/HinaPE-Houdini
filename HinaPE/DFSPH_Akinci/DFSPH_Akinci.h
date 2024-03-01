@@ -31,7 +31,7 @@ struct DFSPH_AkinciFluidCPU : public FluidCPU
 	ScalarArrayCPU density_adv;
 };
 
-struct DFSPH_AkinciParam
+struct DFSPH_AkinciParamCPU
 {
 	real FLUID_REST_DENSITY = 1000.0f;
 	std::vector<real> BOUNDARY_REST_DENSITY;
@@ -43,7 +43,7 @@ struct DFSPH_AkinciParam
 	bool TOP_OPEN = true;
 };
 
-struct DFSPH_AkinciSolver : public DFSPH_AkinciParam
+struct DFSPH_AkinciSolver : public DFSPH_AkinciParamCPU
 {
 	DFSPH_AkinciSolver(real, Vector);
 	void Solve(real dt);
