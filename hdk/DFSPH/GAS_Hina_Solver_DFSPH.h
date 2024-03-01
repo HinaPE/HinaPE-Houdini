@@ -2,6 +2,7 @@
 #define HINAPE_GAS_HINA_SOLVER_DFSPH_H
 
 #include <SIM_Hina_Generator.h>
+
 #include <DFSPH/SIM_Hina_Particles_DFSPH.h>
 #include <HinaPE/DFSPH_Akinci/DFSPH_Akinci.h>
 #include <HinaPE/DFSPH_Bender/DFSPH_Bender.h>

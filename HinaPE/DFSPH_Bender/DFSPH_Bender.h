@@ -9,6 +9,7 @@
 #include "common/fluid.h"
 #include "common/kernels.h"
 #include "common/neighbors.h"
+#include "common/geometry.h"
 #include <vector>
 #include <UT/UT_Vector3.h>
 namespace HinaPE

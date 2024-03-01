@@ -55,7 +55,7 @@ struct IBenderBoundary
 {
 	IBenderBoundary()
 	{
-		Vmap = std::make_shared<Discregrid::CubicLagrangeDiscreteGrid>();
+//		Vmap = std::make_shared<Discregrid::CubicLagrangeDiscreteGrid>();
 	}
 	std::shared_ptr<Discregrid::DiscreteGrid> Vmap;
 };

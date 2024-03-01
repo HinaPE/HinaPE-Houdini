@@ -1,5 +1,6 @@
 #include "GAS_Hina_Solver_DFSPH.h"
-#include <Akinci2012/SIM_Hina_Particles_Akinci.h>
+#include <Boundary/SIM_Hina_Particles_Akinci.h>
+#include <Boundary/SIM_Hina_Particles_Bender.h>
 #include <memory>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
@@ -141,12 +142,27 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 			DFSPH_particles->factor = &DFSPH_BenderSolverPtr->Fluid->factor;
 			DFSPH_particles->k = &DFSPH_BenderSolverPtr->Fluid->k;
 			DFSPH_particles->density_adv = &DFSPH_BenderSolverPtr->Fluid->density_adv;
+
+			std::vector<SIM_Hina_Particles_Bender *> bender_boundaries = FetchAllBenderBoundaries(obj);
+			for (auto &bender_boundary: bender_boundaries)
+			{
+				DFSPH_BenderSolverPtr->Boundaries.emplace_back(std::make_shared<HinaPE::BenderBoundaryCPU>());
+//				bender_boundary->x = &DFSPH_BenderSolverPtr->Boundaries.back()->x;
+//				bender_boundary->v = &DFSPH_BenderSolverPtr->Boundaries.back()->v;
+//				bender_boundary->a = &DFSPH_BenderSolverPtr->Boundaries.back()->a;
+//				bender_boundary->m = &DFSPH_BenderSolverPtr->Boundaries.back()->m;
+//				bender_boundary->V = &DFSPH_BenderSolverPtr->Boundaries.back()->V;
+//				bender_boundary->rho = &DFSPH_BenderSolverPtr->Boundaries.back()->rho;
+//				bender_boundary->nt = &DFSPH_BenderSolverPtr->Boundaries.back()->neighbor_this;
+//				bender_boundary->no = &DFSPH_BenderSolverPtr->Boundaries.back()->neighbor_others;
+//
+//				bender_boundary->load(); // load from gdp to HinaPE
+//				DFSPH_BenderSolverPtr->Boundaries.back()->size = akinci_boundary->x->size();
+				DFSPH_BenderSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(bender_boundary->getSolidDensity()));
+			}
 		}
 			break;
-		case 3: // None
-		{
-		}
-			break;
+		case 3:
 		default:
 			break;
 	}

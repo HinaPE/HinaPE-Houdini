@@ -5,7 +5,8 @@
 #include <PRM/PRM_Template.h>
 #include <PRM/PRM_Default.h>
 #include <Base/SIM_Hina_Particles.h>
-#include <Akinci2012/SIM_Hina_Particles_Akinci.h>
+#include <Boundary/SIM_Hina_Particles_Akinci.h>
+#include <Boundary/SIM_Hina_Particles_Bender.h>
 
 const SIM_DopDescription *GAS_CFL_SubStep::getDopDescription()
 {

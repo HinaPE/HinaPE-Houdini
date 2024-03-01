@@ -13,7 +13,7 @@ add_subdirectory(3rd_party/TreeNSearch)
 option(BUILD_CMD_EXECUTABLE OFF)
 add_subdirectory(3rd_party/Discregrid)
 
-file(GLOB HINAPE_COMMON common/fluid.h common/neighbors.h common/kernels.h)
+file(GLOB HINAPE_COMMON common/fluid.h common/neighbors.h common/kernels.h common/geometry.h)
 file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp)
 file(GLOB_RECURSE HINAPE_DFSPH_BENDER_SOURCE DFSPH_Bender/*.h DFSPH_Bender/*.cpp)
 

@@ -4,8 +4,8 @@
 #include <Base/SIM_Hina_Particles.h>
 #include <DFSPH/SIM_Hina_Particles_DFSPH.h>
 #include <DFSPH/GAS_Hina_Solver_DFSPH.h>
-#include <Akinci2012/SIM_Hina_Particles_Akinci.h>
-#include <Akinci2012/SIM_Hina_Particles_Bender.h>
+#include <Boundary/SIM_Hina_Particles_Akinci.h>
+#include <Boundary/SIM_Hina_Particles_Bender.h>
 
 void initializeSIM(void *)
 {

@@ -6,7 +6,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		true,
 		HINA_FLOAT_PARAMETER(SolidDensity, 1000.) \
         HINA_BOOL_PARAMETER(IsDynamic, false) \
-        TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_Akinci)
+        TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_Bender)
 )
 void SIM_Hina_Particles_Bender::_init_Particles_Bender()
 {
