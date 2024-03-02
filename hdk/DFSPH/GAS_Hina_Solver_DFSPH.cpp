@@ -167,7 +167,7 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 			break;
 	}
 
-	HinaPE_CUDA::test1();
+//	HinaPE_CUDA::test1();
 	inited = true;
 }
 void GAS_Hina_Solver_DFSPH::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
