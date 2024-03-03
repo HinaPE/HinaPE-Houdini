@@ -305,9 +305,10 @@ void HinaPE::DFSPH_AkinciSolver::_resize()
 
 	for (auto &Boundary: Boundaries)
 	{
-		if (Boundary->size != Boundary->x.size())
+		if (Boundary->size != Boundary->x_init.size())
 		{
-			Boundary->size = Boundary->x.size();
+			Boundary->size = Boundary->x_init.size();
+			Boundary->x.resize(Boundary->size);
 			Boundary->v.resize(Boundary->size);
 			Boundary->a.resize(Boundary->size);
 			Boundary->m.resize(Boundary->size);
@@ -315,7 +316,7 @@ void HinaPE::DFSPH_AkinciSolver::_resize()
 			Boundary->rho.resize(Boundary->size);
 			Boundary->neighbor_this.resize(Boundary->size);
 			Boundary->neighbor_others.resize(Boundary->size);
-			Boundary->x_init = Boundary->x;
+			Boundary->x = Boundary->x_init;
 		}
 	}
 
@@ -324,13 +325,6 @@ void HinaPE::DFSPH_AkinciSolver::_resize()
 		real d = static_cast<real>(2.f) * FLUID_PARTICLE_RADIUS;
 		std::fill(Fluid->V.begin(), Fluid->V.end(), static_cast<real>(.8f) * d * d * d);
 		std::transform(Fluid->V.begin(), Fluid->V.end(), Fluid->m.begin(), [&](real V) { return V * FLUID_REST_DENSITY; });
-
-		for (auto &Boundary: Boundaries)
-		{
-			UT_DMatrix4 inv = Boundary->xform;
-			inv.invert();
-			std::transform(Boundary->x.begin(), Boundary->x.end(), Boundary->x_init.begin(), [&](Vector x) { return rowVecMult(x, inv); });
-		}
 
 		std::vector<VectorArrayCPU *> x_sets;
 		x_sets.emplace_back(&Fluid->x);

@@ -44,7 +44,7 @@ void SIM_Hina_Particles_Akinci::load_sop(SIM_Object *boundary_obj)
 				{
 					UT_Vector3 pos = gdp->getPos3(pt_off);
 					positions.emplace_back(pos);
-					(*x).emplace_back(pos);
+					(*x_init).emplace_back(pos);
 				}
 		}
 		_inited = true;
