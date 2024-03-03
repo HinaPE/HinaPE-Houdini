@@ -9,10 +9,15 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		HINA_GETSET_PARAMETER(SolidDensity, GETSET_DATA_FUNCS_F)
 		HINA_GETSET_PARAMETER(IsDynamic, GETSET_DATA_FUNCS_B)
 		void load_sop(SIM_Object *boundary_obj);
+		void commit() override;
 
+		VectorArrayCPU *x_init;
+		UT_DMatrix4 *xform;
 		bool _inited;
 )
 
 std::vector<SIM_Hina_Particles_Akinci *> FetchAllAkinciBoundaries(SIM_Object *fluid_obj);
+void InitAllAkinciBoundaries(SIM_Object *fluid_obj);
+void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj);
 
 #endif //HINAPE_SIM_HINA_PARTICLES_AKINCI_H

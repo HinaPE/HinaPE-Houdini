@@ -1,0 +1,43 @@
+# Blender 4.0.2 MTL File: 'None'
+# www.blender.org
+
+newmtl 01_-_Default
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd C:/Users/xayah/Desktop/HinaPE-Houdini/084 船/1.psd
+map_Bump -bm 0.300000 C:/Users/xayah/Desktop/HinaPE-Houdini/084 船/1.psd
+
+newmtl 02_-_Default
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+illum 1
+map_Kd C:/Users/xayah/Desktop/HinaPE-Houdini/084 船/2.psd
+map_d C:/Users/xayah/Desktop/HinaPE-Houdini/084 船/2.psd
+
+newmtl 03_-_Default
+Ns 20.000006
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd C:/Map #13
+
+newmtl 07_-_Default
+Ns 149.285278
+Ka 1.000000 1.000000 1.000000
+Kd 0.156863 0.156863 0.156863
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3

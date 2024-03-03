@@ -41,14 +41,12 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 void GAS_Hina_Solver_DFSPH::_init()
 {
 	this->DFSPH_AkinciSolverPtr = nullptr;
-	this->DFSPH_BenderSolverPtr = nullptr;
 	this->inited = false;
 	this->emitted = false;
 }
 void GAS_Hina_Solver_DFSPH::_makeEqual(const GAS_Hina_Solver_DFSPH *src)
 {
 	this->DFSPH_AkinciSolverPtr = src->DFSPH_AkinciSolverPtr;
-	this->DFSPH_BenderSolverPtr = src->DFSPH_BenderSolverPtr;
 	this->inited = src->inited;
 	this->emitted = src->emitted;
 }
@@ -64,7 +62,10 @@ bool GAS_Hina_Solver_DFSPH::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 		emit_data(DFSPH_particles);
 
 	if (DFSPH_AkinciSolverPtr)
+	{
+		UpdateAllAkinciBoundaries(obj);
 		DFSPH_AkinciSolverPtr->Solve(timestep);
+	}
 
 	return true;
 }
@@ -112,62 +113,20 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 				akinci_boundary->rho = &DFSPH_AkinciSolverPtr->Boundaries.back()->rho;
 				akinci_boundary->nt = &DFSPH_AkinciSolverPtr->Boundaries.back()->neighbor_this;
 				akinci_boundary->no = &DFSPH_AkinciSolverPtr->Boundaries.back()->neighbor_others;
+				akinci_boundary->x_init = &DFSPH_AkinciSolverPtr->Boundaries.back()->x_init;
+				akinci_boundary->xform = &DFSPH_AkinciSolverPtr->Boundaries.back()->xform;
 
-				akinci_boundary->load(); // load from gdp to HinaPE
-				DFSPH_AkinciSolverPtr->Boundaries.back()->size = akinci_boundary->x->size();
+				InitAllAkinciBoundaries(obj);
+
 				DFSPH_AkinciSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));
+				DFSPH_AkinciSolverPtr->BOUNDARY_DYNAMICS.emplace_back(akinci_boundary->getIsDynamic());
 			}
 		}
 			break;
-		case 1: // Koschier2017
-		{
-		}
-			break;
-		case 2: // Bender2019
-		{
-			DFSPH_BenderSolverPtr = std::make_shared<HinaPE::DFSPH_BenderSolver>(kernel_radius, domain);
-			DFSPH_BenderSolverPtr->FLUID_REST_DENSITY = rest_density;
-			DFSPH_BenderSolverPtr->FLUID_PARTICLE_RADIUS = spacing / 2.;
-			DFSPH_BenderSolverPtr->GRAVITY = gravity;
-			DFSPH_BenderSolverPtr->TOP_OPEN = top_open;
-
-			DFSPH_particles->x = &DFSPH_BenderSolverPtr->Fluid->x;
-			DFSPH_particles->v = &DFSPH_BenderSolverPtr->Fluid->v;
-			DFSPH_particles->a = &DFSPH_BenderSolverPtr->Fluid->a;
-			DFSPH_particles->m = &DFSPH_BenderSolverPtr->Fluid->m;
-			DFSPH_particles->V = &DFSPH_BenderSolverPtr->Fluid->V;
-			DFSPH_particles->rho = &DFSPH_BenderSolverPtr->Fluid->rho;
-			DFSPH_particles->nt = &DFSPH_BenderSolverPtr->Fluid->neighbor_this;
-			DFSPH_particles->no = &DFSPH_BenderSolverPtr->Fluid->neighbor_others;
-			DFSPH_particles->factor = &DFSPH_BenderSolverPtr->Fluid->factor;
-			DFSPH_particles->k = &DFSPH_BenderSolverPtr->Fluid->k;
-			DFSPH_particles->density_adv = &DFSPH_BenderSolverPtr->Fluid->density_adv;
-
-			std::vector<SIM_Hina_Particles_Bender *> bender_boundaries = FetchAllBenderBoundaries(obj);
-			for (auto &bender_boundary: bender_boundaries)
-			{
-				DFSPH_BenderSolverPtr->Boundaries.emplace_back(std::make_shared<HinaPE::BenderBoundaryCPU>());
-//				bender_boundary->x = &DFSPH_BenderSolverPtr->Boundaries.back()->x;
-//				bender_boundary->v = &DFSPH_BenderSolverPtr->Boundaries.back()->v;
-//				bender_boundary->a = &DFSPH_BenderSolverPtr->Boundaries.back()->a;
-//				bender_boundary->m = &DFSPH_BenderSolverPtr->Boundaries.back()->m;
-//				bender_boundary->V = &DFSPH_BenderSolverPtr->Boundaries.back()->V;
-//				bender_boundary->rho = &DFSPH_BenderSolverPtr->Boundaries.back()->rho;
-//				bender_boundary->nt = &DFSPH_BenderSolverPtr->Boundaries.back()->neighbor_this;
-//				bender_boundary->no = &DFSPH_BenderSolverPtr->Boundaries.back()->neighbor_others;
-//
-//				bender_boundary->load(); // load from gdp to HinaPE
-//				DFSPH_BenderSolverPtr->Boundaries.back()->size = akinci_boundary->x->size();
-				DFSPH_BenderSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(bender_boundary->getSolidDensity()));
-			}
-		}
-			break;
-		case 3:
 		default:
 			break;
 	}
 
-//	HinaPE_CUDA::test1();
 	inited = true;
 }
 void GAS_Hina_Solver_DFSPH::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)

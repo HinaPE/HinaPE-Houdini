@@ -11,6 +11,7 @@
 #include "common/neighbors.h"
 #include <vector>
 #include <UT/UT_Vector3.h>
+#include <UT/UT_Matrix4.h>
 namespace HinaPE
 {
 using real = float;
@@ -19,10 +20,15 @@ using Kernel = Cubic<real, Vector>;
 using ScalarArrayCPU = std::vector<real>;
 using VectorArrayCPU = std::vector<Vector>;
 using FluidCPU = IFluid<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
-using AkinciBoundaryCPU = IAkinciBoundary<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
+using AkinciBoundary = IAkinciBoundary<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 using NeighborBuilder = NeighborBuilderGPU<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 using FluidEmitter = IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 
+struct AkinciBoundaryCPU : public AkinciBoundary
+{
+	VectorArrayCPU x_init;
+	UT_DMatrix4 xform;
+};
 
 struct DFSPH_AkinciFluidCPU : public FluidCPU
 {
@@ -35,6 +41,7 @@ struct DFSPH_AkinciParamCPU
 {
 	real FLUID_REST_DENSITY = 1000.0f;
 	std::vector<real> BOUNDARY_REST_DENSITY;
+	std::vector<bool> BOUNDARY_DYNAMICS;
 	real FLUID_PARTICLE_RADIUS = 0.01;
 	real FLUID_SURFACE_TENSION = 0.01;
 	real FLUID_VISCOSITY = 0.01;

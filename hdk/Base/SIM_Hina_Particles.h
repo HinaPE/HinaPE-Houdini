@@ -14,7 +14,7 @@ SIM_HINA_GEOMETRY_CLASS(
 		bool gdp_dirty;
 		std::map<GA_Offset, GA_Size> offset2index;
 		std::map<GA_Size, GA_Offset> index2offset;
-		virtual void load();
+//		virtual void load();
 		virtual void commit(); // auto commit by `GAS_CFL_SubStep`
 
 		VectorArrayCPU *x, *v, *a;

@@ -41,6 +41,10 @@ void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 {
 	_resize();
 	NeighborBuilder.update_set(0);
+	serial_for(Boundaries.size(), [&](size_t b_set)
+	{
+		NeighborBuilder.update_set(b_set + 1);
+	});
 	NeighborBuilder.build();
 
 	// This can be deleted for performance
@@ -299,20 +303,46 @@ void HinaPE::DFSPH_AkinciSolver::_resize()
 		Fluid->density_adv.resize(Fluid->size);
 	}
 
+	for (auto &Boundary: Boundaries)
+	{
+		if (Boundary->size != Boundary->x.size())
+		{
+			Boundary->size = Boundary->x.size();
+			Boundary->v.resize(Boundary->size);
+			Boundary->a.resize(Boundary->size);
+			Boundary->m.resize(Boundary->size);
+			Boundary->V.resize(Boundary->size);
+			Boundary->rho.resize(Boundary->size);
+			Boundary->neighbor_this.resize(Boundary->size);
+			Boundary->neighbor_others.resize(Boundary->size);
+			Boundary->x_init = Boundary->x;
+		}
+	}
+
 	if (pre_size == 0) // first time resize
 	{
 		real d = static_cast<real>(2.f) * FLUID_PARTICLE_RADIUS;
 		std::fill(Fluid->V.begin(), Fluid->V.end(), static_cast<real>(.8f) * d * d * d);
 		std::transform(Fluid->V.begin(), Fluid->V.end(), Fluid->m.begin(), [&](real V) { return V * FLUID_REST_DENSITY; });
 
+		for (auto &Boundary: Boundaries)
+		{
+			UT_DMatrix4 inv = Boundary->xform;
+			inv.invert();
+			std::transform(Boundary->x.begin(), Boundary->x.end(), Boundary->x_init.begin(), [&](Vector x) { return rowVecMult(x, inv); });
+		}
+
 		std::vector<VectorArrayCPU *> x_sets;
 		x_sets.emplace_back(&Fluid->x);
-		for (auto &static_boundary: Boundaries)
-			x_sets.emplace_back(&static_boundary->x);
+		for (auto &Boundary: Boundaries)
+			x_sets.emplace_back(&Boundary->x);
 		NeighborBuilder.init(x_sets);
 	}
 //	else
 //		NeighborBuilder.resize_set(0, &Fluid->x);
+
+	for (auto &Boundary: Boundaries)
+		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
 }
 void HinaPE::DFSPH_AkinciSolver::_compute_akinci_volume()
 {
@@ -337,7 +367,8 @@ void HinaPE::DFSPH_AkinciSolver::_compute_akinci_volume()
 			std::fill(Boundaries[b_set]->v.begin(), Boundaries[b_set]->v.end(), Vector{0, 0, 0});
 			std::fill(Boundaries[b_set]->a.begin(), Boundaries[b_set]->a.end(), Vector{0, 0, 0});
 		});
-		NeighborBuilder.disable_set_to_search_from(b_set + 1);
+		if (!BOUNDARY_DYNAMICS[b_set])
+			NeighborBuilder.disable_set_to_search_from(b_set + 1);
 	});
 
 	VolumeInited = true;

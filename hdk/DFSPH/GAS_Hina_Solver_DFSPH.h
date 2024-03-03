@@ -24,7 +24,6 @@ GAS_HINA_SUBSOLVER_CLASS(
 		HINA_GETSET_PARAMETER(BoundaryHandling, GETSET_DATA_FUNCS_I)
 
 		std::shared_ptr<HinaPE::DFSPH_AkinciSolver> DFSPH_AkinciSolverPtr;
-		std::shared_ptr<HinaPE::DFSPH_BenderSolver> DFSPH_BenderSolverPtr;
 		bool inited;
 		bool emitted;
 
