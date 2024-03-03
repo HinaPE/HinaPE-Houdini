@@ -40,14 +40,15 @@ struct DFSPH_AkinciFluidCPU : public FluidCPU
 struct DFSPH_AkinciParamCPU
 {
 	real FLUID_REST_DENSITY = 1000.0f;
-	std::vector<real> BOUNDARY_REST_DENSITY;
-	std::vector<bool> BOUNDARY_DYNAMICS;
 	real FLUID_PARTICLE_RADIUS = 0.01;
 	real FLUID_SURFACE_TENSION = 0.01;
 	real FLUID_VISCOSITY = 0.01;
 	real BOUNDARY_VISCOSITY = 0;
 	Vector GRAVITY = Vector(0, -9.8, 0);
 	bool TOP_OPEN = true;
+
+	std::vector<real> BOUNDARY_REST_DENSITY;
+	std::vector<bool> BOUNDARY_DYNAMICS;
 };
 
 struct DFSPH_AkinciSolver : public DFSPH_AkinciParamCPU

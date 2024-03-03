@@ -1,7 +1,5 @@
 #include "GAS_Hina_Solver_DFSPH.h"
 #include <Boundary/SIM_Hina_Particles_Akinci.h>
-#include <Boundary/SIM_Hina_Particles_Bender.h>
-#include <memory>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		Solver_DFSPH,
@@ -69,25 +67,19 @@ bool GAS_Hina_Solver_DFSPH::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 
 	return true;
 }
+
+/// mapping pointers to the solver, and set solvers' parameters (SHOULD BE DONE AT FIRST STEP)
 void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles, SIM_Object *obj)
 {
-	real kernel_radius = getKernelRadius();
-	Vector domain = getFluidDomain();
-	real spacing = getTargetSpacing();
-	real rest_density = getTargetDensity();
-	Vector gravity = getGravity();
-	bool top_open = getTopOpen();
-
-	int boundary_handling = getBoundaryHandling();
-	switch (boundary_handling)
+	switch (getBoundaryHandling())
 	{
 		case 0: // Akinci2012
 		{
-			DFSPH_AkinciSolverPtr = std::make_shared<HinaPE::DFSPH_AkinciSolver>(kernel_radius, domain);
-			DFSPH_AkinciSolverPtr->FLUID_REST_DENSITY = rest_density;
-			DFSPH_AkinciSolverPtr->FLUID_PARTICLE_RADIUS = spacing / 2.;
-			DFSPH_AkinciSolverPtr->GRAVITY = gravity;
-			DFSPH_AkinciSolverPtr->TOP_OPEN = top_open;
+			DFSPH_AkinciSolverPtr = std::make_shared<HinaPE::DFSPH_AkinciSolver>(static_cast<real>(getKernelRadius()), getFluidDomainF());
+			DFSPH_AkinciSolverPtr->FLUID_REST_DENSITY = getTargetDensity();
+			DFSPH_AkinciSolverPtr->FLUID_PARTICLE_RADIUS = getTargetSpacing() / 2.;
+			DFSPH_AkinciSolverPtr->GRAVITY = getGravityF();
+			DFSPH_AkinciSolverPtr->TOP_OPEN = getTopOpen();
 
 			DFSPH_particles->x = &DFSPH_AkinciSolverPtr->Fluid->x;
 			DFSPH_particles->v = &DFSPH_AkinciSolverPtr->Fluid->v;
@@ -116,8 +108,6 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 				akinci_boundary->x_init = &DFSPH_AkinciSolverPtr->Boundaries.back()->x_init;
 				akinci_boundary->xform = &DFSPH_AkinciSolverPtr->Boundaries.back()->xform;
 
-				InitAllAkinciBoundaries(obj);
-
 				DFSPH_AkinciSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));
 				DFSPH_AkinciSolverPtr->BOUNDARY_DYNAMICS.emplace_back(akinci_boundary->getIsDynamic());
 			}
@@ -127,8 +117,11 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 			break;
 	}
 
+	InitAllAkinciBoundaries(obj); // load from sop into x_init
 	inited = true;
 }
+
+/// Emit particles (with any method)
 void GAS_Hina_Solver_DFSPH::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
 {
 	size_t max_p = getMaxNumOfParticles();

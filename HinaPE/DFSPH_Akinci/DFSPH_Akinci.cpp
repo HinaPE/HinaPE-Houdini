@@ -40,10 +40,10 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 {
 	_resize();
-	NeighborBuilder.update_set(0);
+	NeighborBuilder.update_set(0); // 0 means fluid set
 	serial_for(Boundaries.size(), [&](size_t b_set)
 	{
-		NeighborBuilder.update_set(b_set + 1);
+		NeighborBuilder.update_set(b_set + 1); // b_set + 1 means #b_set boundary set
 	});
 	NeighborBuilder.build();
 
@@ -285,6 +285,10 @@ void HinaPE::DFSPH_AkinciSolver::_for_each_neighbor_boundaries(size_t i, const s
 }
 void HinaPE::DFSPH_AkinciSolver::_resize()
 {
+	/**
+	 * For Fluid, [Fluid->x] is init or update from outside, but [Fluid->size] is never updated from outside
+	 * If [Fluid->size] is not equal to [Fluid->x.size()], then resize all the vectors
+	 */
 	size_t pre_size = Fluid->size;
 	if (Fluid->size != Fluid->x.size())
 	{
@@ -303,6 +307,10 @@ void HinaPE::DFSPH_AkinciSolver::_resize()
 		Fluid->density_adv.resize(Fluid->size);
 	}
 
+	/**
+	 * For Boundaries, [Boundary->x_init] is init from outside, but [Boundary->size] is never updated from outside
+	 * If [Boundary->size] is not equal to [Boundary->x_init.size()], then resize all the vectors
+	 */
 	for (auto &Boundary: Boundaries)
 	{
 		if (Boundary->size != Boundary->x_init.size())
@@ -332,8 +340,8 @@ void HinaPE::DFSPH_AkinciSolver::_resize()
 			x_sets.emplace_back(&Boundary->x);
 		NeighborBuilder.init(x_sets);
 	}
-//	else
-//		NeighborBuilder.resize_set(0, &Fluid->x);
+	else
+		NeighborBuilder.resize_set(0, &Fluid->x); // if new fluid particles is generated, update fluid set
 
 	for (auto &Boundary: Boundaries)
 		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });

@@ -5,7 +5,6 @@
 #include <DFSPH/SIM_Hina_Particles_DFSPH.h>
 #include <DFSPH/GAS_Hina_Solver_DFSPH.h>
 #include <Boundary/SIM_Hina_Particles_Akinci.h>
-#include <Boundary/SIM_Hina_Particles_Bender.h>
 
 void initializeSIM(void *)
 {
@@ -15,5 +14,4 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_DFSPH)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_DFSPH)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_Akinci)
-	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_Bender)
 }

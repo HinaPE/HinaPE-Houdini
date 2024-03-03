@@ -36,6 +36,8 @@
 #include <UT/UT_NetMessage.h>
 #include <UT/UT_ThreadedAlgorithm.h>
 
+#include <memory>
+
 #define AS_UTVector3D(Vec3) UT_Vector3D(Vec3.x, Vec3.y, Vec3.z)
 #define AS_CFVector3D(Vec3) CubbyFlow::Vector3D(Vec3.x(), Vec3.y(), Vec3.z())
 

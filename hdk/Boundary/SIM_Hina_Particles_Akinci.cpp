@@ -11,13 +11,11 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 )
 void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 {
-	this->_inited = false;
 	this->x_init = nullptr;
 	this->xform = nullptr;
 }
 void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Particles_Akinci *src)
 {
-	this->_inited = src->_inited;
 	this->x_init = src->x_init;
 	this->xform = src->xform;
 }
@@ -25,32 +23,9 @@ void SIM_Hina_Particles_Akinci::_setup_gdp(GU_Detail *gdp) const
 {
 	SIM_Hina_Particles::_setup_gdp(gdp);
 }
-void SIM_Hina_Particles_Akinci::load_sop(SIM_Object *boundary_obj)
-{
-	if (!_inited)
-	{
-		// Reload the whole boundary particles
-		std::vector<UT_Vector3> positions;
-		positions.clear();
-		{
-			SIM_Geometry *boundary_sop = SIM_DATA_GET(*boundary_obj, SIM_GEOMETRY_DATANAME, SIM_Geometry);
-			if (!boundary_sop)
-				return;
-			SIM_GeometryAutoReadLock lock(boundary_sop);
-			const GU_Detail *gdp = lock.getGdp();
-			positions.reserve(gdp->getNumPoints());
-			GA_Offset pt_off;
-			GA_FOR_ALL_PTOFF(gdp, pt_off)
-				{
-					UT_Vector3 pos = gdp->getPos3(pt_off);
-					positions.emplace_back(pos);
-					(*x_init).emplace_back(pos);
-				}
-		}
-		_inited = true;
-		return;
-	}
-}
+
+
+/// For akinci boundaries, we should keep particles init positions(x_init), and moving it ONLY by its transform(xform).
 void SIM_Hina_Particles_Akinci::commit()
 {
 	SIM_Hina_Particles::commit();
@@ -91,7 +66,8 @@ void SIM_Hina_Particles_Akinci::commit()
 	}
 }
 
-std::vector<SIM_Hina_Particles_Akinci *> FetchAllAkinciBoundaries(SIM_Object *fluid_obj)
+/// Fetch all akinci boundaries from [fluid_obj]
+auto FetchAllAkinciBoundaries(SIM_Object *fluid_obj) -> std::vector<SIM_Hina_Particles_Akinci *>
 {
 	std::vector<SIM_Hina_Particles_Akinci *> res;
 	SIM_ObjectArray affectors;
@@ -109,6 +85,8 @@ std::vector<SIM_Hina_Particles_Akinci *> FetchAllAkinciBoundaries(SIM_Object *fl
 	}
 	return res;
 }
+
+/// Load sop geometry into [x_init] ONLY (ensure [x_init] is already mapped to the fluid solver, aka, [x_init] is not nullptr) (Fluid solver would deal with the `size` problems)
 void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 {
 	SIM_ObjectArray affectors;
@@ -122,9 +100,27 @@ void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 		UT_String boundary_obj_name = obj_collider->getName();
 		SIM_Hina_Particles_Akinci *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Particles_Akinci::DATANAME, SIM_Hina_Particles_Akinci);
 		if (boundary_akinci)
-			boundary_akinci->load_sop(obj_collider);
+		{
+			(*boundary_akinci->x_init).clear();
+			{
+				SIM_Geometry *boundary_sop = SIM_DATA_GET(*obj_collider, SIM_GEOMETRY_DATANAME, SIM_Geometry);
+				if (!boundary_sop)
+					return;
+				SIM_GeometryAutoReadLock lock(boundary_sop);
+				const GU_Detail *gdp = lock.getGdp();
+				(*boundary_akinci->x_init).reserve(gdp->getNumPoints());
+				GA_Offset pt_off;
+				GA_FOR_ALL_PTOFF(gdp, pt_off)
+					{
+						UT_Vector3 pos = gdp->getPos3(pt_off);
+						(*boundary_akinci->x_init).emplace_back(pos);
+					}
+			}
+		}
 	}
 }
+
+/// Update Transforms of all Akinci boundaries, and update to [xform] (ensure [xform] is already mapped to the fluid solver, aka, [xform] is not nullptr)
 void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 {
 	SIM_ObjectArray affectors;
