@@ -13,11 +13,13 @@ void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 {
 	this->x_init = nullptr;
 	this->xform = nullptr;
+	this->rest_center_of_mass = nullptr;
 }
 void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Particles_Akinci *src)
 {
 	this->x_init = src->x_init;
 	this->xform = src->xform;
+	this->rest_center_of_mass = src->rest_center_of_mass;
 }
 void SIM_Hina_Particles_Akinci::_setup_gdp(GU_Detail *gdp) const
 {

@@ -5,7 +5,7 @@
 #include <execution>
 
 HinaPE::DFSPH_AkinciSolver::DFSPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector _b)
-		: NeighborBuilder(_r), MaxBound(_b / 2.), VolumeInited(false)
+		: NeighborBuilder(_r), MaxBound(_b / 2.), BoundariesInited(false)
 {
 	Kernel::set_radius(_r);
 	constexpr size_t n = 50000;
@@ -59,7 +59,7 @@ void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 				});
 			});
 
-	_compute_akinci_volume();
+	_update_akinci_volume();
 }
 void HinaPE::DFSPH_AkinciSolver::compute_density()
 {
@@ -170,6 +170,9 @@ void HinaPE::DFSPH_AkinciSolver::non_pressure_force()
 					real v_xy = (Fluid->v[i] - Fluid->v[j]).dot(r);
 					Vector f_v = d * BOUNDARY_VISCOSITY * (BOUNDARY_REST_DENSITY[b_set] * Boundaries[b_set]->V[j] / Fluid->rho[i]) * v_xy / (r2 + 0.01f * kr2) * Kernel::gradW(r);
 					dv += f_v;
+
+					if (BOUNDARY_DYNAMICS[b_set]) // Dynamic Rigid Body
+						Boundaries[b_set]->a[j] = -f_v;
 				});
 
 				Fluid->a[i] = dv;
@@ -339,16 +342,15 @@ void HinaPE::DFSPH_AkinciSolver::_resize()
 		for (auto &Boundary: Boundaries)
 			x_sets.emplace_back(&Boundary->x);
 		NeighborBuilder.init(x_sets);
-	}
-	else
+	} else
 		NeighborBuilder.resize_set(0, &Fluid->x); // if new fluid particles is generated, update fluid set
 
 	for (auto &Boundary: Boundaries)
 		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
 }
-void HinaPE::DFSPH_AkinciSolver::_compute_akinci_volume()
+void HinaPE::DFSPH_AkinciSolver::_update_akinci_volume()
 {
-	if (VolumeInited)
+	if (BoundariesInited)
 		return;
 
 	serial_for(Boundaries.size(), [&](size_t b_set)
@@ -373,7 +375,19 @@ void HinaPE::DFSPH_AkinciSolver::_compute_akinci_volume()
 			NeighborBuilder.disable_set_to_search_from(b_set + 1);
 	});
 
-	VolumeInited = true;
+	// compute center of mass
+	serial_for(Boundaries.size(), [&](size_t b_set)
+	{
+		Vector rest_center_of_mass{0, 0, 0};
+		serial_for(Boundaries[b_set]->size, [&](size_t i)
+		{
+			rest_center_of_mass += Boundaries[b_set]->x_init[i];
+		});
+		rest_center_of_mass /= Boundaries[b_set]->size;
+		Boundaries[b_set]->rest_center_of_mass = rest_center_of_mass;
+	});
+
+	BoundariesInited = true;
 }
 void HinaPE::DFSPH_AkinciSolver::_compute_density_change()
 {
@@ -447,7 +461,7 @@ void HinaPE::DFSPH_AkinciSolver::_divergence_solver_iteration_kernel(real dt)
 				{
 					real b_j = Fluid->density_adv[j];
 					real k_j = b_j * Fluid->factor[j];
-					real k_sum = k_i + k_j; // TODO: for multiphase fluid
+					real k_sum = k_i + k_j; // for multiphase fluid
 					if (std::abs(k_sum) > 1e-5)
 					{
 						Vector grad_p_j = -Fluid->V[j] * Kernel::gradW(x_i - x_j);
@@ -461,7 +475,9 @@ void HinaPE::DFSPH_AkinciSolver::_divergence_solver_iteration_kernel(real dt)
 						Vector grad_p_j = -Boundaries[b_set]->V[j] * Kernel::gradW(x_i - x_j);
 						Vector vel_change = -dt * k_i * grad_p_j;
 						dv += vel_change;
-						// TODO: for dynamic rigid body
+
+						if (BOUNDARY_DYNAMICS[b_set]) // Dynamic Rigid Body
+							Boundaries[b_set]->a[j] += (-vel_change) / dt;
 					}
 				});
 				Fluid->v[i] += dv;
@@ -480,7 +496,7 @@ void HinaPE::DFSPH_AkinciSolver::_pressure_solve_iteration_kernel(real dt)
 				{
 					real b_j = Fluid->density_adv[j] - static_cast<real>(1.f);
 					real k_j = b_j * Fluid->factor[j];
-					real k_sum = k_i + k_j; // TODO: for multiphase fluid
+					real k_sum = k_i + k_j; // for multiphase fluid
 					if (std::abs(k_sum) > 1e-5)
 					{
 						Vector grad_p_j = -Fluid->V[j] * Kernel::gradW(x_i - x_j);
@@ -494,7 +510,9 @@ void HinaPE::DFSPH_AkinciSolver::_pressure_solve_iteration_kernel(real dt)
 						Vector grad_p_j = -Boundaries[b_set]->V[j] * Kernel::gradW(x_i - x_j);
 						Vector vel_change = -dt * k_i * grad_p_j;
 						dv += vel_change;
-						// TODO: for dynamic rigid body
+
+						if (BOUNDARY_DYNAMICS[b_set]) // Dynamic Rigid Body
+							Boundaries[b_set]->a[j] += (-vel_change) / dt;
 					}
 				});
 				Fluid->v[i] += dv;

@@ -12,6 +12,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 
 		VectorArrayCPU *x_init;
 		UT_DMatrix4 *xform;
+		Vector *rest_center_of_mass;
 )
 
 auto FetchAllAkinciBoundaries(SIM_Object *fluid_obj) -> std::vector<SIM_Hina_Particles_Akinci *>;

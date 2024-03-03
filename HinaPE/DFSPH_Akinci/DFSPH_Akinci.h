@@ -28,6 +28,7 @@ struct AkinciBoundaryCPU : public AkinciBoundary
 {
 	VectorArrayCPU x_init;
 	UT_DMatrix4 xform;
+	Vector rest_center_of_mass;
 };
 
 struct DFSPH_AkinciFluidCPU : public FluidCPU
@@ -76,10 +77,10 @@ private:
 	void _resize();
 	NeighborBuilder NeighborBuilder;
 	Vector MaxBound;
-	bool VolumeInited;
+	bool BoundariesInited;
 
 private:
-	void _compute_akinci_volume();
+	void _update_akinci_volume();
 	void _compute_density_change();
 	void _compute_density_adv(real dt);
 	real _compute_density_error(const real offset);

@@ -107,6 +107,7 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 				akinci_boundary->no = &DFSPH_AkinciSolverPtr->Boundaries.back()->neighbor_others;
 				akinci_boundary->x_init = &DFSPH_AkinciSolverPtr->Boundaries.back()->x_init;
 				akinci_boundary->xform = &DFSPH_AkinciSolverPtr->Boundaries.back()->xform;
+				akinci_boundary->rest_center_of_mass = &DFSPH_AkinciSolverPtr->Boundaries.back()->rest_center_of_mass;
 
 				DFSPH_AkinciSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));
 				DFSPH_AkinciSolverPtr->BOUNDARY_DYNAMICS.emplace_back(akinci_boundary->getIsDynamic());
