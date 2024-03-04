@@ -12,6 +12,7 @@ add_subdirectory(3rd_party/TreeNSearch)
 #add_subdirectory(3rd_party/eigen-3.4.0)
 option(BUILD_CMD_EXECUTABLE OFF)
 add_subdirectory(3rd_party/Discregrid)
+add_subdirectory(3rd_party/ReactPhysics3D)
 
 file(GLOB HINAPE_COMMON common/fluid.h common/neighbors.h common/kernels.h common/geometry.h)
 file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp)
@@ -23,7 +24,7 @@ add_library(HinaPE STATIC
         ${HINAPE_DFSPH_AKINCI_SOURCE}
         ${HINAPE_DFSPH_BENDER_SOURCE}
 )
-target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini tbb CUDA_CubbyFlow CUDA_NeighborSearch Discregrid TreeNSearch)
+target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini tbb CUDA_CubbyFlow CUDA_NeighborSearch Discregrid TreeNSearch ReactPhysics3D)
 target_link_directories(
         HinaPE
         PUBLIC
