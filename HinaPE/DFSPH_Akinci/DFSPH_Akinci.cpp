@@ -5,7 +5,7 @@
 #include <execution>
 
 HinaPE::DFSPH_AkinciSolver::DFSPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector _b)
-		: NeighborBuilder(_r), MaxBound(_b / 2.), BoundariesInited(false)
+		: NeighborBuilder(_r), MaxBound(_b / 2.), NeighborBuilderInited(false), BoundariesMassVolumeCalculated(false)
 {
 	Kernel::set_radius(_r);
 	constexpr size_t n = 50000;
@@ -27,6 +27,9 @@ HinaPE::DFSPH_AkinciSolver::DFSPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector _
 }
 void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 {
+	resize();
+	_update_akinci_boundaries();
+
 	build_neighbors();
 	compute_density();
 	compute_factor();
@@ -39,11 +42,28 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 }
 void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 {
-	_resize();
+	if (!NeighborBuilderInited)
+	{
+		real d = static_cast<real>(2.f) * FLUID_PARTICLE_RADIUS;
+		std::fill(Fluid->V.begin(), Fluid->V.end(), static_cast<real>(.8f) * d * d * d);
+		std::transform(Fluid->V.begin(), Fluid->V.end(), Fluid->m.begin(), [&](real V) { return V * FLUID_REST_DENSITY; });
+
+		std::vector<VectorArrayCPU *> x_sets;
+		x_sets.emplace_back(&Fluid->x);
+		for (auto &Boundary: Boundaries)
+			x_sets.emplace_back(&Boundary->x);
+		NeighborBuilder.init(x_sets);
+		NeighborBuilderInited = true;
+	} else
+		NeighborBuilder.resize_set(0, &Fluid->x); // if new fluid particles is generated, update fluid set
+
 	NeighborBuilder.update_set(0); // 0 means fluid set
 	serial_for(Boundaries.size(), [&](size_t b_set)
 	{
-		NeighborBuilder.update_set(b_set + 1); // b_set + 1 means #b_set boundary set
+		if (BOUNDARY_DYNAMICS[b_set])
+			NeighborBuilder.update_set(b_set + 1); // b_set + 1 means #b_set boundary set
+		else
+			NeighborBuilder.disable_set_to_search_from(b_set + 1);
 	});
 	NeighborBuilder.build();
 
@@ -59,7 +79,40 @@ void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 				});
 			});
 
-	_update_akinci_volume();
+	if (!BoundariesMassVolumeCalculated)
+	{
+		// compute V and m for Akinci Boundaries
+		serial_for(Boundaries.size(), [&](size_t b_set)
+		{
+			parallel_for(Boundaries[b_set]->size, [&](size_t i)
+			{
+				real V = Kernel::W_zero();
+				Vector x_i = Boundaries[b_set]->x[i];
+				NeighborBuilder.for_each_neighbor(
+						b_set + 1, b_set + 1, i,
+						[&](size_t j, Vector x_j)
+						{
+							V += Kernel::W(x_i - x_j);
+						});
+				Boundaries[b_set]->V[i] = static_cast<real>(1.f) / V;
+				Boundaries[b_set]->m[i] = Boundaries[b_set]->V[i] * BOUNDARY_REST_DENSITY[b_set];
+				Boundaries[b_set]->neighbor_this[i] = NeighborBuilder.n_neighbors(b_set + 1, b_set + 1, i);
+			});
+		});
+
+		// compute center of mass
+		serial_for(Boundaries.size(), [&](size_t b_set)
+		{
+			Vector rest_center_of_mass{0, 0, 0};
+			serial_for(Boundaries[b_set]->size, [&](size_t i)
+			{
+				rest_center_of_mass += Boundaries[b_set]->x_init[i];
+			});
+			rest_center_of_mass /= Boundaries[b_set]->size;
+			Boundaries[b_set]->rest_center_of_mass = rest_center_of_mass;
+		});
+		BoundariesMassVolumeCalculated = true;
+	}
 }
 void HinaPE::DFSPH_AkinciSolver::compute_density()
 {
@@ -286,7 +339,7 @@ void HinaPE::DFSPH_AkinciSolver::_for_each_neighbor_boundaries(size_t i, const s
 		NeighborBuilder.for_each_neighbor(0, b_set + 1, i, [&](size_t j, Vector x_j) { f(j, x_j, b_set); });
 	});
 }
-void HinaPE::DFSPH_AkinciSolver::_resize()
+void HinaPE::DFSPH_AkinciSolver::resize()
 {
 	/**
 	 * For Fluid, [Fluid->x] is init or update from outside, but [Fluid->size] is never updated from outside
@@ -330,64 +383,15 @@ void HinaPE::DFSPH_AkinciSolver::_resize()
 			Boundary->x = Boundary->x_init;
 		}
 	}
-
-	if (pre_size == 0) // first time resize
-	{
-		real d = static_cast<real>(2.f) * FLUID_PARTICLE_RADIUS;
-		std::fill(Fluid->V.begin(), Fluid->V.end(), static_cast<real>(.8f) * d * d * d);
-		std::transform(Fluid->V.begin(), Fluid->V.end(), Fluid->m.begin(), [&](real V) { return V * FLUID_REST_DENSITY; });
-
-		std::vector<VectorArrayCPU *> x_sets;
-		x_sets.emplace_back(&Fluid->x);
-		for (auto &Boundary: Boundaries)
-			x_sets.emplace_back(&Boundary->x);
-		NeighborBuilder.init(x_sets);
-	} else
-		NeighborBuilder.resize_set(0, &Fluid->x); // if new fluid particles is generated, update fluid set
-
-	for (auto &Boundary: Boundaries)
-		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
 }
-void HinaPE::DFSPH_AkinciSolver::_update_akinci_volume()
+void HinaPE::DFSPH_AkinciSolver::_update_akinci_boundaries()
 {
-	if (BoundariesInited)
-		return;
-
-	serial_for(Boundaries.size(), [&](size_t b_set)
+	for (auto &Boundary: Boundaries)
 	{
-		parallel_for(Boundaries[b_set]->size, [&](size_t i)
-		{
-			real V = Kernel::W_zero();
-			Vector x_i = Boundaries[b_set]->x[i];
-			NeighborBuilder.for_each_neighbor(
-					b_set + 1, b_set + 1, i,
-					[&](size_t j, Vector x_j)
-					{
-						V += Kernel::W(x_i - x_j);
-					});
-			Boundaries[b_set]->V[i] = static_cast<real>(1.f) / V;
-			Boundaries[b_set]->m[i] = Boundaries[b_set]->V[i] * BOUNDARY_REST_DENSITY[b_set];
-			Boundaries[b_set]->neighbor_this[i] = NeighborBuilder.n_neighbors(b_set + 1, b_set + 1, i);
-			std::fill(Boundaries[b_set]->v.begin(), Boundaries[b_set]->v.end(), Vector{0, 0, 0});
-			std::fill(Boundaries[b_set]->a.begin(), Boundaries[b_set]->a.end(), Vector{0, 0, 0});
-		});
-		if (!BOUNDARY_DYNAMICS[b_set])
-			NeighborBuilder.disable_set_to_search_from(b_set + 1);
-	});
-
-	// compute center of mass
-	serial_for(Boundaries.size(), [&](size_t b_set)
-	{
-		Vector rest_center_of_mass{0, 0, 0};
-		serial_for(Boundaries[b_set]->size, [&](size_t i)
-		{
-			rest_center_of_mass += Boundaries[b_set]->x_init[i];
-		});
-		rest_center_of_mass /= Boundaries[b_set]->size;
-		Boundaries[b_set]->rest_center_of_mass = rest_center_of_mass;
-	});
-
-	BoundariesInited = true;
+		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
+		std::fill(Boundary->v.begin(), Boundary->v.end(), Vector{0, 0, 0});
+		std::fill(Boundary->a.begin(), Boundary->a.end(), Vector{0, 0, 0});
+	}
 }
 void HinaPE::DFSPH_AkinciSolver::_compute_density_change()
 {

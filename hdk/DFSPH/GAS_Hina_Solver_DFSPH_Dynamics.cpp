@@ -1,7 +1,7 @@
-#include "GAS_Hina_Solver_DFSPH.h"
+#include "GAS_Hina_Solver_DFSPH_Dynamics.h"
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
-		Solver_DFSPH,
+		Solver_DFSPH_Dynamics,
 		true,
 		false,
 		HINA_FLOAT_VECTOR_PARAMETER(FluidDomain, 3, 1., 1., 1.) \
@@ -35,19 +35,20 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
         PRMS.emplace_back(PRM_ORD, 1, &KernelName, &KernelNameDefault, &CLKernel); \
         TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_DFSPH)
 )
-void GAS_Hina_Solver_DFSPH::_init()
+
+void GAS_Hina_Solver_DFSPH_Dynamics::_init()
 {
 	this->DFSPH_AkinciSolverPtr = nullptr;
 	this->inited = false;
 	this->emitted = false;
 }
-void GAS_Hina_Solver_DFSPH::_makeEqual(const GAS_Hina_Solver_DFSPH *src)
+void GAS_Hina_Solver_DFSPH_Dynamics::_makeEqual(const GAS_Hina_Solver_DFSPH_Dynamics *src)
 {
 	this->DFSPH_AkinciSolverPtr = src->DFSPH_AkinciSolverPtr;
 	this->inited = src->inited;
 	this->emitted = src->emitted;
 }
-bool GAS_Hina_Solver_DFSPH::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
+bool GAS_Hina_Solver_DFSPH_Dynamics::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
 {
 	SIM_Hina_Particles_DFSPH *DFSPH_particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles_DFSPH);
 	CHECK_NULL_RETURN_BOOL(DFSPH_particles)
@@ -68,7 +69,7 @@ bool GAS_Hina_Solver_DFSPH::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 }
 
 /// mapping pointers to the solver, and set solvers' parameters (SHOULD BE DONE AT FIRST STEP)
-void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles, SIM_Object *obj)
+void GAS_Hina_Solver_DFSPH_Dynamics::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles, SIM_Object *obj)
 {
 	switch (getBoundaryHandling())
 	{
@@ -122,7 +123,7 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 }
 
 /// Emit particles (with any method)
-void GAS_Hina_Solver_DFSPH::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
+void GAS_Hina_Solver_DFSPH_Dynamics::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
 {
 	size_t max_p = getMaxNumOfParticles();
 	bool one_shot = getIsOneShot();

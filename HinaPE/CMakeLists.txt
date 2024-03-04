@@ -15,7 +15,10 @@ add_subdirectory(3rd_party/Discregrid)
 add_subdirectory(3rd_party/ReactPhysics3D)
 
 file(GLOB HINAPE_COMMON common/particles.h common/neighbors.h common/kernels.h common/geometry.h common/emitter.h)
-file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp)
+file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE
+        DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp
+        DFSPH_Akinci_Dynamics/*.h DFSPH_Akinci_Dynamics/*.cpp
+)
 
 
 add_library(HinaPE STATIC

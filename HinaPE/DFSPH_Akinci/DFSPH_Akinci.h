@@ -56,11 +56,12 @@ struct DFSPH_AkinciParam
 struct DFSPH_AkinciSolver : public DFSPH_AkinciParam
 {
 	DFSPH_AkinciSolver(real, Vector);
-	void Solve(real dt);
+	virtual void Solve(real dt);
 	std::shared_ptr<DFSPH_AkinciFluid> Fluid;
 	std::vector<std::shared_ptr<AkinciBoundary>> Boundaries;
 
 protected:
+	void resize();
 	void build_neighbors();
 	void compute_density();
 	void compute_factor();
@@ -75,13 +76,13 @@ private:
 	void _for_each_fluid_particle(const std::function<void(size_t, Vector)> &);
 	void _for_each_neighbor_fluid(size_t, const std::function<void(size_t, Vector)> &);
 	void _for_each_neighbor_boundaries(size_t, const std::function<void(size_t, Vector, size_t)> &);
-	void _resize();
 	NeighborBuilder NeighborBuilder;
 	Vector MaxBound;
-	bool BoundariesInited;
+	bool NeighborBuilderInited;
+	bool BoundariesMassVolumeCalculated;
 
 private:
-	void _update_akinci_volume();
+	void _update_akinci_boundaries();
 	void _compute_density_change();
 	void _compute_density_adv(real dt);
 	real _compute_density_error(const real offset);
