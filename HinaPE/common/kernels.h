@@ -6,7 +6,7 @@
  * TODO: make it more general
  */
 template<typename real, typename Vector3>
-struct Cubic
+struct ICubic
 {
 	inline static void set_radius(real r)
 	{

@@ -17,29 +17,29 @@ namespace HinaPE
 {
 using real = float;
 using Vector = UT_Vector3T<real>;
-using Kernel = Cubic<real, Vector>;
+using Kernel = ICubic<real, Vector>;
 using ScalarArrayCPU = std::vector<real>;
 using VectorArrayCPU = std::vector<Vector>;
 using FluidCPU = IFluid<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
-using AkinciBoundary = IAkinciBoundary<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
+using AkinciBoundaryCPU = IAkinciBoundary<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 using NeighborBuilder = NeighborBuilderGPU<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 using FluidEmitter = IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 
-struct AkinciBoundaryCPU : public AkinciBoundary
+struct AkinciBoundary : public AkinciBoundaryCPU
 {
 	VectorArrayCPU x_init;
 	UT_DMatrix4 xform;
 	Vector rest_center_of_mass;
 };
 
-struct DFSPH_AkinciFluidCPU : public FluidCPU
+struct DFSPH_AkinciFluid : public FluidCPU
 {
 	ScalarArrayCPU factor;
 	ScalarArrayCPU k;
 	ScalarArrayCPU density_adv;
 };
 
-struct DFSPH_AkinciParamCPU
+struct DFSPH_AkinciParam
 {
 	real FLUID_REST_DENSITY = 1000.0f;
 	real FLUID_PARTICLE_RADIUS = 0.01;
@@ -53,12 +53,12 @@ struct DFSPH_AkinciParamCPU
 	std::vector<bool> BOUNDARY_DYNAMICS;
 };
 
-struct DFSPH_AkinciSolver : public DFSPH_AkinciParamCPU
+struct DFSPH_AkinciSolver : public DFSPH_AkinciParam
 {
 	DFSPH_AkinciSolver(real, Vector);
 	void Solve(real dt);
-	std::shared_ptr<DFSPH_AkinciFluidCPU> Fluid;
-	std::vector<std::shared_ptr<AkinciBoundaryCPU>> Boundaries;
+	std::shared_ptr<DFSPH_AkinciFluid> Fluid;
+	std::vector<std::shared_ptr<AkinciBoundary>> Boundaries;
 
 protected:
 	void build_neighbors();

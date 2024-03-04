@@ -9,7 +9,7 @@ HinaPE::DFSPH_AkinciSolver::DFSPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector _
 {
 	Kernel::set_radius(_r);
 	constexpr size_t n = 50000;
-	Fluid = std::make_shared<DFSPH_AkinciFluidCPU>();
+	Fluid = std::make_shared<DFSPH_AkinciFluid>();
 
 	Fluid->x.reserve(n);
 	Fluid->v.reserve(n);

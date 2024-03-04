@@ -96,7 +96,7 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 			std::vector<SIM_Hina_Particles_Akinci *> akinci_boundaries = FetchAllAkinciBoundaries(obj);
 			for (auto &akinci_boundary: akinci_boundaries)
 			{
-				DFSPH_AkinciSolverPtr->Boundaries.emplace_back(std::make_shared<HinaPE::AkinciBoundaryCPU>());
+				DFSPH_AkinciSolverPtr->Boundaries.emplace_back(std::make_shared<HinaPE::AkinciBoundary>());
 				akinci_boundary->x = &DFSPH_AkinciSolverPtr->Boundaries.back()->x;
 				akinci_boundary->v = &DFSPH_AkinciSolverPtr->Boundaries.back()->v;
 				akinci_boundary->a = &DFSPH_AkinciSolverPtr->Boundaries.back()->a;
