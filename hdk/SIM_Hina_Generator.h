@@ -44,14 +44,14 @@
 #define CHECK_NULL_RETURN_BOOL(ptr) \
 if (!ptr) \
 { \
-error_msg.appendSprintf("%s::NULL POINTER Exception, From %s\n", ptr->getDataType().c_str(), DATANAME); \
+error_msg.appendSprintf("NULL POINTER Exception, From %s\n", DATANAME); \
 return false; \
 }
 
 #define CHECK_NULL_RETURN_VOID(ptr) \
 if (!ptr) \
 { \
-error_msg.appendSprintf("%s::NULL POINTER Exception, From %s\n", ptr->getDataType().c_str(), DATANAME); \
+error_msg.appendSprintf("NULL POINTER Exception, From %s\n", DATANAME); \
 }
 
 #define SIM_HINA_GEOMETRY_CLASS(NAME, ...) \

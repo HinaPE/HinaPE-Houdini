@@ -28,7 +28,7 @@ HinaPE::DFSPH_AkinciSolver::DFSPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector _
 void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 {
 	resize();
-	_update_akinci_boundaries();
+	update_akinci_boundaries();
 
 	build_neighbors();
 	compute_density();
@@ -39,6 +39,60 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 	pressure_solve(dt);
 	advect(dt);
 	enforce_boundary();
+}
+void HinaPE::DFSPH_AkinciSolver::resize()
+{
+	/**
+	 * For Fluid, [Fluid->x] is init or update from outside, but [Fluid->size] is never updated from outside
+	 * If [Fluid->size] is not equal to [Fluid->x.size()], then resize all the vectors
+	 */
+	size_t pre_size = Fluid->size;
+	if (Fluid->size != Fluid->x.size())
+	{
+		Fluid->size = Fluid->x.size();
+		Fluid->v.resize(Fluid->size);
+		Fluid->a.resize(Fluid->size);
+		Fluid->m.resize(Fluid->size);
+		Fluid->V.resize(Fluid->size);
+		Fluid->rho.resize(Fluid->size);
+		Fluid->neighbor_this.resize(Fluid->size);
+		Fluid->neighbor_others.resize(Fluid->size);
+
+		Fluid->a.resize(Fluid->size);
+		Fluid->factor.resize(Fluid->size);
+		Fluid->k.resize(Fluid->size);
+		Fluid->density_adv.resize(Fluid->size);
+	}
+
+	/**
+	 * For Boundaries, [Boundary->x_init] is init from outside, but [Boundary->size] is never updated from outside
+	 * If [Boundary->size] is not equal to [Boundary->x_init.size()], then resize all the vectors
+	 */
+	for (auto &Boundary: Boundaries)
+	{
+		if (Boundary->size != Boundary->x_init.size())
+		{
+			Boundary->size = Boundary->x_init.size();
+			Boundary->x.resize(Boundary->size);
+			Boundary->v.resize(Boundary->size);
+			Boundary->a.resize(Boundary->size);
+			Boundary->m.resize(Boundary->size);
+			Boundary->V.resize(Boundary->size);
+			Boundary->rho.resize(Boundary->size);
+			Boundary->neighbor_this.resize(Boundary->size);
+			Boundary->neighbor_others.resize(Boundary->size);
+			Boundary->x = Boundary->x_init;
+		}
+	}
+}
+void HinaPE::DFSPH_AkinciSolver::update_akinci_boundaries()
+{
+	for (auto &Boundary: Boundaries)
+	{
+		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
+		std::fill(Boundary->v.begin(), Boundary->v.end(), Vector{0, 0, 0});
+		std::fill(Boundary->a.begin(), Boundary->a.end(), Vector{0, 0, 0});
+	}
 }
 void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 {
@@ -338,60 +392,6 @@ void HinaPE::DFSPH_AkinciSolver::_for_each_neighbor_boundaries(size_t i, const s
 	{
 		NeighborBuilder.for_each_neighbor(0, b_set + 1, i, [&](size_t j, Vector x_j) { f(j, x_j, b_set); });
 	});
-}
-void HinaPE::DFSPH_AkinciSolver::resize()
-{
-	/**
-	 * For Fluid, [Fluid->x] is init or update from outside, but [Fluid->size] is never updated from outside
-	 * If [Fluid->size] is not equal to [Fluid->x.size()], then resize all the vectors
-	 */
-	size_t pre_size = Fluid->size;
-	if (Fluid->size != Fluid->x.size())
-	{
-		Fluid->size = Fluid->x.size();
-		Fluid->v.resize(Fluid->size);
-		Fluid->a.resize(Fluid->size);
-		Fluid->m.resize(Fluid->size);
-		Fluid->V.resize(Fluid->size);
-		Fluid->rho.resize(Fluid->size);
-		Fluid->neighbor_this.resize(Fluid->size);
-		Fluid->neighbor_others.resize(Fluid->size);
-
-		Fluid->a.resize(Fluid->size);
-		Fluid->factor.resize(Fluid->size);
-		Fluid->k.resize(Fluid->size);
-		Fluid->density_adv.resize(Fluid->size);
-	}
-
-	/**
-	 * For Boundaries, [Boundary->x_init] is init from outside, but [Boundary->size] is never updated from outside
-	 * If [Boundary->size] is not equal to [Boundary->x_init.size()], then resize all the vectors
-	 */
-	for (auto &Boundary: Boundaries)
-	{
-		if (Boundary->size != Boundary->x_init.size())
-		{
-			Boundary->size = Boundary->x_init.size();
-			Boundary->x.resize(Boundary->size);
-			Boundary->v.resize(Boundary->size);
-			Boundary->a.resize(Boundary->size);
-			Boundary->m.resize(Boundary->size);
-			Boundary->V.resize(Boundary->size);
-			Boundary->rho.resize(Boundary->size);
-			Boundary->neighbor_this.resize(Boundary->size);
-			Boundary->neighbor_others.resize(Boundary->size);
-			Boundary->x = Boundary->x_init;
-		}
-	}
-}
-void HinaPE::DFSPH_AkinciSolver::_update_akinci_boundaries()
-{
-	for (auto &Boundary: Boundaries)
-	{
-		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
-		std::fill(Boundary->v.begin(), Boundary->v.end(), Vector{0, 0, 0});
-		std::fill(Boundary->a.begin(), Boundary->a.end(), Vector{0, 0, 0});
-	}
 }
 void HinaPE::DFSPH_AkinciSolver::_compute_density_change()
 {

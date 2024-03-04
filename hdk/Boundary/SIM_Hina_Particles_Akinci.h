@@ -12,6 +12,8 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 
 		VectorArrayCPU *x_init;
 		UT_DMatrix4 *xform;
+		UT_Vector3 *pos;
+		UT_Quaternion *quat;
 		Vector *rest_center_of_mass;
 )
 

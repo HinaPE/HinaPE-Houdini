@@ -1,5 +1,6 @@
 #include "SIM_Hina_Particles_Akinci.h"
 #include <SIM/SIM_Position.h>
+#include <Rigid/SIM_Hina_RigidBody.h>
 
 SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		Particles_Akinci,
@@ -13,19 +14,22 @@ void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 {
 	this->x_init = nullptr;
 	this->xform = nullptr;
+	this->pos = nullptr;
+	this->quat = nullptr;
 	this->rest_center_of_mass = nullptr;
 }
 void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Particles_Akinci *src)
 {
 	this->x_init = src->x_init;
 	this->xform = src->xform;
+	this->pos = src->pos;
+	this->quat = src->quat;
 	this->rest_center_of_mass = src->rest_center_of_mass;
 }
 void SIM_Hina_Particles_Akinci::_setup_gdp(GU_Detail *gdp) const
 {
 	SIM_Hina_Particles::_setup_gdp(gdp);
 }
-
 
 /// For akinci boundaries, we should keep particles init positions(x_init), and moving it ONLY by its transform(xform).
 void SIM_Hina_Particles_Akinci::commit()
@@ -138,12 +142,23 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 		if (boundary_akinci)
 		{
 			SIM_Position *position = SIM_DATA_GET(*obj_collider, SIM_POSITION_DATANAME, SIM_Position);
+			SIM_Hina_RigidBody *rb = SIM_DATA_GET(*obj_collider, SIM_Hina_RigidBody::DATANAME, SIM_Hina_RigidBody);
 			UT_DMatrix4 xform;
-			if (position)
+			UT_Vector3 pos, scale;
+			UT_Quaternion quat;
+			if (rb)
+			{
+
+			} else if (position)
+			{
+				position->getPosition(pos);
+				position->getOrientation(quat);
 				position->getTransform(xform);
-			else
+			} else
 				xform.identity();
 			(*boundary_akinci->xform) = xform;
+			(*boundary_akinci->pos) = pos;
+			(*boundary_akinci->quat) = quat;
 		}
 	}
 }

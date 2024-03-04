@@ -50,7 +50,8 @@ void GAS_Hina_Solver_DFSPH::_makeEqual(const GAS_Hina_Solver_DFSPH *src)
 bool GAS_Hina_Solver_DFSPH::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
 {
 	SIM_Hina_Particles_DFSPH *DFSPH_particles = SIM_DATA_CAST(getGeometryCopy(obj, GAS_NAME_GEOMETRY), SIM_Hina_Particles_DFSPH);
-	CHECK_NULL_RETURN_BOOL(DFSPH_particles)
+	if (DFSPH_particles == nullptr)
+		return true;
 
 	if (!inited)
 		init_data(DFSPH_particles, obj);
@@ -106,6 +107,8 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 				akinci_boundary->no = &DFSPH_AkinciSolverPtr->Boundaries.back()->neighbor_others;
 				akinci_boundary->x_init = &DFSPH_AkinciSolverPtr->Boundaries.back()->x_init;
 				akinci_boundary->xform = &DFSPH_AkinciSolverPtr->Boundaries.back()->xform;
+				akinci_boundary->pos = &DFSPH_AkinciSolverPtr->Boundaries.back()->pos;
+				akinci_boundary->quat = &DFSPH_AkinciSolverPtr->Boundaries.back()->quat;
 				akinci_boundary->rest_center_of_mass = &DFSPH_AkinciSolverPtr->Boundaries.back()->rest_center_of_mass;
 
 				DFSPH_AkinciSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));

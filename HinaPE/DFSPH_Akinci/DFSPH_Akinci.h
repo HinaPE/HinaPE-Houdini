@@ -13,6 +13,7 @@
 #include <vector>
 #include <UT/UT_Vector3.h>
 #include <UT/UT_Matrix4.h>
+#include <UT/UT_Quaternion.h>
 namespace HinaPE
 {
 using real = float;
@@ -29,6 +30,8 @@ struct AkinciBoundary : public AkinciBoundaryCPU
 {
 	VectorArrayCPU x_init;
 	UT_DMatrix4 xform;
+	UT_Vector3 pos;
+	UT_Quaternion quat;
 	Vector rest_center_of_mass;
 };
 
@@ -62,6 +65,7 @@ struct DFSPH_AkinciSolver : public DFSPH_AkinciParam
 
 protected:
 	void resize();
+	void update_akinci_boundaries();
 	void build_neighbors();
 	void compute_density();
 	void compute_factor();
@@ -82,7 +86,6 @@ private:
 	bool BoundariesMassVolumeCalculated;
 
 private:
-	void _update_akinci_boundaries();
 	void _compute_density_change();
 	void _compute_density_adv(real dt);
 	real _compute_density_error(const real offset);
