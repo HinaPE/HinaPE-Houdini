@@ -1,8 +1,5 @@
-#ifndef HINAPE_COMMON1_H
-#define HINAPE_COMMON1_H
-
-#include <functional>
-#include <memory>
+#ifndef HINAPE_EMITTER_H
+#define HINAPE_EMITTER_H
 
 #include <CUDA_CubbyFlow/Core/Emitter/VolumeParticleEmitter3.hpp>
 #include <CUDA_CubbyFlow/Core/Geometry/SurfaceToImplicit.hpp>
@@ -13,52 +10,6 @@
 #include <CUDA_CubbyFlow/Core/Geometry/TriangleMesh3.hpp>
 #include <CUDA_CubbyFlow/Core/Geometry/ImplicitSurfaceSet.hpp>
 #include <CUDA_CubbyFlow/Core/Utils/Logging.hpp>
-#include <Discregrid/discregrid/include/Discregrid/All>
-#include "tbb/tbb.h"
-
-namespace HinaPE
-{
-inline void serial_for(size_t n, const std::function<void(size_t)> &f) { for (size_t i = 0; i < n; ++i) { f(i); }}
-inline void parallel_for(size_t n, const std::function<void(size_t)> &f) { tbb::parallel_for(size_t(0), n, [&](size_t i) { f(i); }); }
-
-template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
-struct IFluid
-{
-	size_t size;
-	Vector3Array x;
-	Vector3Array v;
-	Vector3Array a;
-	ScalarArray m;
-	ScalarArray V;
-	ScalarArray rho;
-	ScalarArray neighbor_this;
-	ScalarArray neighbor_others;
-};
-
-template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
-struct IAkinciBoundary
-{
-	size_t size;
-	Vector3Array x;
-	Vector3Array v;
-	Vector3Array a;
-	ScalarArray m;
-	ScalarArray V;
-	ScalarArray rho;
-
-	ScalarArray neighbor_this;
-	ScalarArray neighbor_others;
-};
-
-template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
-struct IBenderBoundary
-{
-	IBenderBoundary()
-	{
-//		Vmap = std::make_shared<Discregrid::CubicLagrangeDiscreteGrid>();
-	}
-	std::shared_ptr<Discregrid::DiscreteGrid> Vmap;
-};
 
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct IFluidEmitter
@@ -115,6 +66,4 @@ struct IFluidEmitter
 	}
 };
 
-} // namespace HinaPE
-
-#endif //HINAPE_COMMON1_H
+#endif //HINAPE_EMITTER_H

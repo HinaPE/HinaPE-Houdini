@@ -416,4 +416,59 @@ DESC.setDefaultUniqueDataName(false); \
 return &DESC; \
 }
 
+#define SIM_HINA_DATA_CLASS(NAME, ...) \
+class SIM_Hina_##NAME : public SIM_Data \
+{ \
+public: \
+    static const char *DATANAME; \
+    bool Configured = false; \
+    mutable GU_DetailHandle my_detail_handle; \
+    mutable UT_WorkBuffer error_msg; \
+    __VA_ARGS__ \
+protected: \
+    explicit SIM_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
+    ~SIM_Hina_##NAME() override = default; \
+    void initializeSubclass() override; \
+    void makeEqualSubclass(const SIM_Data *source) override; \
+    static const SIM_DopDescription *getDopDescription(); \
+    DECLARE_STANDARD_GETCASTTOTYPE(); \
+    DECLARE_DATAFACTORY(SIM_Hina_##NAME, SIM_Data, "Hina_"#NAME, getDopDescription()); \
+private: \
+    void _init_##NAME(); \
+    void _makeEqual_##NAME(const SIM_Hina_##NAME *src); \
+};
+
+#define SIM_HINA_DATA_IMPLEMENT(NAME, GEN_NODE, ...) \
+void SIM_Hina_##NAME::initializeSubclass() \
+{ \
+    SIM_Data::initializeSubclass(); \
+    this->Configured = false; \
+    this->error_msg.clear(); \
+    _init_##NAME(); \
+} \
+void SIM_Hina_##NAME::makeEqualSubclass(const SIM_Data *source) \
+{ \
+    SIM_Data::makeEqualSubclass(source); \
+    const SIM_Hina_##NAME *src = SIM_DATA_CASTCONST(source, SIM_Hina_##NAME); \
+    this->Configured = src->Configured; \
+    this->error_msg = src->error_msg; \
+    _makeEqual_##NAME(src); \
+} \
+const char *SIM_Hina_##NAME::DATANAME = "Hina_"#NAME; \
+const SIM_DopDescription *SIM_Hina_##NAME::getDopDescription() \
+{ \
+static std::vector<PRM_Template> PRMS; \
+PRMS.clear(); \
+__VA_ARGS__ \
+PRMS.emplace_back(); \
+static SIM_DopDescription DESC(GEN_NODE, \
+                               "Hina_"#NAME, \
+                               "Hina "#NAME, \
+                               DATANAME, \
+                               classname(), \
+                               PRMS.data()); \
+DESC.setDefaultUniqueDataName(false); \
+return &DESC; \
+}
+
 #endif //HINAPE_SIM_HINA_GENERATOR_H

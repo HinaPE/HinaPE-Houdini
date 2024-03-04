@@ -1,0 +1,10 @@
+#ifndef HINAPE_SIM_HINA_RIGIDBODY_H
+#define HINAPE_SIM_HINA_RIGIDBODY_H
+
+#include <SIM_Hina_Generator.h>
+
+SIM_HINA_DATA_CLASS(
+		RigidBody
+		)
+
+#endif //HINAPE_SIM_HINA_RIGIDBODY_H

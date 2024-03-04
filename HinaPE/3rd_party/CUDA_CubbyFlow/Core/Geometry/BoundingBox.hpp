@@ -16,6 +16,9 @@
 
 #include <limits>
 
+#undef near
+#undef far
+
 namespace CubbyFlow
 {
 //!

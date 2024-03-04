@@ -6,7 +6,8 @@
  * https://github.com/erizmr/SPH_Taichi
  */
 
-#include "common/fluid.h"
+#include "common/particles.h"
+#include "common/emitter.h"
 #include "common/kernels.h"
 #include "common/neighbors.h"
 #include <vector>
