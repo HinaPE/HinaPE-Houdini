@@ -142,6 +142,8 @@ void GAS_Hina_Solver_DFSPH::apply_akinci_force(SIM_Object *obj)
 {
 	for (auto &rigidbody: FetchAllRigidBodies(obj))
 	{
+		rigidbody->rb->resetForce();
+		rigidbody->rb->resetTorque();
 		for (auto &boundary: FetchAllAkinciBoundaries(obj))
 		{
 			if (rigidbody->b_set_index == -1 || boundary->b_set_index == -1)
@@ -162,5 +164,9 @@ void GAS_Hina_Solver_DFSPH::apply_akinci_force(SIM_Object *obj)
 				}
 			}
 		}
+
+		rigidbody->rb->setAngularDamping(0.5);
+		rigidbody->rb->resetTorque();
+		std::cout << rigidbody->rb->getForce().x << " " << rigidbody->rb->getForce().y << " " << rigidbody->rb->getForce().z << std::endl;
 	}
 }

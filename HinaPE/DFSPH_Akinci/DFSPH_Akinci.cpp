@@ -250,7 +250,7 @@ void HinaPE::DFSPH_AkinciSolver::non_pressure_force()
 					dv += f_v;
 
 					if (BOUNDARY_DYNAMICS[b_set]) // Dynamic Rigid Body
-						Boundaries[b_set]->a[j] = -f_v;
+						Boundaries[b_set]->a[j] += -f_v;
 				});
 
 				Fluid->a[i] = dv;
