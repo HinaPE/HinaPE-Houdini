@@ -31,11 +31,7 @@ bool GAS_Hina_Solver_Rigid::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 	if (check_need_solve())
 	{
 		world->update(timestep); // We Only Want to Update Once per Substep
-		for (auto &rb: FetchAllRigidBodies(obj))
-		{
-			auto pos = rb->rb->getTransform().getPosition();
-//			std::cout << "Rigid Body Position: " << pos.x << " " << pos.y << " " << pos.z << std::endl;
-		}
+		UpdateAllRigidBodies(obj);
 	}
 
 	return true;
