@@ -36,11 +36,11 @@ void SIM_Hina_RigidBody::buildGuideGeometrySubclass(const SIM_RootData &root, co
 
 	if (rb)
 	{
-		auto &pos = WorldTransformCache.getPosition();
 		for (int i = 0; i < v_size; ++i)
 		{
+			reactphysics3d::Vector3 pos_final = WorldTransformCache * reactphysics3d::Vector3{V[i * 3 + 0], V[i * 3 + 1], V[i * 3 + 2]};
 			GA_Offset pt_off = gdp->appendPoint();
-			gdp->setPos3(pt_off, UT_Vector3{V[i * 3 + 0] + pos.x, V[i * 3 + 1] + pos.y, V[i * 3 + 2] + pos.z});
+			gdp->setPos3(pt_off, UT_Vector3F{pos_final.x, pos_final.y, pos_final.z});
 		}
 
 		for (int i = 0; i < F_size; ++i)
