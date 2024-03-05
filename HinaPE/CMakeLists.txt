@@ -21,12 +21,16 @@ file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE
 file(GLOB_RECURSE HINAPE_PBF_AKINCI_SOURCE
         PBF_Akinci/*.h PBF_Akinci/*.cpp
 )
+file(GLOB_RECURSE HINAPE_SMOKE_SOURCE
+        Smoke/*.h Smoke/*.cpp
+)
 
 
 add_library(HinaPE STATIC
         ${HINAPE_COMMON}
         ${HINAPE_DFSPH_AKINCI_SOURCE}
         ${HINAPE_PBF_AKINCI_SOURCE}
+        ${HINAPE_SMOKE_SOURCE}
 )
 target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini tbb CUDA_CubbyFlow CUDA_NeighborSearch Discregrid TreeNSearch ReactPhysics3D)
 target_link_directories(

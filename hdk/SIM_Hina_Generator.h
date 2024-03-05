@@ -59,7 +59,6 @@ class SIM_Hina_##NAME : public SIM_GeometryCopy \
 { \
 public: \
     static const char *DATANAME; \
-    bool Configured = false; \
     mutable GU_DetailHandle my_detail_handle; \
     mutable UT_WorkBuffer error_msg; \
     __VA_ARGS__ \
@@ -83,7 +82,6 @@ protected: \
 void SIM_Hina_##NAME::initializeSubclass() \
 { \
     SIM_GeometryCopy::initializeSubclass(); \
-    this->Configured = false; \
     this->error_msg.clear(); \
 	my_detail_handle.clear(); \
     _init_##NAME(); \
@@ -92,7 +90,6 @@ void SIM_Hina_##NAME::makeEqualSubclass(const SIM_Data *source) \
 { \
     SIM_GeometryCopy::makeEqualSubclass(source); \
     const SIM_Hina_##NAME *src = SIM_DATA_CASTCONST(source, SIM_Hina_##NAME); \
-    this->Configured = src->Configured; \
     this->error_msg = src->error_msg; \
     this->my_detail_handle = src->my_detail_handle; \
     _makeEqual_##NAME(src); \
@@ -368,7 +365,6 @@ class SIM_Hina_##NAME : public SIM_Collider \
 { \
 public: \
 static const char *DATANAME; \
-bool Configured = false; \
 mutable UT_WorkBuffer error_msg; \
 __VA_ARGS__ \
 protected: \
@@ -388,7 +384,6 @@ void _makeEqual(const SIM_Hina_##NAME *src); \
 void SIM_Hina_##NAME::initializeSubclass() \
 { \
     SIM_Collider::initializeSubclass(); \
-    this->Configured = false; \
     this->error_msg.clear(); \
     _init(); \
 } \
@@ -396,7 +391,6 @@ void SIM_Hina_##NAME::makeEqualSubclass(const SIM_Data *source) \
 { \
     SIM_Collider::makeEqualSubclass(source); \
     const SIM_Hina_##NAME *src = SIM_DATA_CASTCONST(source, SIM_Hina_##NAME); \
-    this->Configured = src->Configured; \
     this->error_msg = src->error_msg; \
     _makeEqual(src); \
 } \
@@ -422,7 +416,6 @@ class SIM_Hina_##NAME : public SIM_Data, SIM_OptionsUser \
 { \
 public: \
     static const char *DATANAME; \
-    bool Configured = false; \
     mutable GU_DetailHandle my_detail_handle; \
     mutable UT_WorkBuffer error_msg; \
     __VA_ARGS__ \
@@ -443,7 +436,6 @@ private: \
 void SIM_Hina_##NAME::initializeSubclass() \
 { \
     SIM_Data::initializeSubclass(); \
-    this->Configured = false; \
     this->error_msg.clear(); \
     _init_##NAME(); \
 } \
@@ -451,7 +443,6 @@ void SIM_Hina_##NAME::makeEqualSubclass(const SIM_Data *source) \
 { \
     SIM_Data::makeEqualSubclass(source); \
     const SIM_Hina_##NAME *src = SIM_DATA_CASTCONST(source, SIM_Hina_##NAME); \
-    this->Configured = src->Configured; \
     this->error_msg = src->error_msg; \
     _makeEqual_##NAME(src); \
 } \
