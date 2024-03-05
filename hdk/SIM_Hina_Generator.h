@@ -20,6 +20,11 @@
 #include <SIM/SIM_Time.h>
 #include <SIM/SIM_Utils.h>
 
+#include <SIM/SIM_ScalarField.h>
+#include <SIM/SIM_VectorField.h>
+#include <SIM/SIM_MatrixField.h>
+#include <SIM/SIM_FieldSampler.h>
+
 #include <PRM/PRM_Name.h>
 #include <PRM/PRM_Template.h>
 #include <PRM/PRM_Shared.h>

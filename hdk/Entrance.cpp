@@ -9,6 +9,7 @@
 #include <PBF/GAS_Hina_Solver_PBF.h>
 #include <Rigid/SIM_Hina_RigidBody.h>
 #include <Rigid/GAS_Hina_Solver_Rigid.h>
+#include <Smoke/GAS_Hina_Solver_Smoke.h>
 
 void initializeSIM(void *)
 {
@@ -22,4 +23,5 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_Akinci)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBody)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Rigid)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Smoke)
 }
