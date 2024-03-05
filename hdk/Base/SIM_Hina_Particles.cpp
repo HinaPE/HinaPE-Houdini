@@ -3,7 +3,6 @@
 SIM_HINA_GEOMETRY_IMPLEMENT(
 		Particles,
 		false,
-		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles)
 )
 void SIM_Hina_Particles::_init_Particles()
 {

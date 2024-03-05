@@ -8,7 +8,6 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		true,
 		HINA_FLOAT_PARAMETER(SolidDensity, 1000.) \
         HINA_BOOL_PARAMETER(IsDynamic, false) \
-        TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_Akinci)
 )
 void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 {
@@ -84,7 +83,6 @@ auto FetchAllAkinciBoundaries(SIM_Object *fluid_obj) -> std::vector<SIM_Hina_Par
 		SIM_Object *obj_collider = affectors(i);
 		if (obj_collider->getName().equal(fluid_obj->getName()))
 			continue;
-		UT_String boundary_obj_name = obj_collider->getName();
 		SIM_Hina_Particles_Akinci *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Particles_Akinci::DATANAME, SIM_Hina_Particles_Akinci);
 		if (boundary_akinci)
 			res.emplace_back(boundary_akinci);
@@ -144,8 +142,9 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 			SIM_Position *position = SIM_DATA_GET(*obj_collider, SIM_POSITION_DATANAME, SIM_Position);
 			SIM_Hina_RigidBody *rb = SIM_DATA_GET(*obj_collider, SIM_Hina_RigidBody::DATANAME, SIM_Hina_RigidBody);
 			UT_DMatrix4 xform;
-			UT_Vector3 pos, scale;
+			UT_Vector3 pos{}, scale{};
 			UT_Quaternion quat;
+			xform.identity();
 			if (rb)
 			{
 
@@ -154,8 +153,7 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 				position->getPosition(pos);
 				position->getOrientation(quat);
 				position->getTransform(xform);
-			} else
-				xform.identity();
+			}
 			(*boundary_akinci->xform) = xform;
 			(*boundary_akinci->pos) = pos;
 			(*boundary_akinci->quat) = quat;

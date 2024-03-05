@@ -4,7 +4,6 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		Particles_DFSPH,
 		Particles,
 		true,
-		TARGET_PARTICLE_GEOMETRY(SIM_Hina_Particles_DFSPH)
 )
 void SIM_Hina_Particles_DFSPH::_init_Particles_DFSPH()
 {

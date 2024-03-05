@@ -417,7 +417,7 @@ return &DESC; \
 }
 
 #define SIM_HINA_DATA_CLASS(NAME, ...) \
-class SIM_Hina_##NAME : public SIM_Data \
+class SIM_Hina_##NAME : public SIM_Data, SIM_OptionsUser \
 { \
 public: \
     static const char *DATANAME; \
@@ -426,7 +426,7 @@ public: \
     mutable UT_WorkBuffer error_msg; \
     __VA_ARGS__ \
 protected: \
-    explicit SIM_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory) {} \
+    explicit SIM_Hina_##NAME(const SIM_DataFactory *factory) : BaseClass(factory), SIM_OptionsUser(this) {} \
     ~SIM_Hina_##NAME() override = default; \
     void initializeSubclass() override; \
     void makeEqualSubclass(const SIM_Data *source) override; \
