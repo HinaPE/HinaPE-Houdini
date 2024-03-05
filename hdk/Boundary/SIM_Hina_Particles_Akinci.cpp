@@ -7,19 +7,21 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		Particles,
 		true,
 		HINA_FLOAT_PARAMETER(SolidDensity, 1000.) \
-		HINA_FLOAT_PARAMETER(Buoyancy, 1.) \
+        HINA_FLOAT_PARAMETER(Buoyancy, 1.) \
         HINA_BOOL_PARAMETER(IsDynamic, false) \
 )
 void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 {
 	this->x_init = nullptr;
 	this->xform = nullptr;
+	this->center_of_mass = UT_Vector3(0, 0, 0);
 	this->b_set_index = -1;
 }
 void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Particles_Akinci *src)
 {
 	this->x_init = src->x_init;
 	this->xform = src->xform;
+	this->center_of_mass = src->center_of_mass;
 	this->b_set_index = src->b_set_index;
 }
 void SIM_Hina_Particles_Akinci::_setup_gdp(GU_Detail *gdp) const
@@ -78,6 +80,7 @@ void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 						}
 					center_of_mass /= gdp->getNumPoints();
 				}
+				boundary_akinci->center_of_mass = center_of_mass;
 
 				(*boundary_akinci->x_init).reserve(gdp->getNumPoints());
 				GA_Offset pt_off;
@@ -116,7 +119,7 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 				auto _p = _t.getPosition();
 				auto _q = _t.getOrientation();
 
-				const reactphysics3d::Matrix3x3& matrix = _q.getMatrix(); // fortunately, this is also a row major matrix
+				const reactphysics3d::Matrix3x3 &matrix = _q.getMatrix(); // fortunately, this is also a row major matrix
 				UT_DMatrix4 final;
 
 				xform[0][0] = matrix[0][0];
@@ -138,6 +141,12 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 				xform[3][1] = _p.y;
 				xform[3][2] = _p.z;
 				xform[3][3] = 1;
+			} else
+			{
+				UT_Vector3 center_of_mass = boundary_akinci->center_of_mass;
+				xform[3][0] = center_of_mass.x();
+				xform[3][1] = center_of_mass.y();
+				xform[3][2] = center_of_mass.z();
 			}
 			(*boundary_akinci->xform) = xform;
 		}

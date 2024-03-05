@@ -12,6 +12,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 
 		VectorArrayCPU *x_init;
 		UT_DMatrix4 *xform;
+		Vector center_of_mass;
 
 		int b_set_index; // Cache, FOR FLUID SOLVER
 )

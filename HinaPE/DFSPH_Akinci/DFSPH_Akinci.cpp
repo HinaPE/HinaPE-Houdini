@@ -99,8 +99,6 @@ void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 	{
 		if (BOUNDARY_DYNAMICS[b_set])
 			NeighborBuilder.update_set(b_set + 1); // b_set + 1 means #b_set boundary set
-		else
-			NeighborBuilder.disable_set_to_search_from(b_set + 1); // for performance, we don't need to search from static boundary set (BUT STILL NEED TO BE SEARCHED FROM)
 	});
 	NeighborBuilder.build();
 
@@ -135,6 +133,12 @@ void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 				Boundaries[b_set]->m[i] = Boundaries[b_set]->V[i] * BOUNDARY_REST_DENSITY[b_set];
 				Boundaries[b_set]->neighbor_this[i] = NeighborBuilder.n_neighbors(b_set + 1, b_set + 1, i);
 			});
+			serial_for(Boundaries.size(), [&](size_t b_set)
+			{
+				if (!BOUNDARY_DYNAMICS[b_set])
+					NeighborBuilder.disable_set_to_search_from(b_set + 1); // for performance, we don't need to search from static boundary set (BUT STILL NEED TO BE SEARCHED FROM)
+			});
+
 		});
 		BoundariesMassVolumeCalculated = true;
 	}
