@@ -8,22 +8,7 @@ HinaPE::DFSPH_AkinciSolver::DFSPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector _
 		: NeighborBuilder(_r), MaxBound(_b / 2.), NeighborBuilderInited(false), BoundariesMassVolumeCalculated(false)
 {
 	Kernel::set_radius(_r);
-	constexpr size_t n = 50000;
 	Fluid = std::make_shared<DFSPH_AkinciFluid>();
-
-	Fluid->x.reserve(n);
-	Fluid->v.reserve(n);
-	Fluid->a.reserve(n);
-	Fluid->m.reserve(n);
-	Fluid->V.reserve(n);
-	Fluid->rho.reserve(n);
-	Fluid->neighbor_this.reserve(n);
-	Fluid->neighbor_others.reserve(n);
-
-	Fluid->a.reserve(n);
-	Fluid->factor.reserve(n);
-	Fluid->k.reserve(n);
-	Fluid->density_adv.reserve(n);
 }
 void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 {
@@ -43,7 +28,7 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 void HinaPE::DFSPH_AkinciSolver::resize()
 {
 	/**
-	 * For Fluid, [Fluid->x] is init or update from outside, but [Fluid->size] is never updated from outside
+	 * For Fluid, [Fluid->x] is inited or update from outside, but [Fluid->size] is never updated from outside
 	 * If [Fluid->size] is not equal to [Fluid->x.size()], then resize all the vectors
 	 */
 	size_t pre_size = Fluid->size;
@@ -58,14 +43,13 @@ void HinaPE::DFSPH_AkinciSolver::resize()
 		Fluid->neighbor_this.resize(Fluid->size);
 		Fluid->neighbor_others.resize(Fluid->size);
 
-		Fluid->a.resize(Fluid->size);
 		Fluid->factor.resize(Fluid->size);
 		Fluid->k.resize(Fluid->size);
 		Fluid->density_adv.resize(Fluid->size);
 	}
 
 	/**
-	 * For Boundaries, [Boundary->x_init] is init from outside, but [Boundary->size] is never updated from outside
+	 * For Boundaries, [Boundary->x_init] is inited from outside, but [Boundary->size] is never updated from outside
 	 * If [Boundary->size] is not equal to [Boundary->x_init.size()], then resize all the vectors
 	 */
 	for (auto &Boundary: Boundaries)
@@ -81,7 +65,6 @@ void HinaPE::DFSPH_AkinciSolver::resize()
 			Boundary->rho.resize(Boundary->size);
 			Boundary->neighbor_this.resize(Boundary->size);
 			Boundary->neighbor_others.resize(Boundary->size);
-			Boundary->x = Boundary->x_init;
 		}
 	}
 }
@@ -117,7 +100,7 @@ void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 		if (BOUNDARY_DYNAMICS[b_set])
 			NeighborBuilder.update_set(b_set + 1); // b_set + 1 means #b_set boundary set
 		else
-			NeighborBuilder.disable_set_to_search_from(b_set + 1);
+			NeighborBuilder.disable_set_to_search_from(b_set + 1); // for performance, we don't need to search from static boundary set (BUT STILL NEED TO BE SEARCHED FROM)
 	});
 	NeighborBuilder.build();
 
@@ -152,18 +135,6 @@ void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 				Boundaries[b_set]->m[i] = Boundaries[b_set]->V[i] * BOUNDARY_REST_DENSITY[b_set];
 				Boundaries[b_set]->neighbor_this[i] = NeighborBuilder.n_neighbors(b_set + 1, b_set + 1, i);
 			});
-		});
-
-		// compute center of mass
-		serial_for(Boundaries.size(), [&](size_t b_set)
-		{
-			Vector rest_center_of_mass{0, 0, 0};
-			serial_for(Boundaries[b_set]->size, [&](size_t i)
-			{
-				rest_center_of_mass += Boundaries[b_set]->x_init[i];
-			});
-			rest_center_of_mass /= Boundaries[b_set]->size;
-			Boundaries[b_set]->rest_center_of_mass = rest_center_of_mass;
 		});
 		BoundariesMassVolumeCalculated = true;
 	}

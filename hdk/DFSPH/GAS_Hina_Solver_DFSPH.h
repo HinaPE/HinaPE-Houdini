@@ -5,6 +5,7 @@
 
 #include <DFSPH/SIM_Hina_Particles_DFSPH.h>
 #include <Boundary/SIM_Hina_Particles_Akinci.h>
+#include <Rigid/SIM_Hina_RigidBody.h>
 #include <HinaPE/DFSPH_Akinci/DFSPH_Akinci.h>
 
 GAS_HINA_SUBSOLVER_CLASS(
@@ -28,6 +29,7 @@ GAS_HINA_SUBSOLVER_CLASS(
 
 		void init_data(SIM_Hina_Particles_DFSPH*, SIM_Object *);
 		void emit_data(SIM_Hina_Particles_DFSPH*);
+		void apply_akinci_force(SIM_Object *);
 )
 
 #endif //HINAPE_GAS_HINA_SOLVER_DFSPH_H

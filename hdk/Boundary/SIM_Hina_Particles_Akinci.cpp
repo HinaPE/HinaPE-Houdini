@@ -7,68 +7,24 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		Particles,
 		true,
 		HINA_FLOAT_PARAMETER(SolidDensity, 1000.) \
+		HINA_FLOAT_PARAMETER(Buoyancy, 1.) \
         HINA_BOOL_PARAMETER(IsDynamic, false) \
 )
 void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 {
 	this->x_init = nullptr;
 	this->xform = nullptr;
-	this->pos = nullptr;
-	this->quat = nullptr;
-	this->rest_center_of_mass = nullptr;
+	this->b_set_index = -1;
 }
 void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Particles_Akinci *src)
 {
 	this->x_init = src->x_init;
 	this->xform = src->xform;
-	this->pos = src->pos;
-	this->quat = src->quat;
-	this->rest_center_of_mass = src->rest_center_of_mass;
+	this->b_set_index = src->b_set_index;
 }
 void SIM_Hina_Particles_Akinci::_setup_gdp(GU_Detail *gdp) const
 {
 	SIM_Hina_Particles::_setup_gdp(gdp);
-}
-
-/// For akinci boundaries, we should keep particles init positions(x_init), and moving it ONLY by its transform(xform).
-void SIM_Hina_Particles_Akinci::commit()
-{
-	SIM_Hina_Particles::commit();
-
-	if (x_init == nullptr)
-	{
-		std::cout << "SIM_Hina_Particles_Akinci::load() called with nullptr" << std::endl;
-		return;
-	}
-	SIM_GeometryAutoWriteLock lock(this);
-	GU_Detail &gdp = lock.getGdp();
-	GA_RWHandleV3 pos_handle = gdp.getP();
-
-	size_t size = x_init->size();
-	if (size == 0)
-		return;
-
-	if (gdp.getNumPoints() == x_init->size()) // Update
-	{
-		GA_Offset pt_off;
-		GA_FOR_ALL_PTOFF(&gdp, pt_off)
-			{
-				size_t pt_idx = offset2index[pt_off];
-				UT_Vector3 pos = (*x_init)[pt_idx];
-				pos_handle.set(pt_off, pos);
-			}
-	}
-	if (gdp.getNumPoints() == 0) // Add
-	{
-		for (int pt_idx = 0; pt_idx < size; ++pt_idx)
-		{
-			GA_Offset pt_off = gdp.appendPoint();
-			offset2index[pt_off] = pt_idx;
-			index2offset[pt_idx] = pt_off;
-			UT_Vector3 pos = (*x_init)[pt_idx];
-			pos_handle.set(pt_off, pos);
-		}
-	}
 }
 
 /// Fetch all akinci boundaries from [fluid_obj]
@@ -101,7 +57,6 @@ void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 		SIM_Object *obj_collider = affectors(i);
 		if (obj_collider->getName().equal(fluid_obj->getName()))
 			continue;
-		UT_String boundary_obj_name = obj_collider->getName();
 		SIM_Hina_Particles_Akinci *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Particles_Akinci::DATANAME, SIM_Hina_Particles_Akinci);
 		if (boundary_akinci)
 		{
@@ -112,12 +67,24 @@ void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 					return;
 				SIM_GeometryAutoReadLock lock(boundary_sop);
 				const GU_Detail *gdp = lock.getGdp();
+
+				UT_Vector3 center_of_mass{0, 0, 0};
+				{
+					GA_Offset pt_off;
+					GA_FOR_ALL_PTOFF(gdp, pt_off)
+						{
+							UT_Vector3 pos = gdp->getPos3(pt_off);
+							center_of_mass += pos;
+						}
+					center_of_mass /= gdp->getNumPoints();
+				}
+
 				(*boundary_akinci->x_init).reserve(gdp->getNumPoints());
 				GA_Offset pt_off;
 				GA_FOR_ALL_PTOFF(gdp, pt_off)
 					{
 						UT_Vector3 pos = gdp->getPos3(pt_off);
-						(*boundary_akinci->x_init).emplace_back(pos);
+						(*boundary_akinci->x_init).emplace_back(pos - center_of_mass);
 					}
 			}
 		}
@@ -135,28 +102,44 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 		SIM_Object *obj_collider = affectors(i);
 		if (obj_collider->getName().equal(fluid_obj->getName()))
 			continue;
-		UT_String boundary_obj_name = obj_collider->getName();
 		SIM_Hina_Particles_Akinci *boundary_akinci = SIM_DATA_GET(*obj_collider, SIM_Hina_Particles_Akinci::DATANAME, SIM_Hina_Particles_Akinci);
 		if (boundary_akinci)
 		{
-			SIM_Position *position = SIM_DATA_GET(*obj_collider, SIM_POSITION_DATANAME, SIM_Position);
 			SIM_Hina_RigidBody *rb = SIM_DATA_GET(*obj_collider, SIM_Hina_RigidBody::DATANAME, SIM_Hina_RigidBody);
-			UT_DMatrix4 xform;
-			UT_Vector3 pos{}, scale{};
-			UT_Quaternion quat;
+			UT_DMatrix4 xform; // this is row major matrix
 			xform.identity();
-			if (rb)
+			if (rb && rb->rb)
 			{
+				rb->b_set_index = boundary_akinci->b_set_index;
 
-			} else if (position)
-			{
-				position->getPosition(pos);
-				position->getOrientation(quat);
-				position->getTransform(xform);
+				auto _t = rb->rb->getTransform();
+				auto _p = _t.getPosition();
+				auto _q = _t.getOrientation();
+
+				const reactphysics3d::Matrix3x3& matrix = _q.getMatrix(); // fortunately, this is also a row major matrix
+				UT_DMatrix4 final;
+
+				xform[0][0] = matrix[0][0];
+				xform[0][1] = matrix[0][1];
+				xform[0][2] = matrix[0][2];
+				xform[0][3] = 0;
+
+				xform[1][0] = matrix[1][0];
+				xform[1][1] = matrix[1][1];
+				xform[1][2] = matrix[1][2];
+				xform[1][3] = 0;
+
+				xform[2][0] = matrix[2][0];
+				xform[2][1] = matrix[2][1];
+				xform[2][2] = matrix[2][2];
+				xform[2][3] = 0;
+
+				xform[3][0] = _p.x;
+				xform[3][1] = _p.y;
+				xform[3][2] = _p.z;
+				xform[3][3] = 1;
 			}
 			(*boundary_akinci->xform) = xform;
-			(*boundary_akinci->pos) = pos;
-			(*boundary_akinci->quat) = quat;
 		}
 	}
 }

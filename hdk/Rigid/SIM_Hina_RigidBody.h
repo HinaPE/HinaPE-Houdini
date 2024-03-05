@@ -9,13 +9,15 @@ SIM_HINA_DATA_CLASS(
 		RigidBody,
 		HINA_GETSET_PARAMETER(IsDynamic, GETSET_DATA_FUNCS_B) \
 		reactphysics3d::RigidBody *rb;
-		float *V;
-		int *I;
-		reactphysics3d::PolygonVertexArray::PolygonFace *F;
-		int v_size;
-		int i_size;
-		int F_size;
-		reactphysics3d::Transform WorldTransformCache;
+		int b_set_index; // FOR FLUID SOLVER
+
+		float *V; // ONLY USED FOR GUIDE GEOMETRY
+		int *I; // ONLY USED FOR GUIDE GEOMETRY
+		reactphysics3d::PolygonVertexArray::PolygonFace *F; // ONLY USED FOR GUIDE GEOMETRY
+		int v_size; // ONLY USED FOR GUIDE GEOMETRY
+		int i_size; // ONLY USED FOR GUIDE GEOMETRY
+		int F_size; // ONLY USED FOR GUIDE GEOMETRY
+		reactphysics3d::Transform WorldTransformCache; // ONLY USED FOR GUIDE GEOMETRY
 
 		SIM_Guide *createGuideObjectSubclass() const override;
 		void buildGuideGeometrySubclass(const SIM_RootData &root, const SIM_Options &options, const GU_DetailHandle &gdh, UT_DMatrix4 *xform, const SIM_Time &t) const override;

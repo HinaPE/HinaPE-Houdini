@@ -7,14 +7,13 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		Particles_Akinci,
 		Particles,
 		HINA_GETSET_PARAMETER(SolidDensity, GETSET_DATA_FUNCS_F)
+		HINA_GETSET_PARAMETER(Buoyancy, GETSET_DATA_FUNCS_F)
 		HINA_GETSET_PARAMETER(IsDynamic, GETSET_DATA_FUNCS_B)
-		void commit() override;
 
 		VectorArrayCPU *x_init;
 		UT_DMatrix4 *xform;
-		UT_Vector3 *pos;
-		UT_Quaternion *quat;
-		Vector *rest_center_of_mass;
+
+		int b_set_index; // Cache, FOR FLUID SOLVER
 )
 
 auto FetchAllAkinciBoundaries(SIM_Object *fluid_obj) -> std::vector<SIM_Hina_Particles_Akinci *>;

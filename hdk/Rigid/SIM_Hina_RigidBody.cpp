@@ -9,6 +9,8 @@ SIM_HINA_DATA_IMPLEMENT(
 void SIM_Hina_RigidBody::_init_RigidBody()
 {
 	this->rb = nullptr;
+	this->b_set_index = -1;
+
 	this->V = nullptr;
 	this->I = nullptr;
 	this->F = nullptr;
@@ -19,6 +21,8 @@ void SIM_Hina_RigidBody::_init_RigidBody()
 void SIM_Hina_RigidBody::_makeEqual_RigidBody(const SIM_Hina_RigidBody *src)
 {
 	this->rb = src->rb;
+	this->b_set_index = src->b_set_index;
+
 	this->V = src->V;
 	this->I = src->I;
 	this->F = src->F;

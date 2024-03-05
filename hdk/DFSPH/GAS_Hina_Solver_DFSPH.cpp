@@ -63,6 +63,7 @@ bool GAS_Hina_Solver_DFSPH::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 	{
 		UpdateAllAkinciBoundaries(obj);
 		DFSPH_AkinciSolverPtr->Solve(timestep);
+		apply_akinci_force(obj);
 	}
 
 	return true;
@@ -107,9 +108,8 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 				akinci_boundary->no = &DFSPH_AkinciSolverPtr->Boundaries.back()->neighbor_others;
 				akinci_boundary->x_init = &DFSPH_AkinciSolverPtr->Boundaries.back()->x_init;
 				akinci_boundary->xform = &DFSPH_AkinciSolverPtr->Boundaries.back()->xform;
-				akinci_boundary->pos = &DFSPH_AkinciSolverPtr->Boundaries.back()->pos;
-				akinci_boundary->quat = &DFSPH_AkinciSolverPtr->Boundaries.back()->quat;
-				akinci_boundary->rest_center_of_mass = &DFSPH_AkinciSolverPtr->Boundaries.back()->rest_center_of_mass;
+
+				akinci_boundary->b_set_index = DFSPH_AkinciSolverPtr->Boundaries.size() - 1;
 
 				DFSPH_AkinciSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));
 				DFSPH_AkinciSolverPtr->BOUNDARY_DYNAMICS.emplace_back(akinci_boundary->getIsDynamic());
@@ -136,4 +136,31 @@ void GAS_Hina_Solver_DFSPH::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
 	HinaPE::FluidEmitter::UseFluidBlock(DFSPH_particles->x, start, end, spacing);
 
 	emitted = one_shot;
+}
+
+void GAS_Hina_Solver_DFSPH::apply_akinci_force(SIM_Object *obj)
+{
+	for (auto &rigidbody: FetchAllRigidBodies(obj))
+	{
+		for (auto &boundary: FetchAllAkinciBoundaries(obj))
+		{
+			if (rigidbody->b_set_index == -1 || boundary->b_set_index == -1)
+				continue;
+
+			if (boundary->b_set_index == rigidbody->b_set_index)
+			{
+				for (int i = 0; i < boundary->a->size(); ++i)
+				{
+					real buoyancy = boundary->getBuoyancy();
+					Vector _f = (*boundary->m)[i] * (*boundary->a)[i];
+					_f *= buoyancy;
+					Vector _x = (*boundary->x)[i];
+
+					reactphysics3d::Vector3 f = {_f.x(), _f.y(), _f.z()};
+					reactphysics3d::Vector3 x = {_x.x(), _x.y(), _x.z()};
+					rigidbody->rb->applyWorldForceAtWorldPosition(f, x);
+				}
+			}
+		}
+	}
 }

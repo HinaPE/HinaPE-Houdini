@@ -30,9 +30,6 @@ struct AkinciBoundary : public AkinciBoundaryCPU
 {
 	VectorArrayCPU x_init;
 	UT_DMatrix4 xform;
-	UT_Vector3 pos;
-	UT_Quaternion quat;
-	Vector rest_center_of_mass;
 };
 
 struct DFSPH_AkinciFluid : public FluidCPU

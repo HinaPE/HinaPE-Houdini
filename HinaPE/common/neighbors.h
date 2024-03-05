@@ -18,6 +18,7 @@ struct INeighborBuilder
 	virtual size_t n_neighbors(size_t this_set_idx, size_t target_set_idx, int pt_idx) = 0;
 };
 
+// DO NOT USE THIS ( NOT IMPLEMENTED YET )
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct NeighborBuilderCPU : INeighborBuilder<real, Vector3, ScalarArray, Vector3Array>
 {
