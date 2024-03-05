@@ -90,6 +90,7 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 			DFSPH_particles->rho = &DFSPH_AkinciSolverPtr->Fluid->rho;
 			DFSPH_particles->nt = &DFSPH_AkinciSolverPtr->Fluid->neighbor_this;
 			DFSPH_particles->no = &DFSPH_AkinciSolverPtr->Fluid->neighbor_others;
+
 			DFSPH_particles->factor = &DFSPH_AkinciSolverPtr->Fluid->factor;
 			DFSPH_particles->k = &DFSPH_AkinciSolverPtr->Fluid->k;
 			DFSPH_particles->density_adv = &DFSPH_AkinciSolverPtr->Fluid->density_adv;

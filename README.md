@@ -55,4 +55,4 @@ Emitter
 
 Two-way Coupling
 
-- [ ] Rigidbody proxy
+- [x] Rigidbody proxy

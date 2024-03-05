@@ -18,11 +18,15 @@ file(GLOB HINAPE_COMMON common/particles.h common/neighbors.h common/kernels.h c
 file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE
         DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp
 )
+file(GLOB_RECURSE HINAPE_PBF_AKINCI_SOURCE
+        PBF_Akinci/*.h PBF_Akinci/*.cpp
+)
 
 
 add_library(HinaPE STATIC
         ${HINAPE_COMMON}
         ${HINAPE_DFSPH_AKINCI_SOURCE}
+        ${HINAPE_PBF_AKINCI_SOURCE}
 )
 target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini tbb CUDA_CubbyFlow CUDA_NeighborSearch Discregrid TreeNSearch ReactPhysics3D)
 target_link_directories(

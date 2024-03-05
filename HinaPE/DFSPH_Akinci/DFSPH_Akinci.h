@@ -29,7 +29,7 @@ using FluidEmitter = IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>
 struct AkinciBoundary : public AkinciBoundaryCPU
 {
 	VectorArrayCPU x_init;
-	UT_DMatrix4 xform;
+	UT_DMatrix4 xform; // update from outside. if Boundary is static, [xform] is the center of mass of the boundary, and keep the same all the time // if Boundary is dynamic, [xform] is updated by RigidBody simulator (update from outside)
 };
 
 struct DFSPH_AkinciFluid : public FluidCPU
