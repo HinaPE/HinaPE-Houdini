@@ -341,23 +341,23 @@ static PRM_Default    theGeometryNameDefault(0, PARTICLE_CLASS::DATANAME); \
 PRMS.emplace_back(PRM_STRING, 1, &theGeometryName, &theGeometryNameDefault);
 
 #define ACTIVATE_GAS_VELOCITY \
-static PRM_Name    theVelocityName(GAS_NAME_VELOCITY, "Velocity"); \
-static PRM_Default    theVelocityNameDefault(0, "Velocity"); \
+static PRM_Name    theVelocityName(GAS_NAME_VELOCITY, "VelocityDataName"); \
+static PRM_Default    theVelocityNameDefault(0, "velocity"); \
 PRMS.emplace_back(PRM_STRING, 1, &theVelocityName, &theVelocityNameDefault);
 
 #define ACTIVATE_GAS_DENSITY \
-static PRM_Name    theDensityName(GAS_NAME_DENSITY, "Density"); \
-static PRM_Default    theDensityNameDefault(0, "Density"); \
+static PRM_Name    theDensityName(GAS_NAME_DENSITY, "DensityDataName"); \
+static PRM_Default    theDensityNameDefault(0, "density"); \
 PRMS.emplace_back(PRM_STRING, 1, &theDensityName, &theDensityNameDefault);
 
 #define ACTIVATE_GAS_TEMPERATURE \
-static PRM_Name    theTemperatureName(GAS_NAME_TEMPERATURE, "Temperature"); \
-static PRM_Default    theTemperatureNameDefault(0, "Temperature"); \
+static PRM_Name    theTemperatureName(GAS_NAME_TEMPERATURE, "TemperatureDataName"); \
+static PRM_Default    theTemperatureNameDefault(0, "temperature"); \
 PRMS.emplace_back(PRM_STRING, 1, &theTemperatureName, &theTemperatureNameDefault);
 
 #define ACTIVATE_GAS_PRESSURE \
-static PRM_Name    thePressureName(GAS_NAME_PRESSURE, "Pressure"); \
-static PRM_Default    thePressureNameDefault(0, "Pressure"); \
+static PRM_Name    thePressureName(GAS_NAME_PRESSURE, "PressureDataName"); \
+static PRM_Default    thePressureNameDefault(0, "pressure"); \
 PRMS.emplace_back(PRM_STRING, 1, &thePressureName, &thePressureNameDefault);
 
 

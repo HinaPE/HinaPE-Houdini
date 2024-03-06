@@ -15,7 +15,7 @@ Dependencies:
 - CUDA (>=12.1)
 
 ```cpp
-cmake -B Build -S .
+cmake -B Build -S . -DCMAKE_CUDA_COMPILER="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin/nvcc.exe"
 cmake --build Build
 ```
 
