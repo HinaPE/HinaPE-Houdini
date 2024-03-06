@@ -1,5 +1,5 @@
-#ifndef HINAPE_COMMON1_H
-#define HINAPE_COMMON1_H
+#ifndef HINAPE_PARTICLES_H
+#define HINAPE_PARTICLES_H
 
 #include <Discregrid/discregrid/include/Discregrid/All>
 #include "tbb/tbb.h"
@@ -53,4 +53,4 @@ struct IBenderBoundary
 
 } // namespace HinaPE
 
-#endif //HINAPE_COMMON1_H
+#endif //HINAPE_PARTICLES_H
