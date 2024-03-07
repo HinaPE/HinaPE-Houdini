@@ -10,7 +10,6 @@ add_library(
         ${SIM_HinaPE_SOURCE}
 )
 
-# Link Houdini Toolkit
 target_link_libraries(
         ${SIM_HinaPE_TARGET}
         PUBLIC

@@ -6,25 +6,16 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(3rd_party/CUDA_CubbyFlow)
 add_subdirectory(3rd_party/CUDA_NeighborSearch)
+add_subdirectory(3rd_party/CUDA_peridyno)
 add_subdirectory(3rd_party/TreeNSearch)
-#option(EIGEN_BUILD_DOC OFF)
-#option(BUILD_TESTING OFF)
-#add_subdirectory(3rd_party/eigen-3.4.0)
 option(BUILD_CMD_EXECUTABLE OFF)
 add_subdirectory(3rd_party/Discregrid)
 add_subdirectory(3rd_party/ReactPhysics3D)
-add_subdirectory(3rd_party/CUDA_peridyno)
 
 file(GLOB HINAPE_COMMON common/particles.h common/neighbors.h common/kernels.h common/geometry.h common/emitter.h)
-file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE
-        DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp
-)
-file(GLOB_RECURSE HINAPE_PBF_AKINCI_SOURCE
-        PBF_Akinci/*.h PBF_Akinci/*.cpp
-)
-file(GLOB_RECURSE HINAPE_SMOKE_SOURCE
-        Smoke/*.h Smoke/*.cpp
-)
+file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp)
+file(GLOB_RECURSE HINAPE_PBF_AKINCI_SOURCE PBF_Akinci/*.h PBF_Akinci/*.cpp)
+file(GLOB_RECURSE HINAPE_SMOKE_SOURCE Smoke/*.h Smoke/*.cpp)
 
 
 add_library(HinaPE STATIC
