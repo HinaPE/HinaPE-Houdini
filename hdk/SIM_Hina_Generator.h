@@ -19,6 +19,7 @@
 #include <SIM/SIM_ForceGravity.h>
 #include <SIM/SIM_Time.h>
 #include <SIM/SIM_Utils.h>
+#include <SIM/SIM_Position.h>
 
 #include <SIM/SIM_ScalarField.h>
 #include <SIM/SIM_VectorField.h>

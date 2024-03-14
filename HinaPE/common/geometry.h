@@ -37,9 +37,17 @@ struct ISurface
 		};
 	}
 
-	real Distance(const Vector3 &point) const
+	real SignedDistance(const Vector3 &point) const
 	{
-		return surface->ClosestDistance(CubbyFlow::Vector3D{point.x(), point.y(), point.z()});
+		CubbyFlow::Vector3D point_cf{point.x(), point.y(), point.z()};
+
+		double _distance = surface->ClosestDistance(point_cf);
+		CubbyFlow::Vector3D _point = surface->ClosestPoint(point_cf);
+		CubbyFlow::Vector3D _normal = surface->ClosestNormal(point_cf);
+
+		(point_cf - _point).Dot(_normal) < 0.0 ? _distance = -_distance : _distance = _distance;
+
+		return _distance;
 	}
 
 private:

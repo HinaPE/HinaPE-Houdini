@@ -25,7 +25,13 @@ bool GAS_Hina_Test::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, S
 		this->InnerPtr = std::make_shared<Surface>(V, I);
 	}
 
-	InnerPtr->update_transform(UT_Vector3D{0, 2, 0}, UT_QuaternionD{0, 0, 0 ,1});
-	std::cout << InnerPtr->Distance(UT_Vector3D{0, 0, 0}) << std::endl;
+	SIM_Position *pos = SIM_DATA_GET(*obj, SIM_POSITION_DATANAME, SIM_Position);
+	if (pos)
+	{
+		UT_Vector3 p;
+		pos->getPosition(p);
+		InnerPtr->update_transform(p, UT_QuaternionD{0, 0, 0 ,1});
+		std::cout << InnerPtr->SignedDistance(UT_Vector3D{0, 0, 0}) << std::endl;
+	}
 	return true;
 }

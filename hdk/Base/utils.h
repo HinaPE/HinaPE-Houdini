@@ -47,10 +47,18 @@ std::pair<std::vector<UT_Vector3>, std::vector<size_t>> ReadTriangleMeshFromGeom
 			GA_Size prim_vertex_count = prim->getVertexCount();
 			if (prim_vertex_count == 3)
 			{
-				for (GA_Size i = 0; i < prim_vertex_count; ++i)
+				for (GA_Size i = 0; i < prim_vertex_count; i += 3)
 				{
 					GA_Offset pt_off = prim->getPointOffset(i);
 					GA_Index pt_idx = gdp->pointIndex(pt_off);
+					indices.emplace_back(pt_idx);
+
+					pt_off = prim->getPointOffset(i + 2); // Important: invert the indices
+					pt_idx = gdp->pointIndex(pt_off);
+					indices.emplace_back(pt_idx);
+
+					pt_off = prim->getPointOffset(i + 1);
+					pt_idx = gdp->pointIndex(pt_off);
 					indices.emplace_back(pt_idx);
 				}
 			} else if (prim_vertex_count == 4)
@@ -59,11 +67,11 @@ std::pair<std::vector<UT_Vector3>, std::vector<size_t>> ReadTriangleMeshFromGeom
 				GA_Index pt_idx = gdp->pointIndex(pt_off);
 				indices.emplace_back(pt_idx);
 
-				pt_off = prim->getPointOffset(1);
+				pt_off = prim->getPointOffset(2); // Important: invert the indices
 				pt_idx = gdp->pointIndex(pt_off);
 				indices.emplace_back(pt_idx);
 
-				pt_off = prim->getPointOffset(2);
+				pt_off = prim->getPointOffset(1);
 				pt_idx = gdp->pointIndex(pt_off);
 				indices.emplace_back(pt_idx);
 
@@ -71,11 +79,11 @@ std::pair<std::vector<UT_Vector3>, std::vector<size_t>> ReadTriangleMeshFromGeom
 				pt_idx = gdp->pointIndex(pt_off);
 				indices.emplace_back(pt_idx);
 
-				pt_off = prim->getPointOffset(2);
+				pt_off = prim->getPointOffset(3); // Important: invert the indices
 				pt_idx = gdp->pointIndex(pt_off);
 				indices.emplace_back(pt_idx);
 
-				pt_off = prim->getPointOffset(3);
+				pt_off = prim->getPointOffset(2);
 				pt_idx = gdp->pointIndex(pt_off);
 				indices.emplace_back(pt_idx);
 			} else
