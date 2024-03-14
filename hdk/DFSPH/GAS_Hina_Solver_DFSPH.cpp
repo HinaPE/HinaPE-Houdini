@@ -1,4 +1,5 @@
 #include "GAS_Hina_Solver_DFSPH.h"
+#include <Base/utils.h>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		Solver_DFSPH,
@@ -147,8 +148,14 @@ void GAS_Hina_Solver_DFSPH::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
 	Vector start = getEmitStart();
 	Vector end = getEmitEnd();
 
-	HinaPE::FluidEmitter::UseFluidBlock(DFSPH_particles->x, start, end, spacing);
-
+	SIM_Geometry *sub_geometry_as_emitter_source = SIM_DATA_GET(*this, SIM_GEOMETRY_DATANAME, SIM_Geometry);
+	if (sub_geometry_as_emitter_source)
+	{
+		Vector pos;
+		std::pair<std::vector<Vector>, std::vector<size_t>> triangle_mesh_info = ReadTriangleMeshFromGeometry<real, Vector>(sub_geometry_as_emitter_source, pos);
+		HinaPE::FluidEmitter::UseTriangleMeshSource(DFSPH_particles->x, triangle_mesh_info, pos, 1.6 * spacing, max_p);
+	} else
+		HinaPE::FluidEmitter::UseFluidBlock(DFSPH_particles->x, start, end, spacing);
 	emitted = one_shot;
 }
 

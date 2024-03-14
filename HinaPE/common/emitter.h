@@ -11,14 +11,32 @@
 #include <CUDA_CubbyFlow/Core/Geometry/ImplicitSurfaceSet.hpp>
 #include <CUDA_CubbyFlow/Core/Utils/Logging.hpp>
 
+#include "geometry.h"
+
+#include <UT/UT_Quaternion.h>
+using Quaternion = UT_Quaternion;
+
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct IFluidEmitter
 {
-	static void UseCubbyVolumeEmitter(Vector3Array *TARGET, CubbyFlow::ImplicitSurfaceSet3Ptr Implicit, real TargetSpacing, real MaxParticles)
+	static void UseTriangleMeshSource(Vector3Array *TARGET, const std::pair<std::vector<Vector3>, std::vector<size_t>> &triangle_mesh_info, Vector3 pos, real TargetSpacing, real MaxParticles)
 	{
 		CubbyFlow::Logging::Mute();
 		const double maxJitterDist = 0;
 
+		const std::vector<Vector3> &vertices = triangle_mesh_info.first;
+		const std::vector<size_t> &indices = triangle_mesh_info.second;
+		CubbyFlow::TriangleMesh3::PointArray points;
+		CubbyFlow::TriangleMesh3::IndexArray point_indices;
+		for (size_t i = 0; i < vertices.size(); i++)
+			points.Append(CubbyFlow::Vector3D{vertices[i].x(), vertices[i].y(), vertices[i].z()});
+		for (size_t i = 0; i < indices.size(); i += 3)
+			point_indices.Append(CubbyFlow::Vector3UZ{indices[i], indices[i + 1], indices[i + 2]});
+		auto surface = CubbyFlow::TriangleMesh3::GetBuilder().WithPoints(points).WithPointIndices(point_indices).MakeShared();
+		surface->transform = CubbyFlow::Transform3{CubbyFlow::Vector3D{pos.x(), pos.y(), pos.z()}, CubbyFlow::QuaternionD{1, 0, 0, 0}};
+		CubbyFlow::Array1<CubbyFlow::Surface3Ptr> surfaces;
+		surfaces.Append(surface);
+		CubbyFlow::ImplicitSurfaceSet3Ptr Implicit = CubbyFlow::ImplicitSurfaceSet3::GetBuilder().WithExplicitSurfaces(surfaces).MakeShared();
 		Implicit->UpdateQueryEngine();
 
 		constexpr int DEFAULT_HASH_GRID_RESOLUTION = 64;
@@ -50,7 +68,7 @@ struct IFluidEmitter
 			{
 				if (TARGET->size() >= MaxParticles)
 					return false;
-				TARGET->push_back({candidate.x, candidate.y, candidate.z});
+				TARGET->push_back({static_cast<real>(candidate.x), static_cast<real>(candidate.y), static_cast<real>(candidate.z)});
 			}
 			return true;
 		});

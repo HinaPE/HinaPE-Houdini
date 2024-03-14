@@ -9,13 +9,9 @@
 #include <SIM/SIM_Geometry.h>
 
 template <typename real, typename Vector>
-std::pair<std::vector<Vector>, std::vector<size_t>> ReadTriangleMeshFromGeometry(SIM_Object *obj, const char *DATANAME, Vector &OUT_pos)
+std::pair<std::vector<Vector>, std::vector<size_t>> ReadTriangleMeshFromGeometry(SIM_Geometry *SOPGeometry, Vector &OUT_pos)
 {
 	std::pair<std::vector<Vector>, std::vector<size_t>> res;
-
-	SIM_Geometry *SOPGeometry = SIM_DATA_GET(*obj, DATANAME, SIM_Geometry);
-	if (!SOPGeometry)
-		throw std::runtime_error("No geometry found for " + std::string(DATANAME));
 
 	SIM_GeometryAutoReadLock lock(SOPGeometry);
 	const GU_Detail *gdp = lock.getGdp();

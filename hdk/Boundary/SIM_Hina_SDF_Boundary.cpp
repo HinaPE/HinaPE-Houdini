@@ -54,8 +54,12 @@ void InitAllSDFBoundaries(SIM_Object *fluid_obj)
 		if (SDF_boundary)
 		{
 			SDF_boundary->S = nullptr;
+
+			SIM_Geometry *SOPGeometry = SIM_DATA_GET(*obj_collider, SDF_boundary->getTargetGeometryDATANAME().c_str(), SIM_Geometry);
+			if (!SOPGeometry)
+				throw std::runtime_error("No geometry found for " + std::string(SIM_GEOMETRY_DATANAME));
 			Vector pos;
-			std::pair<std::vector<Vector>, std::vector<size_t>> triangle_mesh_info = ReadTriangleMeshFromGeometry<real, Vector>(obj_collider, SDF_boundary->getTargetGeometryDATANAME().c_str(), pos);
+			std::pair<std::vector<Vector>, std::vector<size_t>> triangle_mesh_info = ReadTriangleMeshFromGeometry<real, Vector>(SOPGeometry, pos);
 			SDF_boundary->S = std::make_shared<Surface>(triangle_mesh_info.first, triangle_mesh_info.second);
 			SDF_boundary->S->update_transform(pos, Quaternion(0, 0, 0, 1));
 		}
