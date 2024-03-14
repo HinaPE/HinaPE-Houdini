@@ -4,7 +4,10 @@
 #include <SIM_Hina_Generator.h>
 
 #include "common/geometry.h"
-using Surface = HinaPE::ISurface<fpreal32, UT_Vector3, UT_Quaternion>;
+using real = float;
+using Vector = UT_Vector3;
+using Quaternion = UT_Quaternion;
+using Surface = HinaPE::ISurface<real, Vector, Quaternion>;
 using SurfacePtr = std::shared_ptr<Surface>;
 
 GAS_HINA_SUBSOLVER_CLASS(

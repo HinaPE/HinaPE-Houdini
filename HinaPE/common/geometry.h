@@ -37,7 +37,7 @@ struct ISurface
 		};
 	}
 
-	real SignedDistance(const Vector3 &point) const
+	real signed_distance(const Vector3 &point) const
 	{
 		CubbyFlow::Vector3D point_cf{point.x(), point.y(), point.z()};
 

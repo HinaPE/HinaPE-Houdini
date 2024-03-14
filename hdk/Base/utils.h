@@ -8,33 +8,36 @@
 #include <SIM/SIM_Object.h>
 #include <SIM/SIM_Geometry.h>
 
-std::pair<std::vector<UT_Vector3>, std::vector<size_t>> ReadTriangleMeshFromGeometry(SIM_Object *obj, const char *DATANAME)
+template <typename real, typename Vector>
+std::pair<std::vector<Vector>, std::vector<size_t>> ReadTriangleMeshFromGeometry(SIM_Object *obj, const char *DATANAME)
 {
-	std::pair<std::vector<UT_Vector3>, std::vector<size_t>> res;
+	std::pair<std::vector<Vector>, std::vector<size_t>> res;
 
 	SIM_Geometry *SOPGeometry = SIM_DATA_GET(*obj, DATANAME, SIM_Geometry);
 	SIM_GeometryAutoReadLock lock(SOPGeometry);
 	const GU_Detail *gdp = lock.getGdp();
 
-	UT_Vector3 center_of_mass{0, 0, 0};
+	Vector center_of_mass{0, 0, 0};
 	{
 		GA_Offset pt_off;
 		GA_FOR_ALL_PTOFF(gdp, pt_off)
 			{
-				UT_Vector3 pos = gdp->getPos3(pt_off);
+				UT_Vector3 _pos = gdp->getPos3(pt_off);
+				Vector pos = {_pos.x(), _pos.y(), _pos.z()};
 				center_of_mass += pos;
 			}
-		center_of_mass /= gdp->getNumPoints();
+		center_of_mass /= (real)gdp->getNumPoints();
 	}
 
-	std::vector<UT_Vector3> &vertices = res.first;
+	std::vector<Vector> &vertices = res.first;
 	vertices.resize(gdp->getNumPoints());
 	{
 		GA_Offset pt_off;
 		GA_FOR_ALL_PTOFF(gdp, pt_off)
 			{
 				GA_Size pt_idx = gdp->pointIndex(pt_off);
-				UT_Vector3 pos = gdp->getPos3(pt_off);
+				UT_Vector3 _pos = gdp->getPos3(pt_off);
+				Vector pos = {_pos.x(), _pos.y(), _pos.z()};
 				vertices[pt_idx] = pos - center_of_mass;
 			}
 	}
