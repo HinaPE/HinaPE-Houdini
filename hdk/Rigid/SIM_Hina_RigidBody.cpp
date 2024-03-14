@@ -3,7 +3,9 @@
 SIM_HINA_DATA_IMPLEMENT(
 		RigidBody,
 		true,
-		HINA_BOOL_PARAMETER(IsDynamic, true)
+		HINA_BOOL_PARAMETER(IsDynamic, true) \
+		HINA_FLOAT_PARAMETER(Bounciness, .4) \
+        HINA_FLOAT_PARAMETER(Friction, .02) \
 )
 
 void SIM_Hina_RigidBody::_init_RigidBody()
@@ -170,8 +172,8 @@ void InitAllRigidBodies(SIM_Object *obj, reactphysics3d::PhysicsCommon &physicsC
 			rigidbody->rb->setType(rigidbody->getIsDynamic() ? reactphysics3d::BodyType::DYNAMIC : reactphysics3d::BodyType::STATIC);
 
 			reactphysics3d::Collider *collider = rigidbody->rb->addCollider(CMS, reactphysics3d::Transform::identity());
-			collider->getMaterial().setBounciness(0.9);
-			collider->getMaterial().setFrictionCoefficient(0.01);
+			collider->getMaterial().setBounciness(rigidbody->getBounciness());
+			collider->getMaterial().setFrictionCoefficient(rigidbody->getFriction());
 
 			rigidbody->rb->updateMassPropertiesFromColliders();
 		}

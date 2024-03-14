@@ -8,6 +8,8 @@
 SIM_HINA_DATA_CLASS(
 		RigidBody,
 		HINA_GETSET_PARAMETER(IsDynamic, GETSET_DATA_FUNCS_B) \
+		HINA_GETSET_PARAMETER(Bounciness, GETSET_DATA_FUNCS_F) \
+		HINA_GETSET_PARAMETER(Friction, GETSET_DATA_FUNCS_F)
 		reactphysics3d::RigidBody *rb;
 		int b_set_index; // FOR FLUID SOLVER
 
