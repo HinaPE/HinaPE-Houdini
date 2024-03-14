@@ -3,7 +3,7 @@
 SIM_HINA_DATA_IMPLEMENT(
 		RigidBody,
 		true,
-		HINA_STRING_PARAMETER(TargetGeometryDATANAME, "GeometryMesh") \
+		HINA_STRING_PARAMETER(TargetGeometryDATANAME, "GeometryConvex") \
 		HINA_BOOL_PARAMETER(IsDynamic, true) \
 		HINA_FLOAT_PARAMETER(Bounciness, .4) \
         HINA_FLOAT_PARAMETER(Friction, .02) \
