@@ -11,24 +11,10 @@
 #include <UT/UT_Vector3.h>
 #include <SIM/SIM_ScalarField.h>
 #include <SIM/SIM_VectorField.h>
+#include "common/geometry.h"
 namespace HinaPE
 {
-//inline void for_each_voxel_index(SIM_ScalarField &sf, std::function<void(int, int, int)> func)
-//{
-//	int x_size = sf.getTotalVoxelRes();
-//	int y_size = f.getVoxelRes().y();
-//	int z_size = f.getVoxelRes().z();
-//	for (int x = 0; x < x_size; x++)
-//	{
-//		for (int y = 0; y < y_size; y++)
-//		{
-//			for (int z = 0; z < z_size; z++)
-//			{
-//				func(x, y, z);
-//			}
-//		}
-//	}
-//}
+using Surface = HinaPE::ISurface<fpreal32, UT_Vector3, UT_Quaternion>;
 
 struct SmokeNativeSolver
 {

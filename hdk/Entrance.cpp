@@ -11,6 +11,8 @@
 #include <Rigid/GAS_Hina_Solver_Rigid.h>
 #include <Smoke/GAS_Hina_Solver_Smoke.h>
 
+#include <_Test/GAS_Hina_Test.h>
+
 void initializeSIM(void *)
 {
 	// Completed Classes
@@ -24,4 +26,7 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBody)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Rigid)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Smoke)
+
+	// TEST CLASSES
+	IMPLEMENT_DATAFACTORY(GAS_Hina_Test)
 }
