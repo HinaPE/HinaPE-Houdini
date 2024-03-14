@@ -3,6 +3,7 @@
 SIM_HINA_DATA_IMPLEMENT(
 		RigidBody,
 		true,
+		HINA_STRING_PARAMETER(TargetGeometryDATANAME, "GeometryMesh") \
 		HINA_BOOL_PARAMETER(IsDynamic, true) \
 		HINA_FLOAT_PARAMETER(Bounciness, .4) \
         HINA_FLOAT_PARAMETER(Friction, .02) \
@@ -93,7 +94,7 @@ void InitAllRigidBodies(SIM_Object *obj, reactphysics3d::PhysicsCommon &physicsC
 		SIM_Hina_RigidBody *rigidbody = SIM_DATA_GET(*obj_collider, SIM_Hina_RigidBody::DATANAME, SIM_Hina_RigidBody);
 		if (rigidbody)
 		{
-			SIM_Geometry *SOPGeometry = SIM_DATA_GET(*obj_collider, "GeometryMesh", SIM_Geometry);
+			SIM_Geometry *SOPGeometry = SIM_DATA_GET(*obj_collider, rigidbody->getTargetGeometryDATANAME().c_str(), SIM_Geometry);
 			SIM_GeometryAutoReadLock lock(SOPGeometry);
 			const GU_Detail *gdp = lock.getGdp();
 
