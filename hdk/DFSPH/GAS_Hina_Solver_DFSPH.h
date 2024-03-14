@@ -5,6 +5,7 @@
 
 #include <DFSPH/SIM_Hina_Particles_DFSPH.h>
 #include <Boundary/SIM_Hina_Particles_Akinci.h>
+#include <Boundary/SIM_Hina_SDF_Boundary.h>
 #include <Rigid/SIM_Hina_RigidBody.h>
 #include <HinaPE/DFSPH_Akinci/DFSPH_Akinci.h>
 

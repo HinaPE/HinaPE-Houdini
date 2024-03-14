@@ -24,6 +24,7 @@ struct ISurface
 		for (size_t i = 0; i < indices.size(); i += 3)
 			point_indices.Append(CubbyFlow::Vector3UZ{indices[i], indices[i + 1], indices[i + 2]});
 		surface = CubbyFlow::TriangleMesh3::GetBuilder().WithPoints(points).WithPointIndices(point_indices).MakeShared();
+		surface->UpdateQueryEngine();
 		implicit_surface = CubbyFlow::SurfaceToImplicit3::GetBuilder().WithSurface(surface).MakeShared();
 		rigid_body_collider = CubbyFlow::RigidBodyCollider3::GetBuilder().WithSurface(surface).MakeShared();
 	}
@@ -33,7 +34,7 @@ struct ISurface
 		rigid_body_collider->GetSurface()->transform
 				= CubbyFlow::Transform3{
 				CubbyFlow::Vector3D{translation.x(), translation.y(), translation.z()},
-				CubbyFlow::QuaternionD{rotation.x(), rotation.y(), rotation.z(), rotation.w()}
+				CubbyFlow::QuaternionD{rotation.w(), rotation.x(), rotation.y(), rotation.z()}
 		};
 	}
 
@@ -48,6 +49,15 @@ struct ISurface
 		(point_cf - _point).Dot(_normal) < 0.0 ? _distance = -_distance : _distance = _distance;
 
 		return _distance;
+	}
+
+	void resolve_collision(real radius, real bounciness, Vector3 &pos, Vector3 &vel)
+	{
+		CubbyFlow::Vector3D pos_cf{pos.x(), pos.y(), pos.z()};
+		CubbyFlow::Vector3D vel_cf{vel.x(), vel.y(), vel.z()};
+		rigid_body_collider->ResolveCollision(static_cast<double>(radius), static_cast<double>(bounciness), &pos_cf, &vel_cf);
+		pos = Vector3{static_cast<real>(pos_cf.x), static_cast<real>(pos_cf.y), static_cast<real>(pos_cf.z)};
+		vel = Vector3{static_cast<real>(vel_cf.x), static_cast<real>(vel_cf.y), static_cast<real>(vel_cf.z)};
 	}
 
 private:

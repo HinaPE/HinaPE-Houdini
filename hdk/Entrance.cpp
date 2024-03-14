@@ -3,6 +3,7 @@
 #include <GAS_CFL_SubStep.h>
 #include <Base/SIM_Hina_Particles.h>
 #include <Boundary/SIM_Hina_Particles_Akinci.h>
+#include <Boundary/SIM_Hina_SDF_Boundary.h>
 #include <DFSPH/SIM_Hina_Particles_DFSPH.h>
 #include <DFSPH/GAS_Hina_Solver_DFSPH.h>
 #include <PBF/SIM_Hina_Particles_PBF.h>
@@ -23,6 +24,7 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_PBF)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_PBF)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_Akinci)
+	IMPLEMENT_DATAFACTORY(SIM_Hina_SDF_Boundary)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBody)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Rigid)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Smoke)

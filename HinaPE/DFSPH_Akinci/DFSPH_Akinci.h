@@ -10,6 +10,7 @@
 #include "common/emitter.h"
 #include "common/kernels.h"
 #include "common/neighbors.h"
+#include "common/geometry.h"
 #include <vector>
 #include <UT/UT_Vector3.h>
 #include <UT/UT_Matrix4.h>
@@ -18,6 +19,7 @@ namespace HinaPE
 {
 using real = float;
 using Vector = UT_Vector3T<real>;
+using Quaternion = UT_QuaternionT<real>;
 using Kernel = ICubic<real, Vector>;
 using ScalarArrayCPU = std::vector<real>;
 using VectorArrayCPU = std::vector<Vector>;
@@ -25,6 +27,12 @@ using FluidCPU = IFluid<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 using AkinciBoundaryCPU = IAkinciBoundary<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 using NeighborBuilder = NeighborBuilderGPU<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
 using FluidEmitter = IFluidEmitter<real, Vector, ScalarArrayCPU, VectorArrayCPU>;
+using Surface = ISurface<real, Vector, Quaternion>;
+
+struct SDFBoundary
+{
+	std::shared_ptr<Surface> S = nullptr; // use for accurate collision detection (RigidBody Solver should use Convex Mesh, but this (Cubby Flow Geometry) can use any accurate Geometry Mesh)
+};
 
 struct AkinciBoundary : public AkinciBoundaryCPU
 {
@@ -53,12 +61,20 @@ struct DFSPH_AkinciParam
 	std::vector<bool> BOUNDARY_DYNAMICS;
 };
 
-struct DFSPH_AkinciSolver : public DFSPH_AkinciParam
+struct DFSPH_SDFParam
+{
+	std::vector<real> SDF_FRICTION;
+	std::vector<real> SDF_BOUNCINESS;
+	std::vector<bool> SDF_DYNAMICS;
+};
+
+struct DFSPH_AkinciSolver : public DFSPH_AkinciParam, public DFSPH_SDFParam
 {
 	DFSPH_AkinciSolver(real, Vector);
 	virtual void Solve(real dt);
 	std::shared_ptr<DFSPH_AkinciFluid> Fluid;
 	std::vector<std::shared_ptr<AkinciBoundary>> Boundaries;
+	std::vector<std::shared_ptr<SDFBoundary>> SDFBoundaries;
 
 protected:
 	void resize();
@@ -71,6 +87,7 @@ protected:
 	void predict_velocity(real dt);
 	void pressure_solve(real dt);
 	void advect(real dt);
+	void enforce_SDF_boundary();
 	void enforce_boundary();
 
 private:

@@ -6,6 +6,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		Particles_Akinci,
 		Particles,
 		true,
+		HINA_STRING_PARAMETER(TargetGeometryDATANAME, SIM_GEOMETRY_DATANAME) \
 		HINA_FLOAT_PARAMETER(SolidDensity, 1000.) \
         HINA_FLOAT_PARAMETER(Buoyancy, 1.) \
         HINA_BOOL_PARAMETER(IsDynamic, false) \
@@ -64,7 +65,7 @@ void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 		{
 			(*boundary_akinci->x_init).clear();
 			{
-				SIM_Geometry *boundary_sop = SIM_DATA_GET(*obj_collider, SIM_GEOMETRY_DATANAME, SIM_Geometry);
+				SIM_Geometry *boundary_sop = SIM_DATA_GET(*obj_collider, boundary_akinci->getTargetGeometryDATANAME().c_str(), SIM_Geometry);
 				if (!boundary_sop)
 					return;
 				SIM_GeometryAutoReadLock lock(boundary_sop);

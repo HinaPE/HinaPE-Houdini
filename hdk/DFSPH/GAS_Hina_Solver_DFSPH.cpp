@@ -72,6 +72,8 @@ bool GAS_Hina_Solver_DFSPH::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 /// mapping pointers to the solver, and set solvers' parameters (SHOULD BE DONE AT FIRST STEP)
 void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles, SIM_Object *obj)
 {
+	InitAllSDFBoundaries(obj); // load from sop into S
+
 	switch (getBoundaryHandling())
 	{
 		case 0: // Akinci2012
@@ -114,6 +116,17 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 
 				DFSPH_AkinciSolverPtr->BOUNDARY_REST_DENSITY.emplace_back(static_cast<real>(akinci_boundary->getSolidDensity()));
 				DFSPH_AkinciSolverPtr->BOUNDARY_DYNAMICS.emplace_back(akinci_boundary->getIsDynamic());
+			}
+
+			std::vector<SIM_Hina_SDF_Boundary *> sdf_boundaries = FetchAllSDFBoundaries(obj);
+			for (auto &sdf_boundary: sdf_boundaries)
+			{
+				DFSPH_AkinciSolverPtr->SDFBoundaries.emplace_back(std::make_shared<HinaPE::SDFBoundary>());
+				DFSPH_AkinciSolverPtr->SDFBoundaries.back()->S = sdf_boundary->S; // Notice here, S is first load into SDFBoundaries, then SDFBoundaries is loaded into SDF_AkinciSolver
+
+				DFSPH_AkinciSolverPtr->SDF_FRICTION.emplace_back(sdf_boundary->getFriction());
+				DFSPH_AkinciSolverPtr->SDF_BOUNCINESS.emplace_back(sdf_boundary->getBounciness());
+				DFSPH_AkinciSolverPtr->SDF_DYNAMICS.emplace_back(sdf_boundary->getIsDynamic());
 			}
 		}
 			break;

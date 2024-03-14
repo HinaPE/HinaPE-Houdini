@@ -19,19 +19,12 @@ bool GAS_Hina_Test::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, S
 {
 	if (!InnerPtr)
 	{
-		std::pair<std::vector<Vector>, std::vector<size_t>> triangle_mesh_info = ReadTriangleMeshFromGeometry<double, Vector>(obj, SIM_GEOMETRY_DATANAME);
+		UT_Vector3 pos;
+		std::pair<std::vector<Vector>, std::vector<size_t>> triangle_mesh_info = ReadTriangleMeshFromGeometry<double, Vector>(obj, SIM_GEOMETRY_DATANAME, pos);
 		const std::vector<Vector> &V = triangle_mesh_info.first;
 		const std::vector<size_t> &I = triangle_mesh_info.second;
 		this->InnerPtr = std::make_shared<Surface>(V, I);
-	}
-
-	SIM_Position *pos = SIM_DATA_GET(*obj, SIM_POSITION_DATANAME, SIM_Position);
-	if (pos)
-	{
-		UT_Vector3 p;
-		pos->getPosition(p);
-		InnerPtr->update_transform(p, Quaternion{0, 0, 0 ,1});
-		std::cout << InnerPtr->signed_distance(Vector{0, 0, 0}) << std::endl;
+		InnerPtr->update_transform(pos, Quaternion{0, 0, 0 ,1});
 	}
 	return true;
 }

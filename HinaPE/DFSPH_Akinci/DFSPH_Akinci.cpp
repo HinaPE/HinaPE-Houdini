@@ -23,6 +23,8 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 	predict_velocity(dt);
 	pressure_solve(dt);
 	advect(dt);
+
+	enforce_SDF_boundary();
 	enforce_boundary();
 }
 void HinaPE::DFSPH_AkinciSolver::resize()
@@ -306,6 +308,17 @@ void HinaPE::DFSPH_AkinciSolver::advect(HinaPE::real dt)
 			[&](size_t i, Vector)
 			{
 				Fluid->x[i] += dt * Fluid->v[i];
+			});
+}
+void HinaPE::DFSPH_AkinciSolver::enforce_SDF_boundary()
+{
+	_for_each_fluid_particle(
+			[&](size_t i, Vector)
+			{
+				serial_for(SDFBoundaries.size(), [&](size_t sdf_idx)
+				{
+					SDFBoundaries[sdf_idx]->S->resolve_collision(FLUID_PARTICLE_RADIUS, SDF_BOUNCINESS[sdf_idx], Fluid->x[i], Fluid->v[i]);
+				});
 			});
 }
 void HinaPE::DFSPH_AkinciSolver::enforce_boundary()

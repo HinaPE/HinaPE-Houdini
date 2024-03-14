@@ -5,6 +5,7 @@ SIM_HINA_DATA_IMPLEMENT(
 		true,
 		HINA_STRING_PARAMETER(TargetGeometryDATANAME, "GeometryConvex") \
 		HINA_BOOL_PARAMETER(IsDynamic, true) \
+		HINA_FLOAT_PARAMETER(Mass, 1.) \
 		HINA_FLOAT_PARAMETER(Bounciness, .4) \
         HINA_FLOAT_PARAMETER(Friction, .02) \
 )
@@ -169,7 +170,7 @@ void InitAllRigidBodies(SIM_Object *obj, reactphysics3d::PhysicsCommon &physicsC
 			transform.setPosition({center_of_mass.x(), center_of_mass.y(), center_of_mass.z()});
 			transform.setOrientation(reactphysics3d::Quaternion::identity());
 			rigidbody->rb = world->createRigidBody(transform);
-			rigidbody->rb->setMass(5);
+			rigidbody->rb->setMass(rigidbody->getMass());
 			rigidbody->rb->setType(rigidbody->getIsDynamic() ? reactphysics3d::BodyType::DYNAMIC : reactphysics3d::BodyType::STATIC);
 
 			reactphysics3d::Collider *collider = rigidbody->rb->addCollider(CMS, reactphysics3d::Transform::identity());
