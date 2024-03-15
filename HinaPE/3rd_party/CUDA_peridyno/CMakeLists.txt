@@ -1,1 +1,5 @@
 add_subdirectory(Core)
+add_subdirectory(Framework)
+add_subdirectory(Topology)
+add_subdirectory(IO)
+add_subdirectory(Dynamics)

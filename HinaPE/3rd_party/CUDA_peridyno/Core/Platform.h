@@ -25,7 +25,9 @@
 #define PERIDYNO_API PERIDYNO_IMPORT
 #endif
 
+#ifndef CUDA_BACKEND
 #define CUDA_BACKEND
+#endif
 
 #if(defined(CUDA_BACKEND))
 #include <cuda_runtime.h>

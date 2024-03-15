@@ -14,6 +14,7 @@ add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 add_compile_definitions(_ENABLE_EXTENDED_ALIGNED_STORAGE)
 add_compile_definitions(CUDA_BACKEND)
 target_compile_options(${LIB_NAME} PUBLIC -Xcompiler "/wd 4819")
+target_link_options(${LIB_NAME} PUBLIC "/NODEFAULTLIB:library")
 set_target_properties(${LIB_NAME} PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 #To disable the warning "calling a constexpr __host__ function("***") from a __host__ __device__ function("***") is not allowed."
 target_compile_options(${LIB_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)

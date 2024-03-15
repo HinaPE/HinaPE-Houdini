@@ -11,8 +11,6 @@
 #include <CUDA_CubbyFlow/Core/Geometry/ImplicitSurfaceSet.hpp>
 #include <CUDA_CubbyFlow/Core/Utils/Logging.hpp>
 
-#include "geometry.h"
-
 #include <UT/UT_Quaternion.h>
 using Quaternion = UT_Quaternion;
 
