@@ -12,7 +12,7 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
         HINA_FLOAT_PARAMETER(TargetDensity, 1000.) \
         HINA_FLOAT_VECTOR_PARAMETER(Gravity, 3, 0, -9.8, 0) \
         HINA_INT_PARAMETER(MaxNumOfParticles, 100000) \
-        HINA_BOOL_PARAMETER(IsOneShot, true) \
+        HINA_BOOL_PARAMETER(UseFluidBlock, false) \
         HINA_FLOAT_VECTOR_PARAMETER(EmitStart, 3, -.3, -.3, -.3) \
         HINA_FLOAT_VECTOR_PARAMETER(EmitEnd, 3, .3, .3, .3) \
         static std::array<PRM_Name, 5> BoundaryHandling = {\
@@ -143,7 +143,6 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 void GAS_Hina_Solver_DFSPH::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
 {
 	size_t max_p = getMaxNumOfParticles();
-	bool one_shot = getIsOneShot();
 	real spacing = getTargetSpacing();
 	Vector start = getEmitStart();
 	Vector end = getEmitEnd();
@@ -153,10 +152,18 @@ void GAS_Hina_Solver_DFSPH::emit_data(SIM_Hina_Particles_DFSPH *DFSPH_particles)
 	{
 		Vector pos;
 		std::pair<std::vector<Vector>, std::vector<size_t>> triangle_mesh_info = ReadTriangleMeshFromGeometry<real, Vector>(sub_geometry_as_emitter_source, pos);
-		HinaPE::FluidEmitter::UseTriangleMeshSource(DFSPH_particles->x, triangle_mesh_info, pos, 1.6 * spacing, max_p);
-	} else
-		HinaPE::FluidEmitter::UseFluidBlock(DFSPH_particles->x, start, end, spacing);
-	emitted = one_shot;
+		VectorArrayCPU temp;
+		HinaPE::FluidEmitter::UseTriangleMeshSource(&temp, triangle_mesh_info, pos, 1.6 * spacing, max_p);
+		DFSPH_particles->x->insert(DFSPH_particles->x->end(), temp.begin(), temp.end());
+	}
+
+	if (getUseFluidBlock())
+	{
+		VectorArrayCPU temp;
+		HinaPE::FluidEmitter::UseFluidBlock(&temp, start, end, spacing);
+		DFSPH_particles->x->insert(DFSPH_particles->x->end(), temp.begin(), temp.end());
+	}
+	emitted = true;
 }
 
 void GAS_Hina_Solver_DFSPH::apply_akinci_force(SIM_Object *obj)
