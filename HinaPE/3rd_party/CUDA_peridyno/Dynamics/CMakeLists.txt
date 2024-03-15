@@ -1,0 +1,7 @@
+add_subdirectory(ParticleSystem)
+add_subdirectory(SemiAnalyticalScheme)
+add_subdirectory(RigidBody)
+#add_subdirectory(Volume)
+#add_subdirectory(Peridynamics)
+#add_subdirectory(Multiphysics)
+#add_subdirectory(HeightField)
