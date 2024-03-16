@@ -6,3 +6,4 @@ sim
 geo
 CubbyFlow.lib
 src/CUDA_NeighborSearch/include/cuNSearch_export.h
+HinaPE/3rd_party/CUDA_peridyno
