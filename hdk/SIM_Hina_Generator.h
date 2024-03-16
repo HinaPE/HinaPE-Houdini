@@ -361,6 +361,10 @@ static PRM_Name    thePressureName(GAS_NAME_PRESSURE, "PressureDataName"); \
 static PRM_Default    thePressureNameDefault(0, "pressure"); \
 PRMS.emplace_back(PRM_STRING, 1, &thePressureName, &thePressureNameDefault);
 
+#define ACTIVATE_GAS_COLLISION \
+static PRM_Name    theCollisionName(GAS_NAME_COLLISION, "CollisionDataName"); \
+static PRM_Default    theCollisionNameDefault(0, "collision"); \
+PRMS.emplace_back(PRM_STRING, 1, &theCollisionName, &theCollisionNameDefault);
 
 // ==================================================================================================
 // ==================================================================================================

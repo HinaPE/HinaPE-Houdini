@@ -8,6 +8,7 @@
 GAS_HINA_SUBSOLVER_CLASS(
 		Solver_Smoke,
 
+		std::shared_ptr<HinaPE::SmokeNativeSolver> SmokeNativeSolverPtr;
 		bool _inited;
 )
 
