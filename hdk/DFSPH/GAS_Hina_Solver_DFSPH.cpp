@@ -10,6 +10,8 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
         HINA_FLOAT_PARAMETER(TargetSpacing, .02) \
         HINA_FLOAT_PARAMETER(KernelRadius, .04) \
         HINA_FLOAT_PARAMETER(TargetDensity, 1000.) \
+        HINA_FLOAT_PARAMETER(FluidViscosity, 0.01) \
+        HINA_FLOAT_PARAMETER(FluidSurfaceTension, 0.01) \
         HINA_FLOAT_VECTOR_PARAMETER(Gravity, 3, 0, -9.8, 0) \
         HINA_INT_PARAMETER(MaxNumOfParticles, 100000) \
         HINA_BOOL_PARAMETER(UseFluidBlock, false) \
@@ -82,6 +84,8 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 			DFSPH_AkinciSolverPtr = std::make_shared<HinaPE::DFSPH_AkinciSolver>(static_cast<real>(getKernelRadius()), getFluidDomainF());
 			DFSPH_AkinciSolverPtr->FLUID_REST_DENSITY = getTargetDensity();
 			DFSPH_AkinciSolverPtr->FLUID_PARTICLE_RADIUS = getTargetSpacing() / 2.;
+			DFSPH_AkinciSolverPtr->FLUID_VISCOSITY = getFluidViscosity();
+			DFSPH_AkinciSolverPtr->FLUID_SURFACE_TENSION = getFluidSurfaceTension();
 			DFSPH_AkinciSolverPtr->GRAVITY = getGravityF();
 			DFSPH_AkinciSolverPtr->TOP_OPEN = getTopOpen();
 
