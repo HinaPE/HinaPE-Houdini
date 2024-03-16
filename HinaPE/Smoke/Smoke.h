@@ -13,6 +13,7 @@
 #include <GAS/GAS_PBDSolve.h>
 #include <SIM/SIM_ScalarField.h>
 #include <SIM/SIM_VectorField.h>
+#include <SIM/SIM_FieldUtils.h>
 #include "common/geometry.h"
 namespace HinaPE
 {

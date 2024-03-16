@@ -2,15 +2,27 @@
 #define HINAPE_PARTICLES_H
 
 #include <Discregrid/discregrid/include/Discregrid/All>
-#include "tbb/tbb.h"
-
 #include <functional>
 #include <memory>
 
+#include <UT/UT_ParallelUtil.h>
+#include <UT/UT_Interrupt.h>
 namespace HinaPE
 {
 inline void serial_for(size_t n, const std::function<void(size_t)> &f) { for (size_t i = 0; i < n; ++i) { f(i); }}
-inline void parallel_for(size_t n, const std::function<void(size_t)> &f) { tbb::parallel_for(size_t(0), n, [&](size_t i) { f(i); }); }
+inline void parallel_for(size_t n, const std::function<void(size_t)> &f)
+{
+	UT_Interrupt *boss = UTgetInterrupt();
+	UTparallelForEachNumber((int)n, [&](const UT_BlockedRange<int> &range)
+	{
+		if (boss->opInterrupt())
+			return;
+		for (size_t i = range.begin(); i != range.end(); ++i)
+		{
+			f(i);
+		}
+	});
+}
 
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct IFluid

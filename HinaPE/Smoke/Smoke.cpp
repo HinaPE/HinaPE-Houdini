@@ -4,9 +4,7 @@
 
 void HinaPE::SmokeNativeSolver::test(SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
 {
-	UT_VoxelArrayF &u = *(*V).getField(0)->fieldNC();
-	UT_VoxelArrayF &v = *(*V).getField(1)->fieldNC();
-	UT_VoxelArrayF &w = *(*V).getField(2)->fieldNC();
+	UT_VoxelArrayF &u = *(*V).getXField()->fieldNC();
 	UT_VoxelArrayIteratorF vit;
 	{
 		vit.setArray(&u);
@@ -15,23 +13,8 @@ void HinaPE::SmokeNativeSolver::test(SIM_ScalarField *D, SIM_ScalarField *T, SIM
 			std::cout << vit.x() << " " << vit.y() << " " << vit.z() << " " << vit.getValue() << std::endl;
 		}
 	}
-	std::cout << "----------------" << std::endl;
-	{
-		vit.setArray(&v);
-		for (vit.rewind(); !vit.atEnd(); vit.advance())
-		{
-			std::cout << vit.x() << " " << vit.y() << " " << vit.z() << " " << vit.getValue() << std::endl;
-		}
-	}
-	std::cout << "----------------" << std::endl;
-	{
-		vit.setArray(&w);
-		for (vit.rewind(); !vit.atEnd(); vit.advance())
-		{
-			std::cout << vit.x() << " " << vit.y() << " " << vit.z() << " " << vit.getValue() << std::endl;
-		}
-	}
-	std::cout << "----------------" << std::endl;
+
+//	SIM::FieldUtils::faceToCellMap();
 }
 void HinaPE::SmokeNativeSolver::emit(SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
 {
@@ -82,6 +65,16 @@ void HinaPE::SmokeNativeSolver::emit(SIM_ScalarField *D, SIM_ScalarField *T, SIM
 			}
 		}
 	}
+
+//	UT_VoxelArrayF &v = *(*V).getYField()->fieldNC();
+//	UT_VoxelArrayIteratorF vit;
+//	{
+//		vit.setArray(&v);
+//		for (vit.rewind(); !vit.atEnd(); vit.advance())
+//		{
+//			vit.setValue(1.0f);
+//		}
+//	}
 }
 void HinaPE::SmokeNativeSolver::apply_advection(float dt, SIM_ScalarField *SF, SIM_ScalarField *Co, const SIM_VectorField *V)
 {

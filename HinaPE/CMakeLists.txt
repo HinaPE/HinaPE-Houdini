@@ -26,7 +26,7 @@ add_library(HinaPE STATIC
 #        ${HINAPE_RIGIDBODY_SOURCE}
         ${HINAPE_SMOKE_SOURCE}
 )
-target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini tbb CUDA_CubbyFlow CUDA_NeighborSearch Discregrid TreeNSearch ReactPhysics3D)
+target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini CUDA_CubbyFlow CUDA_NeighborSearch Discregrid TreeNSearch ReactPhysics3D)
 target_link_directories(
         HinaPE
         PUBLIC
