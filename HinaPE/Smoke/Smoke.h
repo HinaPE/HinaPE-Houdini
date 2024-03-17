@@ -36,19 +36,23 @@ protected:
 	void non_pressure(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
 	void pressure(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
 	void advect(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
+	void advect_HDK(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
+	void enforce_boundary(SIM_VectorField *V);
 
 private:
 	THREADED_METHOD1(SmokeNativeSolver, D->getField()->shouldMultiThread(), _emit_density, SIM_ScalarField*, D);
 	THREADED_METHOD1(SmokeNativeSolver, T->getField()->shouldMultiThread(), _emit_temperature, SIM_ScalarField*, T);
-	THREADED_METHOD4(SmokeNativeSolver, V->getXField()->shouldMultiThread(), _apply_buoyancy_force, float, dt, SIM_ScalarField*, D, SIM_ScalarField*, T, SIM_VectorField*, V);
-	THREADED_METHOD2(SmokeNativeSolver, V->getXField()->shouldMultiThread(), _apply_pressure_force, float, dt, SIM_VectorField*, V);
+	THREADED_METHOD4(SmokeNativeSolver, flow->getXField()->shouldMultiThread(), _apply_buoyancy_force, float, dt, SIM_ScalarField*, D, SIM_ScalarField*, T, SIM_VectorField*, flow);
+	THREADED_METHOD2(SmokeNativeSolver, flow->getXField()->shouldMultiThread(), _apply_pressure_force, float, dt, SIM_VectorField*, flow);
 	THREADED_METHOD4(SmokeNativeSolver, flow->getXField()->shouldMultiThread(), _advect_field, float, dt, SIM_RawField*, output, const SIM_RawField*, input, SIM_VectorField*, flow);
+	THREADED_METHOD2(SmokeNativeSolver, Vaxis->shouldMultiThread(), _enforce_boundary, SIM_RawField*, Vaxis, int, axis);
 
 	void _emit_densityPartial(SIM_ScalarField *D, const UT_JobInfo &info);
 	void _emit_temperaturePartial(SIM_ScalarField *T, const UT_JobInfo &info);
-	void _apply_buoyancy_forcePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, const UT_JobInfo &info);
-	void _apply_pressure_forcePartial(float dt, SIM_VectorField *V, const UT_JobInfo &info);
+	void _apply_buoyancy_forcePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *flow, const UT_JobInfo &info);
+	void _apply_pressure_forcePartial(float dt, SIM_VectorField *flow, const UT_JobInfo &info);
 	void _advect_fieldPartial(float dt, SIM_RawField *output, const SIM_RawField *input, SIM_VectorField *flow, const UT_JobInfo &info);
+	void _enforce_boundaryPartial(SIM_RawField *Vaxis, int axis, const UT_JobInfo &info);
 
 private:
 	auto _back_trace(float dt, const UT_Vector3 &pt, const SIM_VectorField *V) -> UT_Vector3;

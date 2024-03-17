@@ -11,7 +11,9 @@ void HinaPE::SmokeNativeSolver::Solve(float dt, SIM_ScalarField *D, SIM_ScalarFi
 	emit(dt, D, T, V);
 	non_pressure(dt, D, T, V);
 	pressure(dt, D, T, V);
-	advect(dt, D, T, V);
+//	advect(dt, D, T, V);
+	advect_HDK(-dt, D, T, V);
+	enforce_boundary(V);
 }
 
 void HinaPE::SmokeNativeSolver::emit(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
@@ -29,18 +31,37 @@ void HinaPE::SmokeNativeSolver::pressure(float dt, SIM_ScalarField *D, SIM_Scala
 }
 void HinaPE::SmokeNativeSolver::advect(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
 {
-	const SIM_RawField D_copy = SIM_RawField(*D->getField());
-	const SIM_RawField T_copy = SIM_RawField(*T->getField());
-	const SIM_RawField Vx_copy = SIM_RawField(*V->getXField());
-	const SIM_RawField Vy_copy = SIM_RawField(*V->getYField());
-	const SIM_RawField Vz_copy = SIM_RawField(*V->getZField());
+	SIM_RawField D_target = SIM_RawField(*D->getField());
+	SIM_RawField T_target = SIM_RawField(*T->getField());
+	SIM_RawField Vx_target = SIM_RawField(*V->getXField());
+	SIM_RawField Vy_target = SIM_RawField(*V->getYField());
+	SIM_RawField Vz_target = SIM_RawField(*V->getZField());
 
-	_advect_field(dt, D->getField(), &D_copy, V);
-	_advect_field(dt, T->getField(), &T_copy, V);
-	_advect_field(dt, V->getXField(), &Vx_copy, V);
-	_advect_field(dt, V->getYField(), &Vy_copy, V);
-	_advect_field(dt, V->getZField(), &Vz_copy, V);
+	_advect_field(dt, &D_target, D->getField(), V);
+	_advect_field(dt, &T_target, T->getField(), V);
+	_advect_field(dt, &Vx_target, V->getXField(), V);
+	_advect_field(dt, &Vy_target, V->getYField(), V);
+	_advect_field(dt, &Vz_target, V->getZField(), V);
+
+	(*D->getField()) = D_target;
+	(*T->getField()) = T_target;
+	(*V->getXField()) = Vx_target;
+	(*V->getYField()) = Vy_target;
+	(*V->getZField()) = Vz_target;
 }
+void HinaPE::SmokeNativeSolver::advect_HDK(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
+{
+	D->advect(V, dt, nullptr, SIM_FieldAdvection::SIM_ADVECT_RK4, 1.f);
+	T->advect(V, dt, nullptr, SIM_FieldAdvection::SIM_ADVECT_RK4, 1.f);
+	V->advect(V, dt, nullptr, SIM_FieldAdvection::SIM_ADVECT_RK4, 1.f);
+}
+void HinaPE::SmokeNativeSolver::enforce_boundary(SIM_VectorField *V)
+{
+	_enforce_boundary(V->getXField(), 0);
+	_enforce_boundary(V->getYField(), 1);
+	_enforce_boundary(V->getZField(), 2);
+}
+
 void HinaPE::SmokeNativeSolver::_emit_densityPartial(SIM_ScalarField *D, const UT_JobInfo &info)
 {
 	auto center = SIMfieldUtilsGetCenter(D);
@@ -71,17 +92,17 @@ void HinaPE::SmokeNativeSolver::_emit_temperaturePartial(SIM_ScalarField *T, con
 			vit.setValue(1.f);
 	}
 }
-void HinaPE::SmokeNativeSolver::_apply_buoyancy_forcePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, const UT_JobInfo &info)
+void HinaPE::SmokeNativeSolver::_apply_buoyancy_forcePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *flow, const UT_JobInfo &info)
 {
 	int axis = 1;
 	UT_VoxelArrayIteratorF vit;
-	V->getField(axis)->getPartialRange(vit, info);
+	flow->getField(axis)->getPartialRange(vit, info);
 	vit.setCompressOnExit(true);
 
 	for (vit.rewind(); !vit.atEnd(); vit.advance())
 	{
 		UT_Vector3 vel_pos;
-		V->getField(axis)->indexToPos(vit.x(), vit.y(), vit.z(), vel_pos);
+		flow->getField(axis)->indexToPos(vit.x(), vit.y(), vit.z(), vel_pos);
 
 		fpreal32 den = D->getValue(vel_pos);
 		fpreal32 tem = T->getValue(vel_pos);
@@ -90,7 +111,7 @@ void HinaPE::SmokeNativeSolver::_apply_buoyancy_forcePartial(float dt, SIM_Scala
 		vit.setValue(vit.getValue() + dt * f_buoyancy);
 	}
 }
-void HinaPE::SmokeNativeSolver::_apply_pressure_forcePartial(float dt, SIM_VectorField *V, const UT_JobInfo &info)
+void HinaPE::SmokeNativeSolver::_apply_pressure_forcePartial(float dt, SIM_VectorField *flow, const UT_JobInfo &info)
 {
 
 }
@@ -106,6 +127,45 @@ void HinaPE::SmokeNativeSolver::_advect_fieldPartial(float dt, SIM_RawField *out
 		pt1 = _back_trace(dt, pt0, flow);
 		fpreal32 value = input->getValue(pt1);
 		vit.setValue(value);
+	}
+}
+void HinaPE::SmokeNativeSolver::_enforce_boundaryPartial(SIM_RawField *Vaxis, int axis, const UT_JobInfo &info)
+{
+	// No-flux
+	UT_VoxelArrayIteratorF vit;
+	Vaxis->getPartialRange(vit, info);
+	vit.setCompressOnExit(true);
+	for (vit.rewind(); !vit.atEnd(); vit.advance())
+	{
+		switch (axis)
+		{
+			case 0:
+			{
+				int min_idx = 0;
+				int max_idx = Vaxis->getXRes() - 1;
+				if (vit.x() == min_idx || vit.x() == max_idx)
+					vit.setValue(0.f);
+			}
+				break;
+			case 1:
+			{
+				int min_idx = 0;
+				int max_idx = Vaxis->getYRes() - 1;
+				if (vit.y() == min_idx || vit.y() == max_idx)
+					vit.setValue(0.f);
+			}
+				break;
+			case 2:
+			{
+				int min_idx = 0;
+				int max_idx = Vaxis->getZRes() - 1;
+				if (vit.z() == min_idx || vit.z() == max_idx)
+					vit.setValue(0.f);
+			}
+				break;
+			default:
+				throw std::runtime_error("Invalid axis");
+		}
 	}
 }
 auto HinaPE::SmokeNativeSolver::_back_trace(float dt, const UT_Vector3 &pt, const SIM_VectorField *V) -> UT_Vector3
