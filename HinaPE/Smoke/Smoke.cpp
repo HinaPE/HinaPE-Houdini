@@ -1,105 +1,75 @@
 #include "Smoke.h"
 #include <UT/UT_MatrixSolver.h>
+#include <UT/UT_ParallelUtil.h>
+#include <UT/UT_ThreadedAlgorithm.h>
+#include <UT/UT_Interrupt.h>
 #include <memory>
 
-void HinaPE::SmokeNativeSolver::test(SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
+void HinaPE::SmokeNativeSolver::Init(SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, float dt)
 {
-	UT_VoxelArrayF &u = *(*V).getXField()->fieldNC();
-	UT_VoxelArrayIteratorF vit;
+	init_smoke_source(D, T);
+}
+void HinaPE::SmokeNativeSolver::Solve(SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, float dt)
+{
+	apply_external_force(dt, D, T, V);
+	apply_viscosity(dt, D, T, V);
+	apply_pressure(dt, D, T, V);
+	advect(dt, D, T, V);
+}
+
+void HinaPE::SmokeNativeSolver::init_smoke_sourcePartial(SIM_ScalarField *D, SIM_ScalarField *T, const UT_JobInfo &info)
+{
+	UT_Interrupt *boss = UTgetInterrupt();
+	if (boss->opInterrupt())
+		return;
+
+//	auto center = D->getOrig() + 0.5 * D->getSize();
+	auto center = SIMfieldUtilsGetCenter(D);
+
 	{
-		vit.setArray(&u);
+		UT_VoxelArrayIteratorF vit;
+		vit.setArray(D->getField()->fieldNC());
+		vit.setCompressOnExit(true);
+		vit.setPartialRange(info.job(), info.numJobs());
 		for (vit.rewind(); !vit.atEnd(); vit.advance())
 		{
-			std::cout << vit.x() << " " << vit.y() << " " << vit.z() << " " << vit.getValue() << std::endl;
+			UT_Vector3 pos;
+			D->indexToPos(vit.x(), vit.y(), vit.z(), pos);
+			if ((pos - center).length() < 0.3)
+				vit.setValue(1.0f);
 		}
 	}
-
-//	SIM::FieldUtils::faceToCellMap();
-}
-void HinaPE::SmokeNativeSolver::emit(SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
-{
-	UT_Vector3 voxel_dim = D->getVoxelSize();
-	UT_Vector3 origin = D->getOrig();
-	UT_Vector3 divisions = D->getDivisions();
-	UT_Vector3 center = D->getCenter();
-	UT_Vector3 size = D->getSize();
-
-	std::cout << "Voxel Size: " << voxel_dim << std::endl;
-	std::cout << "Origin: " << origin << std::endl;
-	std::cout << "Divisions: " << divisions << std::endl;
-	std::cout << "Center: " << center << std::endl;
-	std::cout << "Size: " << size << std::endl;
-
-	fpreal32 r = 0.3f * (divisions * voxel_dim).x();
-	UT_Vector3 source = origin + 0.5 * size;
-	source.y() = origin.y() + r;
-
-	UT_VoxelArrayF *_D = D->getField()->fieldNC();
-	for (int x = 0; x < divisions.x(); x++)
 	{
-		for (int y = 0; y < divisions.y(); y++)
+		UT_VoxelArrayIteratorF vit;
+		vit.setArray(T->getField()->fieldNC());
+		vit.setCompressOnExit(true);
+		vit.setPartialRange(info.job(), info.numJobs());
+		for (vit.rewind(); !vit.atEnd(); vit.advance())
 		{
-			for (int z = 0; z < divisions.z(); z++)
-			{
-				UT_Vector3F pos_grid, pos_world;
-				_D->indexToPos(x, y, z, pos_grid);
-				pos_world = pos_grid * size + origin;
-				if ((pos_world - source).length() < r)
-				{
-					_D->setValue(x, y, z, 1.0f);
-				}
-			}
+			UT_Vector3 pos;
+			T->indexToPos(vit.x(), vit.y(), vit.z(), pos);
+			if ((pos - center).length() < 0.3)
+				vit.setValue(1.0f);
 		}
 	}
-
-	UT_VoxelArrayF *velY = V->getYField()->fieldNC();
-	for (int x = 0; x < divisions.x(); x++)
-	{
-		for (int y = 0; y < divisions.y(); y++)
-		{
-			for (int z = 0; z < divisions.z(); z++)
-			{
-				fpreal32 old_value = velY->getValue(x, y, z);
-				fpreal32 new_value = old_value + -1;
-				velY->setValue(x, y, z, new_value);
-			}
-		}
-	}
-
-//	UT_VoxelArrayF &v = *(*V).getYField()->fieldNC();
-//	UT_VoxelArrayIteratorF vit;
-//	{
-//		vit.setArray(&v);
-//		for (vit.rewind(); !vit.atEnd(); vit.advance())
-//		{
-//			vit.setValue(1.0f);
-//		}
-//	}
 }
-void HinaPE::SmokeNativeSolver::apply_advection(float dt, SIM_ScalarField *SF, SIM_ScalarField *Co, const SIM_VectorField *V)
-{
-	SF->advect(V, dt, Co->getField(), SIM_ADVECT_MIDPOINT, 0.4f);
-}
-//void HinaPE::SmokeNativeSolver::apply_external_forcePartial(const UT_JobInfo &info)
-//{
-//	int i, n;
-//	for (info.divideWork(10, i, n); i < n; i++)
-//	{
-//		std::cout << "Thread: " << std::endl;
-//	}
-//}
-
-
-void HinaPE::SmokeNativeSolver::apply_external_forcePartial(float dt, const UT_JobInfo &info)
-{
-	SIM_RawField viscfielddata;
-	viscfielddata = *V->getXField();
-}
-void HinaPE::SmokeNativeSolver::apply_viscosityPartial(float dt, const UT_JobInfo &info)
+void HinaPE::SmokeNativeSolver::apply_external_forcePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, const UT_JobInfo &info)
 {
 
 }
-void HinaPE::SmokeNativeSolver::apply_pressurePartial(float dt, const UT_JobInfo &info)
+void HinaPE::SmokeNativeSolver::apply_viscosityPartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, const UT_JobInfo &info)
+{
+
+}
+void HinaPE::SmokeNativeSolver::apply_pressurePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, const UT_JobInfo &info)
+{
+
+}
+void HinaPE::SmokeNativeSolver::advectPartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, const UT_JobInfo &info)
+{
+
+}
+void HinaPE::SmokeNativeSolver::_compute_buoyancy(float dt, SIM_ScalarField *T, SIM_VectorField *V)
 {
 
 }

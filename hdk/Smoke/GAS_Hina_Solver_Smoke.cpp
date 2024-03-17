@@ -8,9 +8,9 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 		false,
 
 		ACTIVATE_GAS_VELOCITY
-				ACTIVATE_GAS_DENSITY
-				ACTIVATE_GAS_TEMPERATURE
-				ACTIVATE_GAS_COLLISION
+		ACTIVATE_GAS_DENSITY
+		ACTIVATE_GAS_TEMPERATURE
+		ACTIVATE_GAS_COLLISION
 )
 
 void print(SIM_ScalarField *f)
@@ -77,12 +77,10 @@ void print(SIM_VectorField *f)
 
 void GAS_Hina_Solver_Smoke::_init()
 {
-	this->_inited = false;
 	this->SmokeNativeSolverPtr = nullptr;
 }
 void GAS_Hina_Solver_Smoke::_makeEqual(const GAS_Hina_Solver_Smoke *src)
 {
-	this->_inited = src->_inited;
 	this->SmokeNativeSolverPtr = src->SmokeNativeSolverPtr;
 }
 bool GAS_Hina_Solver_Smoke::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
@@ -92,20 +90,13 @@ bool GAS_Hina_Solver_Smoke::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 	SIM_ScalarField *C = getScalarField(obj, GAS_NAME_COLLISION);
 	SIM_VectorField *V = getVectorField(obj, GAS_NAME_VELOCITY);
 
-	if (!_inited)
+	if (this->SmokeNativeSolverPtr == nullptr)
 	{
-		HinaPE::SmokeNativeSolver::emit(D, T, V);
-		HinaPE::SmokeNativeSolver::test(D, T, V);
 		this->SmokeNativeSolverPtr = std::make_shared<HinaPE::SmokeNativeSolver>();
-		_inited = true;
+		this->SmokeNativeSolverPtr->Init(D, T, V, timestep);
 	} else
 	{
-		this->SmokeNativeSolverPtr->D = D;
-		this->SmokeNativeSolverPtr->T = T;
-		this->SmokeNativeSolverPtr->V = V;
-		this->SmokeNativeSolverPtr->apply_viscosity(timestep);
-		this->SmokeNativeSolverPtr->apply_pressure(timestep);
-		HinaPE::SmokeNativeSolver::apply_advection(timestep, D, C, V);
+		this->SmokeNativeSolverPtr->Solve(D, T, V, timestep);
 	}
 
 	return true;
