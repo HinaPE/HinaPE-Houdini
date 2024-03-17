@@ -8,9 +8,9 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 		false,
 
 		ACTIVATE_GAS_VELOCITY
-		ACTIVATE_GAS_DENSITY
-		ACTIVATE_GAS_TEMPERATURE
-		ACTIVATE_GAS_COLLISION
+				ACTIVATE_GAS_DENSITY
+				ACTIVATE_GAS_TEMPERATURE
+				ACTIVATE_GAS_COLLISION
 )
 
 void print(SIM_ScalarField *f)
@@ -90,13 +90,16 @@ bool GAS_Hina_Solver_Smoke::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 	SIM_ScalarField *C = getScalarField(obj, GAS_NAME_COLLISION);
 	SIM_VectorField *V = getVectorField(obj, GAS_NAME_VELOCITY);
 
+	if (!V->isFaceSampled())
+		return false;
+
 	if (this->SmokeNativeSolverPtr == nullptr)
 	{
 		this->SmokeNativeSolverPtr = std::make_shared<HinaPE::SmokeNativeSolver>();
-		this->SmokeNativeSolverPtr->Init(D, T, V, timestep);
+		this->SmokeNativeSolverPtr->Init(timestep, D, T, V);
 	} else
 	{
-		this->SmokeNativeSolverPtr->Solve(D, T, V, timestep);
+		this->SmokeNativeSolverPtr->Solve(timestep, D, T, V);
 	}
 
 	return true;
