@@ -25,15 +25,16 @@ void HinaPE::SmokeNativeSolver::non_pressure(float dt, SIM_ScalarField *D, SIM_S
 }
 void HinaPE::SmokeNativeSolver::pressure(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
 {
-
+	_apply_pressure_force(dt, V);
 }
 void HinaPE::SmokeNativeSolver::advect(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V)
 {
-	D_copy = SIM_RawField(*D->getField());
-	T_copy = SIM_RawField(*T->getField());
-	Vx_copy = SIM_RawField(*V->getXField());
-	Vy_copy = SIM_RawField(*V->getYField());
-	Vz_copy = SIM_RawField(*V->getZField());
+	const SIM_RawField D_copy = SIM_RawField(*D->getField());
+	const SIM_RawField T_copy = SIM_RawField(*T->getField());
+	const SIM_RawField Vx_copy = SIM_RawField(*V->getXField());
+	const SIM_RawField Vy_copy = SIM_RawField(*V->getYField());
+	const SIM_RawField Vz_copy = SIM_RawField(*V->getZField());
+
 	_advect_field(dt, D->getField(), &D_copy, V);
 	_advect_field(dt, T->getField(), &T_copy, V);
 	_advect_field(dt, V->getXField(), &Vx_copy, V);
@@ -86,11 +87,12 @@ void HinaPE::SmokeNativeSolver::_apply_buoyancy_forcePartial(float dt, SIM_Scala
 		fpreal32 tem = T->getValue(vel_pos);
 
 		const fpreal32 f_buoyancy = BUOYANCY_SMOKE_DENSITY_FACTOR * den + BUOYANCY_SMOKE_TEMPERATURE_FACTOR * tem;
-//		vit.setValue(vit.getValue() + dt * f_buoyancy);
-
-		if (tem > 0)
-			vit.setValue(1);
+		vit.setValue(vit.getValue() + dt * f_buoyancy);
 	}
+}
+void HinaPE::SmokeNativeSolver::_apply_pressure_forcePartial(float dt, SIM_VectorField *V, const UT_JobInfo &info)
+{
+
 }
 void HinaPE::SmokeNativeSolver::_advect_fieldPartial(float dt, SIM_RawField *output, const SIM_RawField *input, SIM_VectorField *flow, const UT_JobInfo &info)
 {
