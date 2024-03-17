@@ -20,7 +20,13 @@ namespace HinaPE
 {
 using Surface = HinaPE::ISurface<fpreal32, UT_Vector3, UT_Quaternion>;
 
-struct SmokeNativeSolver
+struct SmokeNativeParam
+{
+	fpreal32 BUOYANCY_SMOKE_DENSITY_FACTOR = -0.000625f;
+	fpreal32 BUOYANCY_SMOKE_TEMPERATURE_FACTOR = 5.0f;
+};
+
+struct SmokeNativeSolver : public SmokeNativeParam
 {
 	void Init(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
 	void Solve(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
@@ -37,6 +43,9 @@ protected:
 	void apply_viscosityPartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
 	void apply_pressurePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
 	void advectPartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
+
+private:
+	void _compute_buoyancy(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
 };
 }
 #endif //HINAPE_SMOKE_H

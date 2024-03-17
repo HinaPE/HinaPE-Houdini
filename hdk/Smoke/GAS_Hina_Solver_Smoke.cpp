@@ -97,10 +97,8 @@ bool GAS_Hina_Solver_Smoke::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 	{
 		this->SmokeNativeSolverPtr = std::make_shared<HinaPE::SmokeNativeSolver>();
 		this->SmokeNativeSolverPtr->Init(timestep, D, T, V);
-	} else
-	{
-		this->SmokeNativeSolverPtr->Solve(timestep, D, T, V);
 	}
+	this->SmokeNativeSolverPtr->Solve(timestep, D, T, V);
 
 	return true;
 }
