@@ -23,7 +23,7 @@ using Surface = HinaPE::ISurface<fpreal32, UT_Vector3, UT_Quaternion>;
 struct SmokeNativeParam
 {
 	fpreal32 BUOYANCY_SMOKE_DENSITY_FACTOR = -0.000625f;
-	fpreal32 BUOYANCY_SMOKE_TEMPERATURE_FACTOR = 5.0f;
+	fpreal32 BUOYANCY_SMOKE_TEMPERATURE_FACTOR = 5.f;
 };
 
 struct SmokeNativeSolver : public SmokeNativeParam
@@ -32,20 +32,30 @@ struct SmokeNativeSolver : public SmokeNativeParam
 	void Solve(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
 
 protected:
-	THREADED_METHOD5(SmokeNativeSolver, V->getXField()->shouldMultiThread(), init_smoke_source, float, dt, SIM_ScalarField*, D, SIM_ScalarField*, T, SIM_VectorField*, V, int, axis);
-	THREADED_METHOD5(SmokeNativeSolver, V->getXField()->shouldMultiThread(), apply_external_force, float, dt, SIM_ScalarField*, D, SIM_ScalarField*, T, SIM_VectorField*, V, int, axis);
-	THREADED_METHOD5(SmokeNativeSolver, V->getXField()->shouldMultiThread(), apply_viscosity, float, dt, SIM_ScalarField*, D, SIM_ScalarField*, T, SIM_VectorField*, V, int, axis);
-	THREADED_METHOD5(SmokeNativeSolver, V->getXField()->shouldMultiThread(), apply_pressure, float, dt, SIM_ScalarField*, D, SIM_ScalarField*, T, SIM_VectorField*, V, int, axis);
-	THREADED_METHOD5(SmokeNativeSolver, V->getXField()->shouldMultiThread(), advect, float, dt, SIM_ScalarField*, D, SIM_ScalarField*, T, SIM_VectorField*, V, int, axis);
-
-	void init_smoke_sourcePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
-	void apply_external_forcePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
-	void apply_viscosityPartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
-	void apply_pressurePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
-	void advectPartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
+	void emit(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
+	void non_pressure(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
+	void pressure(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
+	void advect(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V);
 
 private:
-	void _compute_buoyancy(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, int axis, const UT_JobInfo &info);
+	THREADED_METHOD1(SmokeNativeSolver, D->getField()->shouldMultiThread(), _emit_density, SIM_ScalarField*, D);
+	THREADED_METHOD1(SmokeNativeSolver, T->getField()->shouldMultiThread(), _emit_temperature, SIM_ScalarField*, T);
+	THREADED_METHOD4(SmokeNativeSolver, V->getXField()->shouldMultiThread(), _apply_buoyancy_force, float, dt, SIM_ScalarField*, D, SIM_ScalarField*, T, SIM_VectorField*, V);
+	THREADED_METHOD4(SmokeNativeSolver, flow->getXField()->shouldMultiThread(), _advect_field, float, dt, SIM_RawField*, output, const SIM_RawField*, input, SIM_VectorField*, flow);
+
+	void _emit_densityPartial(SIM_ScalarField *D, const UT_JobInfo &info);
+	void _emit_temperaturePartial(SIM_ScalarField *T, const UT_JobInfo &info);
+	void _apply_buoyancy_forcePartial(float dt, SIM_ScalarField *D, SIM_ScalarField *T, SIM_VectorField *V, const UT_JobInfo &info);
+	void _advect_fieldPartial(float dt, SIM_RawField *output, const SIM_RawField *input, SIM_VectorField *flow, const UT_JobInfo &info);
+
+private:
+	auto _back_trace(float dt, const UT_Vector3 &pt, const SIM_VectorField *V) -> UT_Vector3;
+
+	SIM_RawField D_copy;
+	SIM_RawField T_copy;
+	SIM_RawField Vx_copy;
+	SIM_RawField Vy_copy;
+	SIM_RawField Vz_copy;
 };
 }
 #endif //HINAPE_SMOKE_H

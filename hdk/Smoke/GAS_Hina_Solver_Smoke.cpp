@@ -83,7 +83,7 @@ void GAS_Hina_Solver_Smoke::_makeEqual(const GAS_Hina_Solver_Smoke *src)
 {
 	this->SmokeNativeSolverPtr = src->SmokeNativeSolverPtr;
 }
-bool GAS_Hina_Solver_Smoke::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
+bool GAS_Hina_Solver_Smoke::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time dt)
 {
 	SIM_ScalarField *D = getScalarField(obj, GAS_NAME_DENSITY);
 	SIM_ScalarField *T = getScalarField(obj, GAS_NAME_TEMPERATURE);
@@ -96,9 +96,9 @@ bool GAS_Hina_Solver_Smoke::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 	if (this->SmokeNativeSolverPtr == nullptr)
 	{
 		this->SmokeNativeSolverPtr = std::make_shared<HinaPE::SmokeNativeSolver>();
-		this->SmokeNativeSolverPtr->Init(timestep, D, T, V);
+		this->SmokeNativeSolverPtr->Init(dt, D, T, V);
 	}
-	this->SmokeNativeSolverPtr->Solve(timestep, D, T, V);
+	this->SmokeNativeSolverPtr->Solve(dt, D, T, V);
 
 	return true;
 }
