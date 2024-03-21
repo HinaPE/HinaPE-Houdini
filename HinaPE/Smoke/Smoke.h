@@ -16,6 +16,7 @@
 #include <SIM/SIM_VectorField.h>
 #include <SIM/SIM_FieldUtils.h>
 #include "common/geometry.h"
+#include "common/numerics.h"
 namespace HinaPE
 {
 using Surface = HinaPE::ISurface<fpreal32, UT_Vector3, UT_Quaternion>;

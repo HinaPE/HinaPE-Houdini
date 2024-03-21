@@ -1,5 +1,4 @@
 #include "Smoke.h"
-#include <UT/UT_MatrixSolver.h>
 #include <UT/UT_ParallelUtil.h>
 #include <UT/UT_ThreadedAlgorithm.h>
 #include <UT/UT_Interrupt.h>
