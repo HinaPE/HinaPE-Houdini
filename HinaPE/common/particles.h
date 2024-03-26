@@ -23,6 +23,7 @@ inline void parallel_for(size_t n, const std::function<void(size_t)> &f)
 		}
 	});
 }
+//inline void parallel_for(size_t n, const std::function<void(size_t)> &f) { serial_for(n, f); }
 
 template<typename real, typename Vector3, typename ScalarArray, typename Vector3Array>
 struct IFluid

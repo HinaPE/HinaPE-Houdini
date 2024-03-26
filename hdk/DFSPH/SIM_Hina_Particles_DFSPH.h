@@ -9,7 +9,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		void commit() override;
 
 		ScalarArrayCPU *factor, *k, *density_adv;
-        std::vector<bool> *BFLP, *VP;
+        std::vector<int> *BFLP, *VP;
 )
 
 #endif //HINAPE_SIM_HINA_PARTICLES_DFSPH_H

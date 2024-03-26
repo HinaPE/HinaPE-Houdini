@@ -38,7 +38,7 @@ struct AkinciBoundary : public AkinciBoundaryCPU
 {
 	VectorArrayCPU x_init;
 	UT_DMatrix4 xform; // update from outside. if Boundary is static, [xform] is the center of mass of the boundary, and keep the same all the time // if Boundary is dynamic, [xform] is updated by RigidBody simulator (update from outside)
-    std::vector<bool> boundary_sp; // Static Particles
+    std::vector<int> boundary_sp; // Static Particles
     VectorArrayCPU normals;
     VectorArrayCPU u_diff;
 };
@@ -49,8 +49,8 @@ struct DFSPH_AkinciFluid : public FluidCPU
 	ScalarArrayCPU k;
 	ScalarArrayCPU density_adv;
 
-    std::vector<bool> fluid_bflp;
-    std::vector<bool> fluid_vp;
+    std::vector<int> fluid_bflp;
+    std::vector<int> fluid_vp;
 };
 
 struct DFSPH_AkinciParam
@@ -84,6 +84,7 @@ struct DFSPH_AkinciSolver : public DFSPH_AkinciParam, public DFSPH_SDFParam
 	std::vector<std::shared_ptr<SDFBoundary>> SDFBoundaries;
 public:
     void findBFLPs();
+    void findSPs();
     void findVPs();
 protected:
 	void resize();

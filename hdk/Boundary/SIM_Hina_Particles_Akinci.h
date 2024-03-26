@@ -13,11 +13,11 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 
         void commit() override;
 
-		VectorArrayCPU *x_init, *normals;
+		VectorArrayCPU *x_init, *normals, *u_diff;
 		UT_DMatrix4 *xform;
 		Vector center_of_mass;
 
-        std::vector<bool> *SP;
+        std::vector<int> *SP;
 
 		int b_set_index; // Cache, FOR FLUID SOLVER
 )
