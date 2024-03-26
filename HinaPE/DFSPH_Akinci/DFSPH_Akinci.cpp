@@ -9,6 +9,7 @@ HinaPE::DFSPH_AkinciSolver::DFSPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector _
 {
 	Kernel::set_radius(_r);
 	Fluid = std::make_shared<DFSPH_AkinciFluid>();
+    FLUID_KERNAL_RADIUS = _r;
 }
 void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 {
@@ -16,6 +17,7 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 	update_akinci_boundaries();
 
 	build_neighbors();
+    findBFLPs();
 	compute_density();
 	compute_factor();
 	divergence_solve(dt);
@@ -48,6 +50,9 @@ void HinaPE::DFSPH_AkinciSolver::resize()
 		Fluid->factor.resize(Fluid->size);
 		Fluid->k.resize(Fluid->size);
 		Fluid->density_adv.resize(Fluid->size);
+
+        Fluid->fluid_bflp.resize(Fluid->size, false);
+        Fluid->fluid_vp.resize(Fluid->size, false);
 	}
 
 	/**
@@ -67,6 +72,8 @@ void HinaPE::DFSPH_AkinciSolver::resize()
 			Boundary->rho.resize(Boundary->size);
 			Boundary->neighbor_this.resize(Boundary->size);
 			Boundary->neighbor_others.resize(Boundary->size);
+
+            Boundary->boundary_sp.resize(Boundary->size, false);
 		}
 	}
 }
@@ -77,6 +84,7 @@ void HinaPE::DFSPH_AkinciSolver::update_akinci_boundaries()
 		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
 		std::fill(Boundary->v.begin(), Boundary->v.end(), Vector{0, 0, 0});
 		std::fill(Boundary->a.begin(), Boundary->a.end(), Vector{0, 0, 0});
+        std::fill(Boundary->boundary_sp.begin(), Boundary->boundary_sp.end(), false);
 	}
 }
 void HinaPE::DFSPH_AkinciSolver::build_neighbors()
@@ -144,6 +152,44 @@ void HinaPE::DFSPH_AkinciSolver::build_neighbors()
 		});
 		BoundariesMassVolumeCalculated = true;
 	}
+}
+void HinaPE::DFSPH_AkinciSolver::findBFLPs() {
+    _for_each_fluid_particle([&](size_t i, Vector x_i)
+     {
+         Vector fluid_pos = x_i;
+         _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
+            {
+                Vector boundary_pos = x_j;
+                fpreal dis = (fluid_pos - boundary_pos).length();
+                if(dis < FLUID_KERNAL_RADIUS)
+                    Fluid->fluid_bflp[i] = true;
+            });
+     });
+
+    _for_each_fluid_particle([&](size_t i, Vector x_i)
+     {
+         if(Fluid->fluid_bflp[i])
+         {
+             _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
+             {
+                 Boundaries[b_set]->boundary_sp[j] = true;
+             });
+         }
+     });
+
+    _for_each_boundary_particle([&](size_t i, Vector x_i)
+     {
+         if(Boundaries[0]->boundary_sp[i])
+         {
+             _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
+             {
+                 if(Fluid->fluid_bflp[j])
+                 {
+                     Fluid->fluid_vp[j] = true;
+                 }
+             });
+         }
+     });
 }
 void HinaPE::DFSPH_AkinciSolver::compute_density()
 {
@@ -381,6 +427,15 @@ void HinaPE::DFSPH_AkinciSolver::_for_each_neighbor_boundaries(size_t i, const s
 		NeighborBuilder.for_each_neighbor(0, b_set + 1, i, [&](size_t j, Vector x_j) { f(j, x_j, b_set); });
 	});
 }
+void HinaPE::DFSPH_AkinciSolver::_for_each_boundary_particle(const std::function<void(size_t, Vector)> &f) {
+    serial_for(Boundaries.size(), [&](size_t b_set)
+    {
+        parallel_for(Boundaries[b_set]->size, [&](size_t i)
+        {
+            f(i, Boundaries[b_set]->x[i]);
+        });
+    });
+}
 void HinaPE::DFSPH_AkinciSolver::_compute_density_change()
 {
 	_for_each_fluid_particle(
@@ -511,3 +566,7 @@ void HinaPE::DFSPH_AkinciSolver::_pressure_solve_iteration_kernel(real dt)
 				Fluid->k[i] = k_i;
 			});
 }
+
+
+
+
