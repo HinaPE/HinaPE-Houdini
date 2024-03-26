@@ -11,9 +11,13 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		HINA_GETSET_PARAMETER(Buoyancy, GETSET_DATA_FUNCS_F)
 		HINA_GETSET_PARAMETER(IsDynamic, GETSET_DATA_FUNCS_B)
 
+        void commit() override;
+
 		VectorArrayCPU *x_init;
 		UT_DMatrix4 *xform;
 		Vector center_of_mass;
+
+        std::vector<bool> *SP;
 
 		int b_set_index; // Cache, FOR FLUID SOLVER
 )

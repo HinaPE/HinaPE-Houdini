@@ -73,7 +73,7 @@ void HinaPE::DFSPH_AkinciSolver::resize()
 			Boundary->neighbor_this.resize(Boundary->size);
 			Boundary->neighbor_others.resize(Boundary->size);
 
-            Boundary->boundary_sp.resize(Boundary->size, false);
+            Boundary->boundary_sp.resize(Boundary->size);
 		}
 	}
 }

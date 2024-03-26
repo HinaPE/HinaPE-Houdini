@@ -17,6 +17,7 @@ void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 	this->xform = nullptr;
 	this->center_of_mass = UT_Vector3(0, 0, 0);
 	this->b_set_index = -1;
+    this->SP = nullptr;
 }
 void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Particles_Akinci *src)
 {
@@ -24,10 +25,37 @@ void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Parti
 	this->xform = src->xform;
 	this->center_of_mass = src->center_of_mass;
 	this->b_set_index = src->b_set_index;
+    this->SP = src->SP;
 }
 void SIM_Hina_Particles_Akinci::_setup_gdp(GU_Detail *gdp) const
 {
 	SIM_Hina_Particles::_setup_gdp(gdp);
+    HINA_GEOMETRY_POINT_ATTRIBUTE("SP", HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
+}
+
+void SIM_Hina_Particles_Akinci::commit()
+{
+    SIM_Hina_Particles::commit();
+
+    if (x_init == nullptr)
+    {
+        std::cout << "SIM_Hina_Particles_Akinci::load() called with nullptr" << std::endl;
+        return;
+    }
+
+    size_t size = x_init->size();
+    if (size == 0)
+        return;
+
+    SIM_GeometryAutoWriteLock lock(this);
+    GU_Detail &gdp = lock.getGdp();
+    GA_RWHandleI sp_handle = gdp.findPointAttribute("SP");
+    GA_Offset pt_off;
+    GA_FOR_ALL_PTOFF(&gdp, pt_off)
+        {
+            int sp = (*SP)[offset2index[pt_off]];
+            sp_handle.set(pt_off, sp);
+        }
 }
 
 /// Fetch all akinci boundaries from [fluid_obj]
@@ -89,6 +117,7 @@ void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 					{
 						UT_Vector3 pos = gdp->getPos3(pt_off);
 						(*boundary_akinci->x_init).emplace_back(pos - center_of_mass);
+                        (*boundary_akinci->SP).emplace_back(0);
 					}
 			}
 		}
