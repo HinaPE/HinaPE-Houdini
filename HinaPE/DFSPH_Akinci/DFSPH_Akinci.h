@@ -39,6 +39,8 @@ struct AkinciBoundary : public AkinciBoundaryCPU
 	VectorArrayCPU x_init;
 	UT_DMatrix4 xform; // update from outside. if Boundary is static, [xform] is the center of mass of the boundary, and keep the same all the time // if Boundary is dynamic, [xform] is updated by RigidBody simulator (update from outside)
     std::vector<bool> boundary_sp; // Static Particles
+    VectorArrayCPU normals;
+    VectorArrayCPU u_diff;
 };
 
 struct DFSPH_AkinciFluid : public FluidCPU
@@ -82,7 +84,7 @@ struct DFSPH_AkinciSolver : public DFSPH_AkinciParam, public DFSPH_SDFParam
 	std::vector<std::shared_ptr<SDFBoundary>> SDFBoundaries;
 public:
     void findBFLPs();
-
+    void findVPs();
 protected:
 	void resize();
 	void update_akinci_boundaries();
@@ -101,7 +103,7 @@ private:
 	void _for_each_fluid_particle(const std::function<void(size_t, Vector)> &);
 	void _for_each_neighbor_fluid(size_t, const std::function<void(size_t, Vector)> &);
 	void _for_each_neighbor_boundaries(size_t, const std::function<void(size_t, Vector, size_t)> &);
-    void _for_each_boundary_particle(const std::function<void(size_t, Vector)> &);
+    //void _for_each_boundary_particle(const std::function<void(size_t, Vector)> &);
 	NeighborBuilder NeighborBuilder;
 	Vector MaxBound;
 	bool NeighborBuilderInited;

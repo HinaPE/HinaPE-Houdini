@@ -13,7 +13,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 
         void commit() override;
 
-		VectorArrayCPU *x_init;
+		VectorArrayCPU *x_init, *normals;
 		UT_DMatrix4 *xform;
 		Vector center_of_mass;
 

@@ -18,6 +18,7 @@ void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
 	this->center_of_mass = UT_Vector3(0, 0, 0);
 	this->b_set_index = -1;
     this->SP = nullptr;
+    this->normals = nullptr;
 }
 void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Particles_Akinci *src)
 {
@@ -26,11 +27,13 @@ void SIM_Hina_Particles_Akinci::_makeEqual_Particles_Akinci(const SIM_Hina_Parti
 	this->center_of_mass = src->center_of_mass;
 	this->b_set_index = src->b_set_index;
     this->SP = src->SP;
+    this->normals = src->normals;
 }
 void SIM_Hina_Particles_Akinci::_setup_gdp(GU_Detail *gdp) const
 {
 	SIM_Hina_Particles::_setup_gdp(gdp);
     HINA_GEOMETRY_POINT_ATTRIBUTE("SP", HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
+    HINA_GEOMETRY_POINT_ATTRIBUTE("Normal", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 }
 
 void SIM_Hina_Particles_Akinci::commit()
@@ -50,11 +53,14 @@ void SIM_Hina_Particles_Akinci::commit()
     SIM_GeometryAutoWriteLock lock(this);
     GU_Detail &gdp = lock.getGdp();
     GA_RWHandleI sp_handle = gdp.findPointAttribute("SP");
+    GA_RWHandleV3 normal_handle = gdp.addFloatTuple(GA_ATTRIB_POINT, "Normal", 3);
     GA_Offset pt_off;
     GA_FOR_ALL_PTOFF(&gdp, pt_off)
         {
             int sp = (*SP)[offset2index[pt_off]];
             sp_handle.set(pt_off, sp);
+            Vector normal = (*normals)[offset2index[pt_off]];
+            normal_handle.set(pt_off, normal);
         }
 }
 
@@ -118,6 +124,7 @@ void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 						UT_Vector3 pos = gdp->getPos3(pt_off);
 						(*boundary_akinci->x_init).emplace_back(pos - center_of_mass);
                         (*boundary_akinci->SP).emplace_back(0);
+                        (*boundary_akinci->normals).emplace_back(UT_Vector3(0, 0, 0));
 					}
 			}
 		}
