@@ -12,6 +12,8 @@ void SIM_Hina_Particles_DFSPH::_init_Particles_DFSPH()
 	this->density_adv = nullptr;
     this->BFLP = nullptr;
     this->VP = nullptr;
+    this->omega = nullptr;
+    this->omega_delta = nullptr;
 }
 void SIM_Hina_Particles_DFSPH::_makeEqual_Particles_DFSPH(const SIM_Hina_Particles_DFSPH *src)
 {
@@ -20,6 +22,8 @@ void SIM_Hina_Particles_DFSPH::_makeEqual_Particles_DFSPH(const SIM_Hina_Particl
 	this->density_adv = src->density_adv;
     this->BFLP = src->BFLP;
     this->VP = src->VP;
+    this->omega = src->omega;
+    this->omega_delta = src->omega_delta;
 }
 void SIM_Hina_Particles_DFSPH::_setup_gdp(GU_Detail *gdp) const
 {
@@ -29,6 +33,8 @@ void SIM_Hina_Particles_DFSPH::_setup_gdp(GU_Detail *gdp) const
 	HINA_GEOMETRY_POINT_ATTRIBUTE(HINA_GEOMETRY_ATTRIBUTE_DFSPH_DENSITY_ADV, HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
     HINA_GEOMETRY_POINT_ATTRIBUTE("BFLP", HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
     HINA_GEOMETRY_POINT_ATTRIBUTE("VP", HINA_GEOMETRY_ATTRIBUTE_TYPE_INT)
+    HINA_GEOMETRY_POINT_ATTRIBUTE("omega", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
+    HINA_GEOMETRY_POINT_ATTRIBUTE("omega_delta", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 }
 void SIM_Hina_Particles_DFSPH::commit()
 {
@@ -51,6 +57,8 @@ void SIM_Hina_Particles_DFSPH::commit()
 	GA_RWHandleF density_adv_handle = gdp.findPointAttribute(HINA_GEOMETRY_ATTRIBUTE_DFSPH_DENSITY_ADV);
     GA_RWHandleI BFLP_handle = gdp.findPointAttribute("BFLP");
     GA_RWHandleI VP_handle = gdp.findPointAttribute("VP");
+    GA_RWHandleV3 omega_handle = gdp.findPointAttribute("omega");
+    GA_RWHandleV3 omega_delta_handle = gdp.findPointAttribute("omega_delta");
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
@@ -59,10 +67,14 @@ void SIM_Hina_Particles_DFSPH::commit()
 			fpreal da = (*density_adv)[offset2index[pt_off]];
             int bflp = (*BFLP)[offset2index[pt_off]];
             int vp = (*VP)[offset2index[pt_off]];
+            UT_Vector3 omega = (*this->omega)[offset2index[pt_off]];
+            UT_Vector3 omega_delta = (*this->omega_delta)[offset2index[pt_off]];
             BFLP_handle.set(pt_off, bflp);
             VP_handle.set(pt_off, vp);
 			factor_handle.set(pt_off, fc);
 			k_handle.set(pt_off, kappa);
 			density_adv_handle.set(pt_off, da);
+            omega_handle.set(pt_off, omega);
+            omega_delta_handle.set(pt_off, omega_delta);
 		}
 }
