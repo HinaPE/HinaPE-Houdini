@@ -697,7 +697,7 @@ void HinaPE::DFSPH_AkinciSolver::compute_vorticity_n1_sph() {
 }
 
 void HinaPE::DFSPH_AkinciSolver::compute_ideal_vorticity_n1_vorticity_equation(real dt) {
-    fpreal viscosity = 0.01;
+    fpreal viscosity = 0.05;
     // 算Dω/dt
     _for_each_fluid_particle([&](size_t i, Vector x_i)
      {
@@ -714,6 +714,7 @@ void HinaPE::DFSPH_AkinciSolver::compute_ideal_vorticity_n1_vorticity_equation(r
         });
         first_term = grad_v.dot(omega);
         // 第二项是v·▽2ω
+        //// 这个东西感觉很有问题,但是真的没找到为什么
         _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
         {
             Vector r = x_i - x_j;
@@ -722,7 +723,9 @@ void HinaPE::DFSPH_AkinciSolver::compute_ideal_vorticity_n1_vorticity_equation(r
             second_term += Fluid->V[j] * (dot(omega_ij, r) / (r2 + 0.01 * FLUID_KERNAL_RADIUS * FLUID_KERNAL_RADIUS)) * Kernel::gradW(r);
         });
         second_term = viscosity * 2 * (3 + 2) * second_term;
-        Fluid->omega[i] = omega + (first_term + second_term) * dt;
+        Fluid->omega[i] += (first_term + second_term) * dt;
+/*        if(Fluid->omega[i].x() > 1 || Fluid->omega[i].y() > 1 || Fluid->omega[i].z() > 1 || Fluid->omega[i].x() < -1 || Fluid->omega[i].y() < -1 || Fluid->omega[i].z() < -1)
+            Fluid->omega[i] = 0;*/
      });
 }
 
@@ -739,7 +742,8 @@ void HinaPE::DFSPH_AkinciSolver::compute_stream_function() {
          Vector psi{0, 0, 0};
         _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j) {
             Vector xij = x_i - x_j;
-            psi += (Fluid->omega_delta[j] * Fluid->V[j]) / xij.length();
+            if(xij.length() <= FLUID_KERNAL_RADIUS)
+                psi += (Fluid->omega_delta[j] * Fluid->V[j]) / xij.length();
         });
          Fluid->psi[i] = psi / (4 * M_PI);
      });
