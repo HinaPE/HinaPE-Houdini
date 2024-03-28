@@ -18,16 +18,26 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
     clearMarkedParticles();
 	build_neighbors();
     compute_density();
-    findBFLPs();
-    findSPs();
+
+    /*findBFLPs();
+    findSPs();*/
+
+    compute_vorticity_n_sph();
+
 	compute_factor();
 	divergence_solve(dt);
 	non_pressure_force();
 	predict_velocity(dt);
-    computeVorticity();
-    /*findVPs();*/
-    computeVorticityVelocity();
-	pressure_solve(dt);
+    pressure_solve(dt);
+    //findVPs();
+    //MarkVPs(); // 为什么不起作用？
+
+    compute_vorticity_n1_sph();
+    compute_ideal_vorticity_n1_vorticity_equation(dt);
+    compute_vorticity_dissipation();
+    compute_stream_function();
+    compute_vorticity_velocity();
+
 	advect(dt);
 
 	enforce_SDF_boundary();
@@ -58,7 +68,9 @@ void HinaPE::DFSPH_AkinciSolver::resize()
         Fluid->fluid_bflp.resize(Fluid->size, false);
         Fluid->fluid_vp.resize(Fluid->size, false);
         Fluid->omega.resize(Fluid->size);
+        Fluid->predict_omega.resize(Fluid->size);
         Fluid->omega_delta.resize(Fluid->size);
+        Fluid->psi.resize(Fluid->size);
 	}
 
 	/**
@@ -227,7 +239,7 @@ void HinaPE::DFSPH_AkinciSolver::findSPs() {
              {
                  if(Boundaries[b_set]->normals[j].dot(Boundaries[b_set]->u_diff[j]) < 0)
                  {
-                     Boundaries[b_set]->boundary_sp[j] = true;
+                     Boundaries[b_set]->boundary_sp[j] = 1;
                  }
              });
          }
@@ -245,7 +257,8 @@ void HinaPE::DFSPH_AkinciSolver::findVPs() {
                 {
                     if(Fluid->fluid_bflp[j] == 1)
                     {
-                        Fluid->fluid_bflp[j] = 2; // pink but not vp
+                        //Fluid->fluid_bflp[j] = 2; // pink but not vp
+                        Fluid->fluid_vp[j] = 1;
                         Vector v_ji = Fluid->v[j] - Boundaries[b_set]->v[i];
                         Vector x_ji = Fluid->x[j] - Boundaries[b_set]->x[i];
                         if(v_ji.dot(x_ji) > 0)
@@ -259,6 +272,8 @@ void HinaPE::DFSPH_AkinciSolver::findVPs() {
             }
         });
     });
+}
+void HinaPE::DFSPH_AkinciSolver::MarkVPs() {
     _for_each_fluid_particle([&](size_t i, Vector x_i)
      {
          if(Fluid->fluid_bflp[i] == 2)
@@ -266,14 +281,11 @@ void HinaPE::DFSPH_AkinciSolver::findVPs() {
              int boundary_nerghbor_num = 0;
              _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
              {
-                 if(Boundaries[b_set]->boundary_sp[j])
-                 {
-                     boundary_nerghbor_num++;
-                 }
+                 boundary_nerghbor_num++;
              });
              if(boundary_nerghbor_num == 0)
              {
-                 Fluid->fluid_vp[i] = true;
+                 Fluid->fluid_vp[i] = 1;
              }
          }
      });
@@ -654,27 +666,94 @@ void HinaPE::DFSPH_AkinciSolver::_pressure_solve_iteration_kernel(real dt)
 			});
 }
 
-void HinaPE::DFSPH_AkinciSolver::computeVorticity() {
-    fpreal beta = BETA;
+void HinaPE::DFSPH_AkinciSolver:: compute_vorticity_n_sph() {
     _for_each_fluid_particle([&](size_t i, Vector x_i)
      {
-         Vector omega= Kernel::gradW(Vector{0, 0, 0}) * Fluid->V[i];
+         Vector omega{0, 0, 0};
          _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
          {
              Vector r = x_i - x_j;
              Vector v = Fluid->v[i] - Fluid->v[j];
-             omega += cross(v,Kernel::gradW(r)) * Fluid->V[i];
+             omega += Fluid->V[j] * cross( v,Kernel::gradW(r));
          });
-         Fluid->omega_delta[i] = beta * (Fluid->omega[i] - omega / 2.0);
+//         omega = 0.1 * omega;
          Fluid->omega[i] = omega;
      });
 }
 
-void HinaPE::DFSPH_AkinciSolver::computeVorticityVelocity() {
+void HinaPE::DFSPH_AkinciSolver::compute_vorticity_n1_sph() {
     _for_each_fluid_particle([&](size_t i, Vector x_i)
      {
-         Vector vorticity_delta = Fluid->omega_delta[i];
-         Fluid->v[i] += vorticity_delta * FLUID_PARTICLE_RADIUS;
+         Vector omega{0, 0, 0};
+         _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
+         {
+             Vector r = x_i - x_j;
+             Vector v = Fluid->v[i] - Fluid->v[j];
+             omega += Fluid->V[j] * cross( v,Kernel::gradW(r));
+         });
+//         omega = 0.1 * omega;
+         Fluid->predict_omega[i] = omega;
+     });
+}
+
+void HinaPE::DFSPH_AkinciSolver::compute_ideal_vorticity_n1_vorticity_equation(real dt) {
+    // 算Dω/dt
+    _for_each_fluid_particle([&](size_t i, Vector x_i)
+     {
+         Vector omega = Fluid->omega[i];
+         // 第一项是ω·▽v
+         Vector first_term{0, 0, 0};
+         Vector second_term{0, 0, 0};
+         Vector grad_v{0, 0, 0};
+        _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
+        {
+            Vector r = x_i - x_j;
+            Vector v = Fluid->v[i] - Fluid->v[j];
+            grad_v += Fluid->V[j] * Kernel::gradW(r) * v;
+        });
+        first_term = omega.dot(grad_v);
+        // 第二项是v·▽2ω
+        _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
+        {
+            Vector r = x_i - x_j;
+            fpreal r2 = r.length() * r.length();
+            Vector omega_ij = omega - Fluid->omega[j];
+            second_term += Fluid->V[j] * Kernel::gradW(r) * dot(Fluid->v[i],omega_ij) / (r2 + 0.01 * FLUID_PARTICLE_RADIUS * FLUID_PARTICLE_RADIUS);
+        });
+        second_term = 2 * (3 + 2) * second_term;
+        Fluid->omega[i] = omega + (first_term + second_term) * dt;
+     });
+}
+
+void HinaPE::DFSPH_AkinciSolver::compute_vorticity_dissipation() {
+    _for_each_fluid_particle([&](size_t i, Vector x_i)
+     {
+         Fluid->omega_delta[i] = Fluid->omega[i] - Fluid->predict_omega[i];
+     });
+}
+
+void HinaPE::DFSPH_AkinciSolver::compute_stream_function() {
+    _for_each_fluid_particle([&](size_t i, Vector x_i)
+     {
+         Vector psi{0, 0, 0};
+        _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j) {
+            Vector xij = x_i - x_j;
+            psi += (Fluid->omega_delta[j] * Fluid->V[j]) / xij.length();
+        });
+         Fluid->psi[i] = psi / (4 * M_PI);
+     });
+}
+
+void HinaPE::DFSPH_AkinciSolver::compute_vorticity_velocity() {
+    _for_each_fluid_particle([&](size_t i, Vector x_i)
+     {
+        Vector vorticity_velocity{0, 0, 0};
+        _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j) {
+            Vector xij = x_i - x_j;
+            Vector fsi_ij = Fluid->psi[i] - Fluid->psi[j];
+            vorticity_velocity += Fluid->V[j] * cross(fsi_ij, Kernel::gradW(xij));
+        });
+        Fluid->v[i] += vorticity_velocity;
      });
 }
 
@@ -693,6 +772,15 @@ void HinaPE::DFSPH_AkinciSolver::clearMarkedParticles() {
         });
     });
 }
+
+
+
+
+
+
+
+
+
 
 
 

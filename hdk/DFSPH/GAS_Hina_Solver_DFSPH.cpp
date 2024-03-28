@@ -108,6 +108,8 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
             DFSPH_particles->VP = &DFSPH_AkinciSolverPtr->Fluid->fluid_vp;
             DFSPH_particles->omega = &DFSPH_AkinciSolverPtr->Fluid->omega;
             DFSPH_particles->omega_delta = &DFSPH_AkinciSolverPtr->Fluid->omega_delta;
+            DFSPH_particles->predict_omega = &DFSPH_AkinciSolverPtr->Fluid->predict_omega;
+            DFSPH_particles->psi = &DFSPH_AkinciSolverPtr->Fluid->psi;
 
 			std::vector<SIM_Hina_Particles_Akinci *> akinci_boundaries = FetchAllAkinciBoundaries(obj);
 			for (auto &akinci_boundary: akinci_boundaries)

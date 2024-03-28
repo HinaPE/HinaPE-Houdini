@@ -52,7 +52,9 @@ struct DFSPH_AkinciFluid : public FluidCPU
     std::vector<int> fluid_bflp;
     std::vector<int> fluid_vp;
     VectorArrayCPU omega;
+    VectorArrayCPU predict_omega;
     VectorArrayCPU omega_delta;
+    VectorArrayCPU psi;
 };
 
 struct DFSPH_AkinciParam
@@ -65,7 +67,7 @@ struct DFSPH_AkinciParam
 	real BOUNDARY_VISCOSITY = 0;
     real ALPHA = 0.1;
     real BETA = 0.2;
-	Vector GRAVITY = Vector(0, -9.8, 0);
+	Vector GRAVITY = /*Vector(0, -9.8, 0)*/Vector(5, 0, 0);
 	bool TOP_OPEN = true;
 
 	std::vector<real> BOUNDARY_REST_DENSITY;
@@ -90,9 +92,14 @@ public:
     void findBFLPs();
     void findSPs();
     void findVPs();
-    void computeVorticity();
-    void computeVorticityVelocity();
+    void compute_vorticity_n_sph();
+    void compute_vorticity_n1_sph();
+    void compute_ideal_vorticity_n1_vorticity_equation(real dt);
+    void compute_vorticity_dissipation();
+    void compute_stream_function();
+    void compute_vorticity_velocity();
     void clearMarkedParticles();
+    void MarkVPs();
 protected:
 	void resize();
 	void update_akinci_boundaries();

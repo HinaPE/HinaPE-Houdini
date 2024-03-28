@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Find Houdini
 if (MSVC)
-    set(Houdini_PATH "E:/Program Files/Side Effects Software/Houdini 20.0.625")
+    set(Houdini_PATH "E:/Program Files/Side Effects Software/Houdini 20.0.653")
 elseif (APPLE)
     set(Houdini_PATH "/Applications/Houdini/Houdini20.0.625/Frameworks/Houdini.framework/Versions/20.0/Resources")
 endif ()
