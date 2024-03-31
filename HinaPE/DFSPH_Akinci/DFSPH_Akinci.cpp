@@ -19,18 +19,21 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 	build_neighbors();
     compute_density();
 
-    /*findBFLPs();
-    findSPs();*/
+    findBFLPs();
+    findSPs();
 
     compute_vorticity_n_sph();
 
+    ////////DFSPH/////////
 	compute_factor();
 	divergence_solve(dt);
 	non_pressure_force();
 	predict_velocity(dt);
     pressure_solve(dt);
-    //findVPs();
-    //MarkVPs(); // 为什么不起作用？
+    /////////////////////
+
+    findVPs();
+    MarkVPs();
 
     compute_vorticity_n1_sph();
     compute_ideal_vorticity_n1_vorticity_equation(dt);
@@ -205,14 +208,14 @@ void HinaPE::DFSPH_AkinciSolver::findSPs() {
 
             // compute the smoothing velocity difference
             Vector u_diff{0, 0, 0};
-            fpreal W_sum = 0;
+            fpreal W_sum = Kernel::W_zero();
             NeighborBuilder.for_each_neighbor(b_set + 1, 0, i, [&](size_t j, Vector x_j)
             {
                 Vector u_i = Boundaries[b_set]->v[i];
                 Vector u_j = Fluid->v[j];
-                Vector r = x_j - Boundaries[b_set]->x[i];
+                Vector r = Boundaries[b_set]->x[i] - Fluid->x[j];
                 fpreal W = Kernel::W(r);
-                u_diff += (u_j - u_i)  * W;
+                u_diff += (u_i - u_j)  * W;
                 W_sum += W;
             });
             if(W_sum != 0)
@@ -237,7 +240,7 @@ void HinaPE::DFSPH_AkinciSolver::findSPs() {
          {
              _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
              {
-                 if(Boundaries[b_set]->normals[j].dot(Boundaries[b_set]->u_diff[j]) < 0)
+                 if(Boundaries[b_set]->u_diff[j].dot(Boundaries[b_set]->normals[j]) < 0)
                  {
                      Boundaries[b_set]->boundary_sp[j] = 1;
                  }
@@ -251,7 +254,7 @@ void HinaPE::DFSPH_AkinciSolver::findVPs() {
     {
         parallel_for(Boundaries[b_set]->size, [&](size_t i)
         {
-            if(Boundaries[b_set]->boundary_sp[i])
+            if(Boundaries[b_set]->boundary_sp[i] == 1)
             {
                 NeighborBuilder.for_each_neighbor(b_set + 1, 0, i, [&](size_t j, Vector x_j)
                 {
@@ -261,7 +264,7 @@ void HinaPE::DFSPH_AkinciSolver::findVPs() {
                         Fluid->fluid_vp[j] = 1;
                         Vector v_ji = Fluid->v[j] - Boundaries[b_set]->v[i];
                         Vector x_ji = Fluid->x[j] - Boundaries[b_set]->x[i];
-                        if(v_ji.dot(x_ji) > 0)
+                        if(x_ji.dot(v_ji) > 0)
                         {
                             Vector v_tan_ji = v_ji - Boundaries[b_set]->normals[i] * v_ji.dot(Boundaries[b_set]->normals[i]);
                             float rand_num = 0.0 + (float)(rand()) / ((float)(RAND_MAX / (1.0 - 0.0)));
@@ -676,7 +679,6 @@ void HinaPE::DFSPH_AkinciSolver:: compute_vorticity_n_sph() {
              Vector v = Fluid->v[i] - Fluid->v[j];
              omega += Fluid->V[j] * cross( v,Kernel::gradW(r));
          });
-//         omega = 0.1 * omega;
          Fluid->omega[i] = omega;
      });
 }
@@ -691,7 +693,6 @@ void HinaPE::DFSPH_AkinciSolver::compute_vorticity_n1_sph() {
              Vector v = Fluid->v[i] - Fluid->v[j];
              omega += Fluid->V[j] * cross( v,Kernel::gradW(r));
          });
-//         omega = 0.1 * omega;
          Fluid->predict_omega[i] = omega;
      });
 }
