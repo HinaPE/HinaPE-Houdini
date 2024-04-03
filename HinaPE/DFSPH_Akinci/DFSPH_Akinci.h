@@ -55,6 +55,7 @@ struct DFSPH_AkinciFluid : public FluidCPU
     VectorArrayCPU predict_omega;
     VectorArrayCPU omega_delta;
     VectorArrayCPU psi;
+    VectorArrayCPU first_term, second_term;
 };
 
 struct DFSPH_AkinciParam
