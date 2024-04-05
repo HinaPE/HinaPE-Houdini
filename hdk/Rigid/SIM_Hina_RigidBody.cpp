@@ -110,6 +110,9 @@ void InitAllRigidBodies(SIM_Object *obj, reactphysics3d::PhysicsCommon &physicsC
 				center_of_mass /= gdp->getNumPoints();
 			}
 
+            /*std::cout << center_of_mass << std::endl;
+            std::cout << std::endl;*/
+
 			float *vertices = new float[gdp->getNumPoints() * 3];
 			{
 				GA_Offset pt_off;
@@ -194,6 +197,8 @@ void UpdateAllRigidBodies(SIM_Object *obj)
 		if (rigidbody)
 		{
 			rigidbody->WorldTransformCache = rigidbody->rb->getTransform();
+            /*std::cout << rigidbody->WorldTransformCache.getPosition().x << " " << rigidbody->WorldTransformCache.getPosition().y << " " << rigidbody->WorldTransformCache.getPosition().z << std::endl;
+            std::cout << std::endl;*/
 		}
 	}
 }

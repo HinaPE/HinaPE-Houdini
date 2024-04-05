@@ -19,8 +19,8 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 	build_neighbors();
     compute_density();
 
-    /*findBFLPs();
-    findSPs();*/
+    findBFLPs();
+    findSPs();
 
     compute_vorticity_n_sph();
 
@@ -32,8 +32,8 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
     pressure_solve(dt);
     /////////////////////
 
-    /*findVPs();
-    MarkVPs();*/
+    findVPs();
+    /*MarkVPs();*/
 
     compute_vorticity_n1_sph();
     compute_ideal_vorticity_n1_vorticity_equation(dt);
@@ -106,6 +106,7 @@ void HinaPE::DFSPH_AkinciSolver::update_akinci_boundaries()
 {
 	for (auto &Boundary: Boundaries)
 	{
+        //std::cout << "Boundary->xfom: " << Boundary->xform << std::endl;
 		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
 		std::fill(Boundary->v.begin(), Boundary->v.end(), Vector{0, 0, 0});
 		std::fill(Boundary->a.begin(), Boundary->a.end(), Vector{0, 0, 0});

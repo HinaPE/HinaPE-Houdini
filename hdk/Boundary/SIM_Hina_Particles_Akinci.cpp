@@ -123,6 +123,8 @@ void InitAllAkinciBoundaries(SIM_Object *fluid_obj)
 				}
 				boundary_akinci->center_of_mass = center_of_mass;
 
+                //std::cout << center_of_mass << std::endl;
+
 				(*boundary_akinci->x_init).reserve(gdp->getNumPoints());
 				GA_Offset pt_off;
 				GA_FOR_ALL_PTOFF(gdp, pt_off)
@@ -161,9 +163,23 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 
 				auto _t = rb->rb->getTransform();
 				auto _p = _t.getPosition();
+//                std::cout << _p.x << " " << _p.y << " " << _p.z << std::endl;
+//                std::cout << std::endl;
 				auto _q = _t.getOrientation();
 
 				const reactphysics3d::Matrix3x3 &matrix = _q.getMatrix(); // fortunately, this is also a row major matrix
+
+                /*////Test
+                for(int i = 0; i < 3; i++)
+                {
+                    for(int j = 0; j < 3; j++)
+                    {
+                        std::cout << matrix[i][j] << " ";
+                    }
+                    std::cout << std::endl;
+                }
+                std::cout << std::endl;*/
+
 				UT_DMatrix4 final;
 
 				xform[0][0] = matrix[0][0];
@@ -188,11 +204,15 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 			} else
 			{
 				UT_Vector3 center_of_mass = boundary_akinci->center_of_mass;
+//                std::cout << "1:" << center_of_mass << std::endl;
+                center_of_mass = UT_Vector3(0, 0, 0);
+//                std::cout << "2:" << center_of_mass << std::endl;
 				xform[3][0] = center_of_mass.x();
 				xform[3][1] = center_of_mass.y();
 				xform[3][2] = center_of_mass.z();
 			}
 			(*boundary_akinci->xform) = xform;
+            //std::cout << xform << std::endl;
 		}
 	}
 }
