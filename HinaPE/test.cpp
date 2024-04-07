@@ -1,5 +1,6 @@
 #include <UT/UT_Vector3.h>
 #include <SIM/SIM_RawField.h>
+#include <SIM/SIM_VectorField.h>
 
 int main()
 {
