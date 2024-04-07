@@ -24,8 +24,8 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 	pressure_solve(dt);
 	advect(dt);
 
-//	enforce_SDF_boundary();
-//	enforce_boundary();
+	enforce_SDF_boundary();
+	enforce_boundary();
 }
 void HinaPE::DFSPH_AkinciSolver::resize()
 {

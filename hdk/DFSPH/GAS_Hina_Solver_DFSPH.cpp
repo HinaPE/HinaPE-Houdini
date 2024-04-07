@@ -193,11 +193,11 @@ void GAS_Hina_Solver_DFSPH::apply_akinci_force(SIM_Object *obj)
 					reactphysics3d::Vector3 f = {_f.x(), _f.y(), _f.z()};
 					reactphysics3d::Vector3 x = {_x.x(), _x.y(), _x.z()};
 					rigidbody->rb->applyWorldForceAtWorldPosition(f, x);
+
+					rigidbody->rb->setAngularDamping(boundary->getRotationStiffness());
+//					rigidbody->rb->resetTorque();
 				}
 			}
 		}
-
-		rigidbody->rb->setAngularDamping(0.5);
-		rigidbody->rb->resetTorque();
 	}
 }

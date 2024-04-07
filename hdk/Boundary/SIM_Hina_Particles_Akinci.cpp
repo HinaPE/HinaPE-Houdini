@@ -9,6 +9,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS_IMPLEMENT(
 		HINA_STRING_PARAMETER(TargetGeometryDATANAME, SIM_GEOMETRY_DATANAME) \
 		HINA_FLOAT_PARAMETER(SolidDensity, 1000.) \
         HINA_FLOAT_PARAMETER(Buoyancy, 1.) \
+        HINA_FLOAT_PARAMETER(RotationStiffness, 1.) \
         HINA_BOOL_PARAMETER(IsDynamic, false) \
 )
 void SIM_Hina_Particles_Akinci::_init_Particles_Akinci()
@@ -120,7 +121,8 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 				auto _p = _t.getPosition();
 				auto _q = _t.getOrientation();
 
-				const reactphysics3d::Matrix3x3 &matrix = _q.getMatrix(); // fortunately, this is also a row major matrix
+				const reactphysics3d::Matrix3x3 &rq = _q.getMatrix(); // this is also a col major matrix
+				const reactphysics3d::Matrix3x3 matrix = rq.getTranspose(); // we need to transpose this
 				UT_DMatrix4 final;
 
 				xform[0][0] = matrix[0][0];
