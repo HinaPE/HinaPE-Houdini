@@ -40,7 +40,7 @@ SIM_RawField HinaPE::ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field)
 			(real) Field->GridSpacing().y * Field->Resolution().y,
 			(real) Field->GridSpacing().z * Field->Resolution().z
 	};
-	UT_Vector3I resolution = {(int) Field->DataSize().x, (int) Field->DataSize().y, (int) Field->DataSize().z};
+	UT_Vector3I resolution = {(int) Field->Resolution().x, (int) Field->Resolution().y, (int) Field->Resolution().z};
 	if (std::dynamic_pointer_cast<CubbyFlow::CellCenteredScalarGrid3>(Field))
 	{
 		Output.init(SIM_SAMPLE_CENTER, origin, size, resolution.x(), resolution.y(), resolution.z());
