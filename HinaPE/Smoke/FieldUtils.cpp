@@ -46,9 +46,18 @@ SIM_RawField HinaPE::ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field)
 		Output.init(SIM_SAMPLE_CENTER, origin, size, resolution.x(), resolution.y(), resolution.z());
 	} else if (std::dynamic_pointer_cast<CubbyFlow::VertexCenteredScalarGrid3>(Field))
 	{
+		origin += UT_Vector3D{Field->GridSpacing().x / 2.f, Field->GridSpacing().y / 2.f, Field->GridSpacing().z / 2.f};
 		Output.init(SIM_SAMPLE_CORNER, origin, size, resolution.x(), resolution.y(), resolution.z());
 	}
 	return Output;
+}
+void HinaPE::print(const SIM_RawField &Field)
+{
+	std::cout << "HDK Origin: " << Field.getOrig() << std::endl;
+	std::cout << "HDK Resolution: : " << Field.getVoxelRes() << std::endl;
+	std::cout << "HDK VoxelSize: : " << Field.getVoxelSize() << std::endl;
+	std::cout << "HDK Size: " << Field.getSize() << std::endl;
+	std::cout << "HDK Data0 Pos: " << Field.indexToPos({0, 0, 0}) << std::endl;
 }
 HinaPE::BackwardDiffusionSolver::BackwardDiffusionSolver()
 {

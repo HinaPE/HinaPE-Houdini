@@ -25,6 +25,9 @@ struct BackwardDiffusionSolver
 
 	CubbyFlow::GridBackwardEulerDiffusionSolver3Ptr solver;
 };
+
+
+void print(const SIM_RawField &Field);
 }
 
 #endif //HINAPE_FIELDUTILS_H
