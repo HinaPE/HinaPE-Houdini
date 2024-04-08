@@ -16,7 +16,7 @@ file(GLOB HINAPE_COMMON common/particles.h common/neighbors.h common/kernels.h c
 file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp)
 file(GLOB_RECURSE HINAPE_PBF_AKINCI_SOURCE PBF_Akinci/*.h PBF_Akinci/*.cpp)
 #file(GLOB_RECURSE HINAPE_RIGIDBODY_SOURCE RigidBody/*.h RigidBody/*.cpp)
-file(GLOB_RECURSE HINAPE_SMOKE_SOURCE Smoke/*.h Smoke/*.cpp Smoke/FieldUtils.h Smoke/FieldUtils.cpp)
+file(GLOB_RECURSE HINAPE_SMOKE_SOURCE Smoke/*.h Smoke/*.cpp Smoke/SmokeNew.h Smoke/SmokeNew.cpp Smoke/FieldUtils.h Smoke/FieldUtils.cpp)
 
 
 add_library(HinaPE STATIC
@@ -25,8 +25,6 @@ add_library(HinaPE STATIC
         ${HINAPE_PBF_AKINCI_SOURCE}
 #        ${HINAPE_RIGIDBODY_SOURCE}
         ${HINAPE_SMOKE_SOURCE}
-        Smoke/FieldUtils.cpp
-        Smoke/FieldUtils.h
         test.cpp
 )
 target_link_libraries(HinaPE PUBLIC ${CUDA_LIBRARIES} Houdini CUDA_CubbyFlow CUDA_NeighborSearch Discregrid TreeNSearch ReactPhysics3D)
