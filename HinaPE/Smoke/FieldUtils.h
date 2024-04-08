@@ -4,11 +4,27 @@
 #include <UT/UT_Vector3.h>
 #include <SIM/SIM_RawField.h>
 
+#include <CUDA_CubbyFlow/Core/Solver/Grid/GridBackwardEulerDiffusionSolver3.hpp>
+#include <CUDA_CubbyFlow/Core/Grid/CellCenteredScalarGrid.hpp>
+#include <CUDA_CubbyFlow/Core/Grid/VertexCenteredScalarGrid.hpp>
+
 namespace HinaPE
 {
 using real = float;
 using Vector = UT_Vector3T<real>;
-real Gradient(SIM_RawField &F, int x, int y, int z);
+
+CubbyFlow::ScalarGrid3Ptr ToCubby(const SIM_RawField &Field);
+SIM_RawField ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field);
+
+struct BackwardDiffusionSolver
+{
+	BackwardDiffusionSolver();
+	void Solve(const SIM_RawField &Input, SIM_RawField &Marker, SIM_RawField &Output);
+	real stiffness;
+	real dt;
+
+	CubbyFlow::GridBackwardEulerDiffusionSolver3Ptr solver;
+};
 }
 
 #endif //HINAPE_FIELDUTILS_H
