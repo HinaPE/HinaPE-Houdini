@@ -3,6 +3,8 @@
 
 #include <UT/UT_Vector3.h>
 #include <SIM/SIM_RawField.h>
+#include <SIM/SIM_ScalarField.h>
+#include <SIM/SIM_VectorField.h>
 
 #include <CUDA_CubbyFlow/Core/Solver/Grid/GridBackwardEulerDiffusionSolver3.hpp>
 #include <CUDA_CubbyFlow/Core/Grid/CellCenteredScalarGrid.hpp>
@@ -13,8 +15,13 @@ namespace HinaPE
 using real = float;
 using Vector = UT_Vector3T<real>;
 
-CubbyFlow::ScalarGrid3Ptr ToCubby(const SIM_RawField &Field);
-SIM_RawField ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field);
+void ToCubby(const SIM_ScalarField &Field, CubbyFlow::ScalarGrid3Ptr &Output);
+void ToCubby(const SIM_VectorField &Field, CubbyFlow::VectorField3Ptr &Output);
+void ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field, SIM_ScalarField &Output);
+void ToHDK(const CubbyFlow::VectorField3Ptr &Field, SIM_VectorField &Output);
+
+CubbyFlow::ScalarGrid3Ptr ToCubby(const SIM_RawField &Field); // @deprecated
+SIM_RawField ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field); // @deprecated
 
 struct BackwardDiffusionSolver
 {

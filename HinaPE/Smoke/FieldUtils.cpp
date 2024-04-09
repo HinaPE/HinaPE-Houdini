@@ -1,5 +1,22 @@
 #include "FieldUtils.h"
 
+void HinaPE::ToCubby(const SIM_ScalarField &Field, CubbyFlow::ScalarGrid3Ptr &Output)
+{
+
+}
+void HinaPE::ToCubby(const SIM_VectorField &Field, CubbyFlow::VectorField3Ptr &Output)
+{
+
+}
+void HinaPE::ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field, SIM_ScalarField &Output)
+{
+
+}
+void HinaPE::ToHDK(const CubbyFlow::VectorField3Ptr &Field, SIM_VectorField &Output)
+{
+
+}
+
 CubbyFlow::ScalarGrid3Ptr HinaPE::ToCubby(const SIM_RawField &Field)
 {
 	CubbyFlow::ScalarGrid3Ptr Output;
