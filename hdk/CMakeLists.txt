@@ -8,6 +8,8 @@ add_library(
         SHARED
         ${SIM_HinaPE_HEADER}
         ${SIM_HinaPE_SOURCE}
+        Smoke/GAS_Hina_ShowInfo.cpp
+        Smoke/GAS_Hina_ShowInfo.h
 )
 
 target_link_libraries(
