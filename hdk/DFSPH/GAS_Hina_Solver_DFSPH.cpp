@@ -17,6 +17,7 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
         HINA_BOOL_PARAMETER(UseFluidBlock, false) \
         HINA_FLOAT_VECTOR_PARAMETER(EmitStart, 3, -.3, -.3, -.3) \
         HINA_FLOAT_VECTOR_PARAMETER(EmitEnd, 3, .3, .3, .3) \
+        HINA_FLOAT_PARAMETER(VorticityAlpha, 0.1) \
         HINA_FLOAT_PARAMETER(VorticityBeta, 1.0) \
         static std::array<PRM_Name, 5> BoundaryHandling = {\
             PRM_Name("0", "Akinci2012"), \
@@ -89,6 +90,7 @@ void GAS_Hina_Solver_DFSPH::init_data(SIM_Hina_Particles_DFSPH *DFSPH_particles,
 			DFSPH_AkinciSolverPtr->FLUID_SURFACE_TENSION = getFluidSurfaceTension();
 			DFSPH_AkinciSolverPtr->GRAVITY = getGravityF();
 			DFSPH_AkinciSolverPtr->TOP_OPEN = getTopOpen();
+            DFSPH_AkinciSolverPtr->ALPHA = getVorticityAlpha();
             DFSPH_AkinciSolverPtr->BETA = getVorticityBeta();
 
 			DFSPH_particles->x = &DFSPH_AkinciSolverPtr->Fluid->x;

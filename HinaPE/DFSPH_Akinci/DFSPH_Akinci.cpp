@@ -187,54 +187,60 @@ void HinaPE::DFSPH_AkinciSolver::findBFLPs() {
          Vector fluid_pos = x_i;
          _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
             {
-                Vector boundary_pos = x_j;
-                fpreal dis = (fluid_pos - boundary_pos).length();
-                if(dis < FLUID_KERNAL_RADIUS)
-                    Fluid->fluid_bflp[i] = 1;
+                if(BOUNDARY_DYNAMICS[b_set])
+                {
+                    Vector boundary_pos = x_j;
+                    fpreal dis = (fluid_pos - boundary_pos).length();
+                    if(dis < FLUID_KERNAL_RADIUS)
+                        Fluid->fluid_bflp[i] = 1;
+                }
             });
      });
 }
 void HinaPE::DFSPH_AkinciSolver::findSPs() {
     serial_for(Boundaries.size(), [&](size_t b_set)
     {
-        parallel_for(Boundaries[b_set]->size, [&](size_t i)
+        if(BOUNDARY_DYNAMICS[b_set])
         {
-            // compute boundary normals
-            Vector n{0, 0, 0};
-            n = Kernel::gradW(Vector{0, 0, 0}) * Boundaries[b_set]->V[i];
-            NeighborBuilder.for_each_neighbor(b_set + 1, b_set + 1, i, [&](size_t j, Vector x_j)
+            parallel_for(Boundaries[b_set]->size, [&](size_t i)
             {
-                n += Kernel::gradW(x_j - Boundaries[b_set]->x[i]) * Boundaries[b_set]->V[j];
-            });
-            if(n.length() != 0)
-                Boundaries[b_set]->normals[i] = n / n.length();
+                // compute boundary normals
+                Vector n{0, 0, 0};
+                n = Kernel::gradW(Vector{0, 0, 0}) * Boundaries[b_set]->V[i];
+                NeighborBuilder.for_each_neighbor(b_set + 1, b_set + 1, i, [&](size_t j, Vector x_j)
+                {
+                    n += Kernel::gradW(x_j - Boundaries[b_set]->x[i]) * Boundaries[b_set]->V[j];
+                });
+                if(n.length() != 0)
+                    Boundaries[b_set]->normals[i] = n / n.length();
 
-            // compute the smoothing velocity difference
-            Vector u_diff{0, 0, 0};
-            fpreal W_sum = Kernel::W_zero();
-            NeighborBuilder.for_each_neighbor(b_set + 1, 0, i, [&](size_t j, Vector x_j)
-            {
-                Vector u_i = Boundaries[b_set]->v[i];
-                Vector u_j = Fluid->v[j];
-                Vector r = Boundaries[b_set]->x[i] - Fluid->x[j];
-                fpreal W = Kernel::W(r);
-                u_diff += (u_i - u_j)  * W;
-                W_sum += W;
+                // compute the smoothing velocity difference
+                Vector u_diff{0, 0, 0};
+                fpreal W_sum = Kernel::W_zero();
+                NeighborBuilder.for_each_neighbor(b_set + 1, 0, i, [&](size_t j, Vector x_j)
+                {
+                    Vector u_i = Boundaries[b_set]->v[i];
+                    Vector u_j = Fluid->v[j];
+                    Vector r = Boundaries[b_set]->x[i] - Fluid->x[j];
+                    fpreal W = Kernel::W(r);
+                    u_diff += (u_i - u_j)  * W;
+                    W_sum += W;
+                });
+                if(W_sum != 0)
+                    Boundaries[b_set]->u_diff[i] = u_diff / W_sum;
             });
-            if(W_sum != 0)
-                Boundaries[b_set]->u_diff[i] = u_diff / W_sum;
-        });
 
-        parallel_for(Boundaries[b_set]->size, [&](size_t i)
-        {
-            Vector n = Boundaries[b_set]->normals[i];
-            NeighborBuilder.for_each_neighbor(b_set + 1, b_set + 1, i, [&](size_t j, Vector x_j)
+            parallel_for(Boundaries[b_set]->size, [&](size_t i)
             {
-                n += Boundaries[b_set]->normals[j];
+                Vector n = Boundaries[b_set]->normals[i];
+                NeighborBuilder.for_each_neighbor(b_set + 1, b_set + 1, i, [&](size_t j, Vector x_j)
+                {
+                    n += Boundaries[b_set]->normals[j];
+                });
+                if(n.length() != 0)
+                    Boundaries[b_set]->normals[i] = n / n.length();
             });
-            if(n.length() != 0)
-                Boundaries[b_set]->normals[i] = n / n.length();
-        });
+        }
     });
 
     _for_each_fluid_particle([&](size_t i, Vector x_i)
@@ -243,9 +249,11 @@ void HinaPE::DFSPH_AkinciSolver::findSPs() {
          {
              _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
              {
-                 if(Boundaries[b_set]->u_diff[j].dot(Boundaries[b_set]->normals[j]) < 0)
-                 {
-                     Boundaries[b_set]->boundary_sp[j] = 1;
+                 if(BOUNDARY_DYNAMICS[b_set]){
+                     if(Boundaries[b_set]->u_diff[j].dot(Boundaries[b_set]->normals[j]) < 0)
+                     {
+                         Boundaries[b_set]->boundary_sp[j] = 1;
+                     }
                  }
              });
          }
@@ -255,28 +263,31 @@ void HinaPE::DFSPH_AkinciSolver::findVPs() {
     double alpha = ALPHA;
     serial_for(Boundaries.size(), [&](size_t b_set)
     {
-        parallel_for(Boundaries[b_set]->size, [&](size_t i)
+        if(BOUNDARY_DYNAMICS[b_set])
         {
-            if(Boundaries[b_set]->boundary_sp[i] == 1)
+            parallel_for(Boundaries[b_set]->size, [&](size_t i)
             {
-                NeighborBuilder.for_each_neighbor(b_set + 1, 0, i, [&](size_t j, Vector x_j)
+                if(Boundaries[b_set]->boundary_sp[i] == 1)
                 {
-                    if(Fluid->fluid_bflp[j] == 1)
+                    NeighborBuilder.for_each_neighbor(b_set + 1, 0, i, [&](size_t j, Vector x_j)
                     {
-                        //Fluid->fluid_bflp[j] = 2; // pink but not vp
-                        Fluid->fluid_vp[j] = 1;
-                        Vector v_ji = Fluid->v[j] - Boundaries[b_set]->v[i];
-                        Vector x_ji = Fluid->x[j] - Boundaries[b_set]->x[i];
-                        if(x_ji.dot(v_ji) > 0)
+                        if(Fluid->fluid_bflp[j] == 1)
                         {
-                            Vector v_tan_ji = v_ji - Boundaries[b_set]->normals[i] * v_ji.dot(Boundaries[b_set]->normals[i]);
-                            float rand_num = 0.0 + (float)(rand()) / ((float)(RAND_MAX / (1.0 - 0.0)));
-                            Fluid->omega[j] = (1.0 - alpha) * rand_num * v_tan_ji / v_tan_ji.length() + alpha * Fluid->omega[j];
+                            //Fluid->fluid_bflp[j] = 2; // pink but not vp
+                            Fluid->fluid_vp[j] = 1;
+                            Vector v_ji = Fluid->v[j] - Boundaries[b_set]->v[i];
+                            Vector x_ji = Fluid->x[j] - Boundaries[b_set]->x[i];
+                            if(x_ji.dot(v_ji) > 0)
+                            {
+                                Vector v_tan_ji = v_ji - Boundaries[b_set]->normals[i] * v_ji.dot(Boundaries[b_set]->normals[i]);
+                                float rand_num = 0.0 + (float)(rand()) / ((float)(RAND_MAX / (1.0 - 0.0)));
+                                Fluid->omega[j] = (1.0 - alpha) * rand_num * v_tan_ji / v_tan_ji.length() + alpha * Fluid->omega[j];
+                            }
                         }
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
+        }
     });
 }
 void HinaPE::DFSPH_AkinciSolver::MarkVPs() {

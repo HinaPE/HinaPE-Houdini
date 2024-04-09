@@ -207,7 +207,7 @@ void UpdateAllAkinciBoundaries(SIM_Object *fluid_obj)
 			{
 				UT_Vector3 center_of_mass = boundary_akinci->center_of_mass;
 //                std::cout << "1:" << center_of_mass << std::endl;
-                center_of_mass = UT_Vector3(0, 0, 0);
+//               center_of_mass = UT_Vector3(0, 0, 0);
 //                std::cout << "2:" << center_of_mass << std::endl;
 				xform[3][0] = center_of_mass.x();
 				xform[3][1] = center_of_mass.y();
