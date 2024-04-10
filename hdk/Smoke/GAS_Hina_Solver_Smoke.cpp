@@ -27,7 +27,5 @@ bool GAS_Hina_Solver_Smoke::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time
 	if (!S || !D || !T || !C || !V)
 		return false;
 
-	std::cout << "Success!" << std::endl;
-
 	return true;
 }
