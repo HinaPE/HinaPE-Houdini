@@ -366,6 +366,11 @@ static PRM_Name    theCollisionName(GAS_NAME_COLLISION, "CollisionDataName"); \
 static PRM_Default    theCollisionNameDefault(0, "collision"); \
 PRMS.emplace_back(PRM_STRING, 1, &theCollisionName, &theCollisionNameDefault);
 
+#define ACTIVATE_GAS_SOURCE \
+static PRM_Name    theSourceName(GAS_NAME_SOURCE, "SourceDataName"); \
+static PRM_Default    theSourceNameDefault(0, "source"); \
+PRMS.emplace_back(PRM_STRING, 1, &theSourceName, &theSourceNameDefault);
+
 #define GAS_NAME_DENSITY2		"density2"
 #define ACTIVATE_GAS_DENSITY2 \
 static PRM_Name    theDensity2Name(GAS_NAME_DENSITY2, "Density2DataName"); \
