@@ -1,6 +1,6 @@
 #include "FieldUtils.h"
 
-void HinaPE::ToCubby(const SIM_ScalarField &Field, CubbyFlow::ScalarGrid3Ptr &Output)
+void HinaPE::ToCubby(const SIM_ScalarField &Field, CubbyFlow::CellCenteredScalarGrid3Ptr &Output)
 {
 	CubbyFlow::Vector3UZ resolution = {(size_t) Field.getDivisions().x(), (size_t) Field.getDivisions().y(), (size_t) Field.getDivisions().z()};
 	CubbyFlow::Vector3D spacing = {Field.getVoxelSize().x(), Field.getVoxelSize().y(), Field.getVoxelSize().z()};
@@ -8,9 +8,8 @@ void HinaPE::ToCubby(const SIM_ScalarField &Field, CubbyFlow::ScalarGrid3Ptr &Ou
 
 	if (Field.getVoxelSample() == SIM_SAMPLE_CENTER)
 		Output = CubbyFlow::CellCenteredScalarGrid3::GetBuilder().MakeShared();
-	else if (Field.getVoxelSample() == SIM_SAMPLE_CORNER)
-		Output = CubbyFlow::VertexCenteredScalarGrid3::GetBuilder().MakeShared();
-	else {}
+	else
+		std::cout << "ERROR VOXEL SAMPLE MATCHED" << std::endl;
 
 	Output->Resize(resolution, spacing, origin);
 	Output->ParallelForEachDataPointIndex(
@@ -19,7 +18,25 @@ void HinaPE::ToCubby(const SIM_ScalarField &Field, CubbyFlow::ScalarGrid3Ptr &Ou
 				(*Output)(idx.x, idx.y, idx.z) = Field.getField()->field()->getValue(idx.x, idx.y, idx.z);
 			});
 }
-void HinaPE::ToCubby(const SIM_VectorField &Field, CubbyFlow::VectorGrid3Ptr &Output)
+void HinaPE::ToCubby(const SIM_ScalarField &Field, CubbyFlow::VertexCenteredScalarGrid3Ptr &Output)
+{
+	CubbyFlow::Vector3UZ resolution = {(size_t) Field.getDivisions().x(), (size_t) Field.getDivisions().y(), (size_t) Field.getDivisions().z()};
+	CubbyFlow::Vector3D spacing = {Field.getVoxelSize().x(), Field.getVoxelSize().y(), Field.getVoxelSize().z()};
+	CubbyFlow::Vector3D origin = {Field.getOrig().x(), Field.getOrig().y(), Field.getOrig().z()};
+
+	if (Field.getVoxelSample() == SIM_SAMPLE_CORNER)
+		Output = CubbyFlow::VertexCenteredScalarGrid3::GetBuilder().MakeShared();
+	else
+		std::cout << "ERROR VOXEL SAMPLE MATCHED" << std::endl;
+
+	Output->Resize(resolution, spacing, origin);
+	Output->ParallelForEachDataPointIndex(
+			[&](const CubbyFlow::Vector3UZ &idx)
+			{
+				(*Output)(idx.x, idx.y, idx.z) = Field.getField()->field()->getValue(idx.x, idx.y, idx.z);
+			});
+}
+void HinaPE::ToCubby(const SIM_VectorField &Field, CubbyFlow::CellCenteredVectorGrid3Ptr &Output)
 {
 	CubbyFlow::Vector3UZ resolution = {(size_t) Field.getDivisions().x(), (size_t) Field.getDivisions().y(), (size_t) Field.getDivisions().z()};
 	CubbyFlow::Vector3D spacing = {Field.getVoxelSize().x(), Field.getVoxelSize().y(), Field.getVoxelSize().z()};
@@ -38,7 +55,16 @@ void HinaPE::ToCubby(const SIM_VectorField &Field, CubbyFlow::VectorGrid3Ptr &Ou
 							 Field.getZField()->field()->getValue(idx.x, idx.y, idx.z)};
 				});
 		Output = _;
-	} else if (Field.isCornerSampled())
+	} else
+		std::cout << "ERROR VOXEL SAMPLE MATCHED" << std::endl;
+}
+void HinaPE::ToCubby(const SIM_VectorField &Field, CubbyFlow::VertexCenteredVectorGrid3Ptr &Output)
+{
+	CubbyFlow::Vector3UZ resolution = {(size_t) Field.getDivisions().x(), (size_t) Field.getDivisions().y(), (size_t) Field.getDivisions().z()};
+	CubbyFlow::Vector3D spacing = {Field.getVoxelSize().x(), Field.getVoxelSize().y(), Field.getVoxelSize().z()};
+	CubbyFlow::Vector3D origin = {Field.getOrig().x(), Field.getOrig().y(), Field.getOrig().z()};
+
+	if (Field.isCornerSampled())
 	{
 		CubbyFlow::VertexCenteredVectorGrid3Ptr _ = CubbyFlow::VertexCenteredVectorGrid3::GetBuilder().MakeShared();
 		_->Resize(resolution, spacing, origin);
@@ -51,7 +77,16 @@ void HinaPE::ToCubby(const SIM_VectorField &Field, CubbyFlow::VectorGrid3Ptr &Ou
 							 Field.getZField()->field()->getValue(idx.x, idx.y, idx.z)};
 				});
 		Output = _;
-	} else if (Field.isFaceSampled())
+	} else
+		std::cout << "ERROR VOXEL SAMPLE MATCHED" << std::endl;
+}
+void HinaPE::ToCubby(const SIM_VectorField &Field, CubbyFlow::FaceCenteredGrid3Ptr &Output)
+{
+	CubbyFlow::Vector3UZ resolution = {(size_t) Field.getDivisions().x(), (size_t) Field.getDivisions().y(), (size_t) Field.getDivisions().z()};
+	CubbyFlow::Vector3D spacing = {Field.getVoxelSize().x(), Field.getVoxelSize().y(), Field.getVoxelSize().z()};
+	CubbyFlow::Vector3D origin = {Field.getOrig().x(), Field.getOrig().y(), Field.getOrig().z()};
+
+	if (Field.isFaceSampled())
 	{
 		CubbyFlow::FaceCenteredGrid3Ptr _ = CubbyFlow::FaceCenteredGrid3::GetBuilder().MakeShared();
 		_->Resize(resolution, spacing, origin);
@@ -59,15 +94,25 @@ void HinaPE::ToCubby(const SIM_VectorField &Field, CubbyFlow::VectorGrid3Ptr &Ou
 				[&](const CubbyFlow::Vector3UZ &idx)
 				{
 					_->U(idx) = Field.getXField()->field()->getValue(idx.x, idx.y, idx.z);
+				});
+		_->ParallelForEachVIndex(
+				[&](const CubbyFlow::Vector3UZ &idx)
+				{
 					_->V(idx) = Field.getYField()->field()->getValue(idx.x, idx.y, idx.z);
+				});
+		_->ParallelForEachWIndex(
+				[&](const CubbyFlow::Vector3UZ &idx)
+				{
 					_->W(idx) = Field.getZField()->field()->getValue(idx.x, idx.y, idx.z);
 				});
 		Output = _;
-	} else {}
+	} else
+		std::cout << "ERROR VOXEL SAMPLE MATCHED" << std::endl;
 }
+
 void HinaPE::ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field, SIM_ScalarField &Output)
 {
-	UT_Vector3 origin = {(real) Field->Origin().x, (real) Field->Origin().y, (real) Field->Origin().z}; // TODO: Origin or DataOrigin?
+	UT_Vector3 origin = {(real) Field->Origin().x, (real) Field->Origin().y, (real) Field->Origin().z};
 	UT_Vector3 size = {
 			(real) Field->GridSpacing().x * Field->Resolution().x,
 			(real) Field->GridSpacing().y * Field->Resolution().y,
@@ -84,7 +129,19 @@ void HinaPE::ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field, SIM_ScalarField &Outp
 }
 void HinaPE::ToHDK(const CubbyFlow::VectorGrid3Ptr &Field, SIM_VectorField &Output)
 {
-
+	UT_Vector3 origin = {(real) Field->Origin().x, (real) Field->Origin().y, (real) Field->Origin().z};
+	UT_Vector3 size = {
+			(real) Field->GridSpacing().x * Field->Resolution().x,
+			(real) Field->GridSpacing().y * Field->Resolution().y,
+			(real) Field->GridSpacing().z * Field->Resolution().z
+	};
+	UT_Vector3I resolution = {(int) Field->Resolution().x, (int) Field->Resolution().y, (int) Field->Resolution().z};
+	if (std::dynamic_pointer_cast<CubbyFlow::FaceCenteredGrid3>(Field))
+	{
+		Output.getXField()->init(SIM_SAMPLE_FACEX, origin, size, resolution.x(), resolution.y(), resolution.z());
+		Output.getYField()->init(SIM_SAMPLE_FACEY, origin, size, resolution.x(), resolution.y(), resolution.z());
+		Output.getZField()->init(SIM_SAMPLE_FACEZ, origin, size, resolution.x(), resolution.y(), resolution.z());
+	}
 }
 void HinaPE::match(const SIM_ScalarField &FieldHDK, const CubbyFlow::CellCenteredScalarGrid3Ptr &FieldCubby)
 {
@@ -95,8 +152,9 @@ void HinaPE::match(const SIM_ScalarField &FieldHDK, const CubbyFlow::CellCentere
 				UT_Vector3 pos2;
 				FieldHDK.indexToPos((int) idx.x, (int) idx.y, (int) idx.z, pos2);
 
-				if (pos1.distance(pos2) > 1e-6) { std::cout << "Mismatch: " << pos1 << " != " << pos2 << std::endl; }
+				if (pos1.distance(pos2) < 1e-6) { std::cout << "Mismatch: " << pos1 << " != " << pos2 << std::endl; }
 			});
+	std::cout << "Match! " << std::endl;
 }
 void HinaPE::match(const SIM_ScalarField &FieldHDK, const CubbyFlow::VertexCenteredScalarGrid3Ptr &FieldCubby)
 {
@@ -165,6 +223,7 @@ void HinaPE::match(const SIM_VectorField &FieldHDK, const CubbyFlow::FaceCentere
 					if (pos1.distance(pos2) > 1e-6) { std::cout << "Mismatch: " << pos1 << " != " << pos2 << std::endl; }
 				}
 			});
+	std::cout << "Match! " << std::endl;
 }
 void HinaPE::print(const SIM_ScalarField &Field)
 {
@@ -172,6 +231,7 @@ void HinaPE::print(const SIM_ScalarField &Field)
 	std::cout << "SIM_ScalarField Center: " << Field.getCenter() << std::endl;
 	std::cout << "SIM_ScalarField Divisions: " << Field.getDivisions() << std::endl;
 	std::cout << "SIM_ScalarField Origin: " << Field.getOrig() << std::endl;
+	std::cout << "SIM_ScalarField Data0: " << Field.getField()->indexToPos({0, 0, 0}) << std::endl;
 }
 void HinaPE::print(const SIM_VectorField &Field)
 {
@@ -212,104 +272,4 @@ void HinaPE::print(const CubbyFlow::FaceCenteredGrid3Ptr &Field)
 	std::cout << "CubbyFlow::FaceCenteredGrid3 Data0 Pos: " << Field->DataPosition(0)({0, 0, 0}).x << ", " << Field->DataPosition(0)({0, 0, 0}).y << ", " << Field->DataPosition(0)({0, 0, 0}).z << std::endl;
 	std::cout << "CubbyFlow::FaceCenteredGrid3 Data0 Pos: " << Field->DataPosition(1)({0, 0, 0}).x << ", " << Field->DataPosition(1)({0, 0, 0}).y << ", " << Field->DataPosition(1)({0, 0, 0}).z << std::endl;
 	std::cout << "CubbyFlow::FaceCenteredGrid3 Data0 Pos: " << Field->DataPosition(2)({0, 0, 0}).x << ", " << Field->DataPosition(2)({0, 0, 0}).y << ", " << Field->DataPosition(2)({0, 0, 0}).z << std::endl;
-}
-
-CubbyFlow::ScalarGrid3Ptr HinaPE::ToCubby(const SIM_RawField &Field)
-{
-	CubbyFlow::ScalarGrid3Ptr Output;
-	CubbyFlow::Vector3UZ resolution = {(size_t) Field.getVoxelRes().x(), (size_t) Field.getVoxelRes().y(), (size_t) Field.getVoxelRes().z()};
-	CubbyFlow::Vector3D spacing = {Field.getVoxelSize().x(), Field.getVoxelSize().y(), Field.getVoxelSize().z()};
-	CubbyFlow::Vector3D origin = {Field.getOrig().x(), Field.getOrig().y(), Field.getOrig().z()};
-
-	switch (Field.getSample())
-	{
-		case SIM_SAMPLE_CENTER:
-		{
-			Output = CubbyFlow::CellCenteredScalarGrid3::GetBuilder().MakeShared();
-		}
-			break;
-		case SIM_SAMPLE_CORNER:
-		{
-			origin += spacing * 0.5;
-			Output = CubbyFlow::VertexCenteredScalarGrid3::GetBuilder().MakeShared();
-		}
-			break;
-		case SIM_SAMPLE_FACEX:
-		{
-
-		}
-			break;
-		case SIM_SAMPLE_FACEY:
-		{
-
-		}
-			break;
-		case SIM_SAMPLE_FACEZ:
-		{
-
-		}
-			break;
-		default:
-			break;
-	}
-
-	Output->Resize(resolution, spacing, origin);
-	Output->ParallelForEachDataPointIndex(
-			[&](const CubbyFlow::Vector3UZ &idx)
-			{
-				(*Output)(idx.x, idx.y, idx.z) = Field.field()->getValue(idx.x, idx.y, idx.z);
-			});
-	return Output;
-}
-SIM_RawField HinaPE::ToHDK(const CubbyFlow::ScalarGrid3Ptr &Field)
-{
-	SIM_RawField Output;
-	UT_Vector3 origin = {(real) Field->Origin().x, (real) Field->Origin().y, (real) Field->Origin().z}; // TODO: Origin or DataOrigin?
-	UT_Vector3 size = {
-			(real) Field->GridSpacing().x * Field->DataSize().x,
-			(real) Field->GridSpacing().y * Field->DataSize().y,
-			(real) Field->GridSpacing().z * Field->DataSize().z
-	};
-	UT_Vector3I resolution = {(int) Field->Resolution().x, (int) Field->Resolution().y, (int) Field->Resolution().z};
-	if (std::dynamic_pointer_cast<CubbyFlow::CellCenteredScalarGrid3>(Field))
-	{
-		Output.init(SIM_SAMPLE_CENTER, origin, size, resolution.x(), resolution.y(), resolution.z());
-	} else if (std::dynamic_pointer_cast<CubbyFlow::VertexCenteredScalarGrid3>(Field))
-	{
-		size -= UT_Vector3D{Field->GridSpacing().x, Field->GridSpacing().y, Field->GridSpacing().z};
-		Output.init(SIM_SAMPLE_CORNER, origin, size, resolution.x(), resolution.y(), resolution.z());
-	}
-	return Output;
-}
-bool HinaPE::match(const SIM_RawField &Field1, const CubbyFlow::ScalarGrid3 &Field2)
-{
-	Field2.ForEachDataPointIndex(
-			[&](const CubbyFlow::Vector3UZ &idx)
-			{
-				UT_Vector3 pos1 = UT_Vector3D{Field2.DataPosition()(idx.x, idx.y, idx.z).x, Field2.DataPosition()(idx.x, idx.y, idx.z).y, Field2.DataPosition()(idx.x, idx.y, idx.z).z};
-				UT_Vector3 pos2 = Field1.indexToPos(UT_Vector3I{(int) idx.x, (int) idx.y, (int) idx.z});
-
-				if (pos1.distance(pos2) > 1e-6)
-				{
-					std::cout << "Mismatch: " << pos1 << " != " << pos2 << std::endl;
-					return false;
-				}
-			});
-	return true;
-}
-void HinaPE::print(const CubbyFlow::ScalarGrid3 &Field)
-{
-	std::cout << "Cubby Origin: " << Field.Origin().x << ", " << Field.Origin().y << ", " << Field.Origin().z << std::endl;
-	std::cout << "Cubby Resolution: : " << Field.Resolution().x << ", " << Field.Resolution().y << ", " << Field.Resolution().z << std::endl;
-	std::cout << "Cubby VoxelSize: : " << Field.GridSpacing().x << ", " << Field.GridSpacing().y << ", " << Field.GridSpacing().z << std::endl;
-	std::cout << "Cubby Size: " << Field.DataSize().x * Field.GridSpacing().x << ", " << Field.DataSize().y * Field.GridSpacing().y << ", " << Field.DataSize().z * Field.GridSpacing().z << std::endl;
-	std::cout << "Cubby Data0 Pos: " << Field.DataPosition()(0, 0, 0).x << ", " << Field.DataPosition()(0, 0, 0).y << ", " << Field.DataPosition()(0, 0, 0).z << std::endl;
-}
-
-HinaPE::BackwardDiffusionSolver::BackwardDiffusionSolver()
-{
-	solver = std::make_shared<CubbyFlow::GridBackwardEulerDiffusionSolver3>();
-}
-void HinaPE::BackwardDiffusionSolver::Solve(const SIM_RawField &Input, SIM_RawField &Marker, SIM_RawField &Output)
-{
 }

@@ -16,21 +16,40 @@ void GAS_Hina_Test::_makeEqual(const GAS_Hina_Test *src) {}
 bool GAS_Hina_Test::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, SIM_Time timestep)
 {
 	SIM_ScalarField *D = getScalarField(obj, GAS_NAME_DENSITY);
-//	SIM_VectorField *V = getVectorField(obj, GAS_NAME_VELOCITY);
-//
-//	if (!D || !V)
-//		return false;
-//
-//	if (!V->isFaceSampled())
-//		return false;
+	SIM_VectorField *V = getVectorField(obj, GAS_NAME_VELOCITY);
+
+	if (!D || !V)
+		return false;
 
 	{
-		const SIM_RawField &Field = *D->getField();
-		auto FieldCubby = HinaPE::ToCubby(Field);
-		auto Field2 = HinaPE::ToHDK(FieldCubby);
+		auto &Field1 = *D;
+		if (Field1.getVoxelSample() == SIM_SAMPLE_CENTER)
+		{
+			CubbyFlow::CellCenteredScalarGrid3Ptr Field2 = CubbyFlow::CellCenteredScalarGrid3::GetBuilder().MakeShared();
+			HinaPE::ToCubby(Field1, Field2);
+			HinaPE::print(Field1);
+			HinaPE::print(Field2);
+			HinaPE::match(Field1, Field2);
+		} else if (Field1.getVoxelSample() == SIM_SAMPLE_CORNER)
+		{
+			CubbyFlow::VertexCenteredScalarGrid3Ptr Field2 = CubbyFlow::VertexCenteredScalarGrid3::GetBuilder().MakeShared();
+			HinaPE::ToCubby(Field1, Field2);
+			HinaPE::print(Field1);
+			HinaPE::print(Field2);
+			HinaPE::match(Field1, Field2);
+		}
+	}
 
-		std::cout << "match1: " << HinaPE::match(Field, *FieldCubby) << std::endl;
-		std::cout << "match2: " << HinaPE::match(Field2, *FieldCubby) << std::endl;
+	{
+		auto &Field1 = *V;
+		if (V->isFaceSampled())
+		{
+			CubbyFlow::FaceCenteredGrid3Ptr Field2 = CubbyFlow::FaceCenteredGrid3 ::GetBuilder().MakeShared();
+			HinaPE::ToCubby(Field1, Field2);
+			HinaPE::print(Field1);
+			HinaPE::print(Field2);
+			HinaPE::match(Field1, Field2);
+		}
 	}
 
 	return true;
