@@ -33,13 +33,13 @@ bool GAS_Hina_GridSourceEmitter::_solve(SIM_Engine &engine, SIM_Object *obj, SIM
 
 	if (!getEmitOnce() || !this->emitted)
 	{
-		_emit(D->getField(), S->getField());
+		_emit(D->getField(), S->getField(), V->getXField(), V->getYField(), V->getZField());
 		this->emitted = true;
 	}
 
 	return true;
 }
-void GAS_Hina_GridSourceEmitter::_emitPartial(SIM_RawField *OutField, const SIM_RawField *InField, const UT_JobInfo &info)
+void GAS_Hina_GridSourceEmitter::_emitPartial(SIM_RawField *OutField, const SIM_RawField *InField, SIM_RawField *OutFlow_X, SIM_RawField *OutFlow_Y, SIM_RawField *OutFlow_Z, const UT_JobInfo &info)
 {
 	UT_VoxelArrayIteratorF vit;
 	InField->getPartialRange(vit, info);
@@ -48,6 +48,12 @@ void GAS_Hina_GridSourceEmitter::_emitPartial(SIM_RawField *OutField, const SIM_
 	{
 		auto value = InField->field()->getValue(vit.x(), vit.y(), vit.z());
 		if (value > std::numeric_limits<fpreal32>::epsilon())
-			OutField->fieldNC()->setValue(vit.x(), vit.y(), vit.z(), value);
+		{
+			auto old_value = OutField->field()->getValue(vit.x(), vit.y(), vit.z());
+			OutField->fieldNC()->setValue(vit.x(), vit.y(), vit.z(), old_value + value);
+//			OutFlow_X->fieldNC()->setValue(vit.x(), vit.y(), vit.z(), 0.0);
+//			OutFlow_Y->fieldNC()->setValue(vit.x(), vit.y(), vit.z(), 0.0);
+//			OutFlow_Z->fieldNC()->setValue(vit.x(), vit.y(), vit.z(), 0.0);
+		}
 	}
 }
