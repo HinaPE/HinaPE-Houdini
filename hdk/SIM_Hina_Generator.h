@@ -366,6 +366,18 @@ static PRM_Name    theCollisionName(GAS_NAME_COLLISION, "CollisionDataName"); \
 static PRM_Default    theCollisionNameDefault(0, "collision"); \
 PRMS.emplace_back(PRM_STRING, 1, &theCollisionName, &theCollisionNameDefault);
 
+#define GAS_NAME_DENSITY2		"density2"
+#define ACTIVATE_GAS_DENSITY2 \
+static PRM_Name    theDensity2Name(GAS_NAME_DENSITY2, "Density2DataName"); \
+static PRM_Default    theDensity2NameDefault(0, "density2"); \
+PRMS.emplace_back(PRM_STRING, 1, &theDensity2Name, &theDensity2NameDefault);
+
+#define GAS_NAME_VELOCITY2		"velocity2"
+#define ACTIVATE_GAS_VELOCITY2 \
+static PRM_Name    theVelocity2Name(GAS_NAME_VELOCITY2, "Velocity2DataName"); \
+static PRM_Default    theVelocity2NameDefault(0, "velocity2"); \
+PRMS.emplace_back(PRM_STRING, 1, &theVelocity2Name, &theVelocity2NameDefault);
+
 // ==================================================================================================
 // ==================================================================================================
 // ==================================================================================================
