@@ -24,6 +24,7 @@
 #include <SIM/SIM_ScalarField.h>
 #include <SIM/SIM_VectorField.h>
 #include <SIM/SIM_MatrixField.h>
+#include <SIM/SIM_RawField.h>
 #include <SIM/SIM_FieldSampler.h>
 
 #include <PRM/PRM_Name.h>
@@ -41,6 +42,7 @@
 #include <UT/UT_WorkBuffer.h>
 #include <UT/UT_NetMessage.h>
 #include <UT/UT_ThreadedAlgorithm.h>
+#include <UT/UT_ParallelUtil.h>
 
 #include <memory>
 
