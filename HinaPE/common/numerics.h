@@ -17,4 +17,4 @@ struct PCGSolver
 };
 }
 
-#endif //HINAPE_HOUDINI_NUMERICS_H
+#endif //HINAPE_NUMERICS_H

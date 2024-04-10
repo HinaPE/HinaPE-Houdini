@@ -1,0 +1,9 @@
+#ifndef HINAPE_PRESSURESOLVER_H
+#define HINAPE_PRESSURESOLVER_H
+
+class PressureSolver
+{
+
+};
+
+#endif //HINAPE_PRESSURESOLVER_H

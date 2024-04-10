@@ -36,7 +36,8 @@ bool GAS_Hina_Test::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, S
 			HinaPE::match(Field1, Field2);
 
 			HinaPE::ToHDK(Field2, *D2);
-			std::cout << "The Same D - D2: " << D->getField()->isMatching(D2->getField()) << std::endl;
+			std::cout << "isMatching D - D2: " << D->getField()->isMatching(D2->getField()) << std::endl;
+			std::cout << "isAligned D - D2: " << D->getField()->isAligned(D2->getField()) << std::endl;
 		} else if (Field1.getVoxelSample() == SIM_SAMPLE_CORNER)
 		{
 			CubbyFlow::VertexCenteredScalarGrid3Ptr Field2 = CubbyFlow::VertexCenteredScalarGrid3::GetBuilder().MakeShared();
@@ -46,7 +47,8 @@ bool GAS_Hina_Test::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, S
 			HinaPE::match(Field1, Field2);
 
 			HinaPE::ToHDK(Field2, *D2);
-			std::cout << "The Same D - D2: " << D->getField()->isMatching(D2->getField()) << std::endl;
+			std::cout << "isMatching D - D2: " << D->getField()->isMatching(D2->getField()) << std::endl;
+			std::cout << "isAligned D - D2: " << D->getField()->isAligned(D2->getField()) << std::endl;
 		}
 	}
 
@@ -60,11 +62,15 @@ bool GAS_Hina_Test::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time time, S
 			HinaPE::print(Field2);
 			HinaPE::match(Field1, Field2);
 
-			std::cout << "The Same V - V2: "
-					<< V->getXField()->isMatching(V2->getXField()) << ", "
-					<< V->getYField()->isMatching(V2->getYField()) << ", "
-					<< V->getZField()->isMatching(V2->getZField()) << ", "
-					<< std::endl;
+			std::cout << "isMatching V - V2: "
+					  << V->getXField()->isMatching(V2->getXField()) << ", "
+					  << V->getYField()->isMatching(V2->getYField()) << ", "
+					  << V->getZField()->isMatching(V2->getZField()) << std::endl;
+
+			std::cout << "isAligned V - V2: "
+					  << V->getXField()->isAligned(V2->getXField()) << ", "
+					  << V->getYField()->isAligned(V2->getYField()) << ", "
+					  << V->getZField()->isAligned(V2->getZField()) << std::endl;
 		}
 	}
 
