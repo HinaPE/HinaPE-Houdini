@@ -10,6 +10,7 @@
 #include <PBF/GAS_Hina_Solver_PBF.h>
 #include <Rigid/SIM_Hina_RigidBody.h>
 #include <Rigid/GAS_Hina_Solver_Rigid.h>
+#include <Smoke/GAS_Hina_GridAdvect.h>
 #include <Smoke/GAS_Hina_GridBoundarySolver.h>
 #include <Smoke/GAS_Hina_GridExternalForce.h>
 #include <Smoke/GAS_Hina_GridSourceEmitter.h>
@@ -31,6 +32,7 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_SDF_Boundary)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBody)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Rigid)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_GridAdvect)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridBoundarySolver)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridExternalForce)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridSourceEmitter)
