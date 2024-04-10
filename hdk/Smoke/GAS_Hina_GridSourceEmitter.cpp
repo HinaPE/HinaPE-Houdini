@@ -33,7 +33,6 @@ bool GAS_Hina_GridSourceEmitter::_solve(SIM_Engine &engine, SIM_Object *obj, SIM
 
 	if (!getEmitOnce() || !this->emitted)
 	{
-		// Emit
 		_emit(D->getField(), S->getField());
 		this->emitted = true;
 	}
