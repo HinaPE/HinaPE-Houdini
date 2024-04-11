@@ -43,6 +43,6 @@ void GAS_Hina_GridExternalForce::_applyPartial(float dt, SIM_RawField *V_X, SIM_
 	for (vit.rewind(); !vit.atEnd(); vit.advance())
 	{
 		auto value = V_Y->field()->getValue(vit.x(), vit.y(), vit.z());
-		V_Y->fieldNC()->setValue(vit.x(), vit.y(), vit.z(), value + dt * getGravity());
+		vit.setValue(value + dt * getGravity());
 	}
 }
