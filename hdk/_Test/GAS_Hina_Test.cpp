@@ -1,8 +1,6 @@
 #include "GAS_Hina_Test.h"
 
 #include <HinaPE/Smoke/FieldUtils.h>
-#include <UT/UT_SparseMatrix.h>
-#include <UT/UT_MatrixSolver.h>
 #include <iostream>
 
 class DiagonalPreconditioner

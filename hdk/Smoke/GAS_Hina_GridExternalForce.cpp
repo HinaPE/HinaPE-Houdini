@@ -1,5 +1,7 @@
 #include "GAS_Hina_GridExternalForce.h"
 
+#include <HinaPE/Smoke/FieldUtils.h>
+
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		GridExternalForce,
 		true,
