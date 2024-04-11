@@ -56,6 +56,7 @@ struct DFSPH_AkinciFluid : public FluidCPU
     VectorArrayCPU omega_delta;
     VectorArrayCPU psi;
     VectorArrayCPU first_term, second_term;
+    VectorArrayCPU refinement_omega;
 };
 
 struct DFSPH_AkinciParam
@@ -93,7 +94,7 @@ public:
     void findBFLPs();
     void findSPs();
     void findVPs();
-    void compute_vorticity_n_sph();
+    void compute_vorticity_n_sph(real dt);
     void compute_vorticity_n1_sph();
     void compute_ideal_vorticity_n1_vorticity_equation(real dt);
     void compute_vorticity_dissipation();
