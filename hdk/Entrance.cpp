@@ -12,6 +12,7 @@
 #include <Rigid/GAS_Hina_Solver_Rigid.h>
 #include <Smoke/GAS_Hina_GridAdvect.h>
 #include <Smoke/GAS_Hina_GridBoundarySolver.h>
+#include <Smoke/GAS_Hina_GridDiffusion.h>
 #include <Smoke/GAS_Hina_GridExternalForce.h>
 #include <Smoke/GAS_Hina_GridSourceEmitter.h>
 #include <Smoke/GAS_Hina_Solver_Smoke.h>
@@ -34,6 +35,7 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Rigid)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridAdvect)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridBoundarySolver)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_GridDiffusion)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridExternalForce)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridSourceEmitter)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Smoke)

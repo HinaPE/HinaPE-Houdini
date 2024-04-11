@@ -2,8 +2,9 @@
 
 enum GridType
 {
-	BOUNDARY = 0,
-	FLUID = 1,
+	AIR = 0,
+	BOUNDARY = 1,
+	FLUID = 2,
 };
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
