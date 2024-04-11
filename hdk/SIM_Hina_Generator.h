@@ -375,6 +375,11 @@ static PRM_Name    theSourceName(GAS_NAME_SOURCE, "SourceDataName"); \
 static PRM_Default    theSourceNameDefault(0, "source"); \
 PRMS.emplace_back(PRM_STRING, 1, &theSourceName, &theSourceNameDefault);
 
+#define ACTIVATE_GAS_MARKER \
+static PRM_Name    theMarkerName(GAS_NAME_STENCIL, "MarkerDataName"); \
+static PRM_Default    theMarkerNameDefault(0, "marker"); \
+PRMS.emplace_back(PRM_STRING, 1, &theMarkerName, &theMarkerNameDefault);
+
 #define GAS_NAME_DENSITY2		"density2"
 #define ACTIVATE_GAS_DENSITY2 \
 static PRM_Name    theDensity2Name(GAS_NAME_DENSITY2, "Density2DataName"); \

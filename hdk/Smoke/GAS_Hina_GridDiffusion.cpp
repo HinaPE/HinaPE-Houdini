@@ -9,6 +9,7 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
         ACTIVATE_GAS_TEMPERATURE \
         ACTIVATE_GAS_COLLISION \
         ACTIVATE_GAS_VELOCITY \
+		ACTIVATE_GAS_MARKER \
 )
 
 void GAS_Hina_GridDiffusion::_init() {}
@@ -20,8 +21,9 @@ bool GAS_Hina_GridDiffusion::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 	SIM_ScalarField *T = getScalarField(obj, GAS_NAME_TEMPERATURE);
 	SIM_ScalarField *C = getScalarField(obj, GAS_NAME_COLLISION);
 	SIM_VectorField *V = getVectorField(obj, GAS_NAME_VELOCITY);
+	SIM_VectorField *M = getVectorField(obj, GAS_NAME_STENCIL);
 
-	if (!S || !D || !T || !C || !V)
+	if (!S || !D || !T || !C || !V || !M)
 		return false;
 
 	if (!V->isFaceSampled())
