@@ -721,17 +721,16 @@ void HinaPE::DFSPH_AkinciSolver:: compute_vorticity_n_sph(real dt) {
          _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
          {
              Vector r = x_i - x_j;
-/*             if(r == Vector{0, 0, 0})
-                 std::cout << "r: " << r << std::endl;*/
              fpreal r_length = r.length();
-             Vector e = r / r_length;
-             delatV = rc * rc / (2.0 /** r*/) * cross(Fluid->refinement_omega[i], e);
-             if(delatV.length() > 10 || delatV.length() < -10)
-                 std::cout << "delatV: " << delatV << std::endl;
-             //Fluid->v[j] += delatV;
+             if(r_length > FLUID_PARTICLE_RADIUS)
+             {
+                 Vector e = r / r_length;
+                 //Vector v_surface = cross(Fluid->refinement_omega[i]/2, rc * e);
+                 delatV = rc * rc / (2.0 * r_length) * cross(Fluid->refinement_omega[i], e);
+                 Fluid->v[j] += delatV;
+             }
          });
      });
-
 }
 
 void HinaPE::DFSPH_AkinciSolver::compute_vorticity_n1_sph() {
