@@ -19,8 +19,8 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 	build_neighbors();
     compute_density();
 
-    findBFLPs();
-    findSPs();
+//    findBFLPs();
+//    findSPs();
 
     compute_vorticity_n_sph(dt);
 
@@ -32,14 +32,14 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
     pressure_solve(dt);
     /////////////////////
 
-    findVPs();
-    MarkVPs();
+//    findVPs();
+//    MarkVPs();
 
-//    compute_vorticity_n1_sph();
-//    compute_ideal_vorticity_n1_vorticity_equation(dt);
-//    compute_vorticity_dissipation();
-//    compute_stream_function();
-//    compute_vorticity_velocity();
+    compute_vorticity_n1_sph();
+    compute_ideal_vorticity_n1_vorticity_equation(dt);
+    compute_vorticity_dissipation();
+    compute_stream_function();
+    compute_vorticity_velocity();
 
 	advect(dt);
 
@@ -111,7 +111,7 @@ void HinaPE::DFSPH_AkinciSolver::update_akinci_boundaries()
         //std::cout << "Boundary->xfom: " << Boundary->xform << std::endl;
 		std::transform(Boundary->x_init.begin(), Boundary->x_init.end(), Boundary->x.begin(), [&](Vector x) { return rowVecMult(x, Boundary->xform); });
 		std::fill(Boundary->v.begin(), Boundary->v.end(), Vector{0, 0, 0});
-		std::fill(Boundary->a.begin(), Boundary->a.end(), Vector{0, 0, -5});
+		std::fill(Boundary->a.begin(), Boundary->a.end(), Vector{0, 0, 0});
         std::fill(Boundary->boundary_sp.begin(), Boundary->boundary_sp.end(), false);
         std::fill(Boundary->normals.begin(), Boundary->normals.end(), Vector{0, 0, 0});
         std::fill(Boundary->u_diff.begin(), Boundary->u_diff.end(), Vector{0, 0, 0});
@@ -732,16 +732,17 @@ void HinaPE::DFSPH_AkinciSolver:: compute_vorticity_n_sph(real dt) {
 //    //computr refinement
 //    _for_each_fluid_particle([&](size_t i, Vector x_i)
 //     {
-//         Vector delatV{0, 0, 0};
 //         _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
 //         {
+//             Vector delatV{0, 0, 0};
 //             Vector r = x_i - x_j;
 //             fpreal r_length = r.length();
-//             if(r_length > FLUID_PARTICLE_RADIUS)
+//             if(r_length != 0)
 //             {
 //                 Vector e = r / r_length;
 //                 //Vector v_surface = cross(Fluid->refinement_omega[i]/2, rc * e);
-//                 delatV = rc * rc / (2.0 * r_length) * cross(Fluid->refinement_omega[i], e);
+//                 //delatV = rc * rc / (2.0 * r_length) * cross(Fluid->refinement_omega[i], e);
+//                 delatV = rc / r_length * cross(-Fluid->refinement_omega[j] / 2.0, rc * e);
 //                 Fluid->v[j] += delatV;
 //             }
 //         });
