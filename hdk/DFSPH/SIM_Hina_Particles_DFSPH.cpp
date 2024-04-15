@@ -17,6 +17,7 @@ void SIM_Hina_Particles_DFSPH::_init_Particles_DFSPH()
     this->predict_omega = nullptr;
     this->psi = nullptr;
     this->refinement_omega = nullptr;
+    this->random_omega = nullptr;
 }
 void SIM_Hina_Particles_DFSPH::_makeEqual_Particles_DFSPH(const SIM_Hina_Particles_DFSPH *src)
 {
@@ -30,6 +31,7 @@ void SIM_Hina_Particles_DFSPH::_makeEqual_Particles_DFSPH(const SIM_Hina_Particl
     this->predict_omega = src->predict_omega;
     this->psi = src->psi;
     this->refinement_omega = src->refinement_omega;
+    this->random_omega = src->random_omega;
 }
 void SIM_Hina_Particles_DFSPH::_setup_gdp(GU_Detail *gdp) const
 {
@@ -44,6 +46,7 @@ void SIM_Hina_Particles_DFSPH::_setup_gdp(GU_Detail *gdp) const
     HINA_GEOMETRY_POINT_ATTRIBUTE("predict_omega", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
     HINA_GEOMETRY_POINT_ATTRIBUTE("psi", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
     HINA_GEOMETRY_POINT_ATTRIBUTE("refinement_omega", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
+    HINA_GEOMETRY_POINT_ATTRIBUTE("random_omega", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
 }
 void SIM_Hina_Particles_DFSPH::commit()
 {
@@ -71,6 +74,7 @@ void SIM_Hina_Particles_DFSPH::commit()
     GA_RWHandleV3 predict_omega_handle = gdp.findPointAttribute("predict_omega");
     GA_RWHandleV3 psi_handle = gdp.findPointAttribute("psi");
     GA_RWHandleV3 refinement_omega_handle = gdp.findPointAttribute("refinement_omega");
+    GA_RWHandleV3 random_omega_handle = gdp.findPointAttribute("random_omega");
 	GA_Offset pt_off;
 	GA_FOR_ALL_PTOFF(&gdp, pt_off)
 		{
@@ -84,6 +88,7 @@ void SIM_Hina_Particles_DFSPH::commit()
             UT_Vector3 PO = (*predict_omega)[offset2index[pt_off]];
             UT_Vector3 ps = (*psi)[offset2index[pt_off]];
             UT_Vector3 ro = (*refinement_omega)[offset2index[pt_off]];
+            UT_Vector3 r_o = (*random_omega)[offset2index[pt_off]];
             BFLP_handle.set(pt_off, bflp);
             VP_handle.set(pt_off, vp);
 			factor_handle.set(pt_off, fc);
@@ -94,5 +99,6 @@ void SIM_Hina_Particles_DFSPH::commit()
             predict_omega_handle.set(pt_off, PO);
             psi_handle.set(pt_off, ps);
             refinement_omega_handle.set(pt_off, ro);
+            random_omega_handle.set(pt_off, r_o);
 		}
 }

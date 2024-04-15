@@ -57,6 +57,7 @@ struct DFSPH_AkinciFluid : public FluidCPU
     VectorArrayCPU psi;
     VectorArrayCPU first_term, second_term;
     VectorArrayCPU refinement_omega;
+    VectorArrayCPU random_omega;
 };
 
 struct DFSPH_AkinciParam
@@ -65,7 +66,7 @@ struct DFSPH_AkinciParam
 	real FLUID_PARTICLE_RADIUS = 0.01;
 	real FLUID_SURFACE_TENSION = 0.01;
     real FLUID_KERNAL_RADIUS = 0.04;
-	real FLUID_VISCOSITY = 0.01;
+	real FLUID_VISCOSITY = 0.05;
 	real BOUNDARY_VISCOSITY = 0;
     real ALPHA = 0.1;
     real BETA = 0.2;
