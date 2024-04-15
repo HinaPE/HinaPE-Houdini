@@ -8,6 +8,9 @@ add_library(
         SHARED
         ${SIM_HinaPE_HEADER}
         ${SIM_HinaPE_SOURCE}
+
+        WCSPH/SpatialGrid.h
+        WCSPH/SpatialGrid.hpp
 )
 
 target_link_libraries(
@@ -30,3 +33,5 @@ target_compile_options(
         -D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION
 )
 houdini_configure_target(${SIM_HinaPE_TARGET})
+
+

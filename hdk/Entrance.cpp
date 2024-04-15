@@ -11,6 +11,7 @@
 #include <Rigid/SIM_Hina_RigidBody.h>
 #include <Rigid/GAS_Hina_Solver_Rigid.h>
 #include <Smoke/GAS_Hina_Solver_Smoke.h>
+#include "WCSPH/GAS_Hina_Solver_DFSPH.h"
 
 #include <_Test/GAS_Hina_Test.h>
 
@@ -31,4 +32,5 @@ void initializeSIM(void *)
 
 	// TEST CLASSES
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Test)
+    IMPLEMENT_DATAFACTORY(SPHSolver);
 }
