@@ -19,8 +19,8 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
 	build_neighbors();
     compute_density();
 
-//    findBFLPs();
-//    findSPs();
+    findBFLPs();
+    findSPs();
 
     compute_vorticity_n_sph(dt);
 
@@ -32,14 +32,14 @@ void HinaPE::DFSPH_AkinciSolver::Solve(HinaPE::real dt)
     pressure_solve(dt);
     /////////////////////
 
-//    findVPs();
-//    MarkVPs();
+    findVPs();
+    MarkVPs();
 
-    compute_vorticity_n1_sph();
-    compute_ideal_vorticity_n1_vorticity_equation(dt);
-    compute_vorticity_dissipation();
-    compute_stream_function();
-    compute_vorticity_velocity();
+//    compute_vorticity_n1_sph();
+//    compute_ideal_vorticity_n1_vorticity_equation(dt);
+//    compute_vorticity_dissipation();
+//    compute_stream_function();
+//    compute_vorticity_velocity();
 
 	advect(dt);
 
@@ -322,9 +322,9 @@ void HinaPE::DFSPH_AkinciSolver::MarkVPs() {
      {
          if(Fluid->fluid_vp[i] == 1)
          {
-             std::cout << "pre omega: " << Fluid->omega[i] << std::endl;
+             //std::cout << "pre omega: " << Fluid->omega[i] << std::endl;
              Fluid->omega[i] = (1.0 - alpha) * Fluid->random_omega[i] + alpha * Fluid->omega[i];
-             std::cout << "after omega: " << Fluid->omega[i] << std::endl;
+             //std::cout << "after omega: " << Fluid->omega[i] << std::endl;
              //Fluid->fluid_vp[i] = 0;
          }
      });
@@ -722,31 +722,31 @@ void HinaPE::DFSPH_AkinciSolver:: compute_vorticity_n_sph(real dt) {
          Fluid->refinement_omega[i] = delta_omega;
      });
 
-//    //compute rc
-//    fpreal rc = 0;
-//    fpreal alpha = 1.25643;
-//    fpreal beta = ALPHA;
-//    fpreal viscosity = 0.05;
-//    rc = beta * std::sqrt(4.0 * alpha * viscosity * dt);
-//    //std::cout << "rc: " << rc << std::endl;
-//    //computr refinement
-//    _for_each_fluid_particle([&](size_t i, Vector x_i)
-//     {
-//         _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
-//         {
-//             Vector delatV{0, 0, 0};
-//             Vector r = x_i - x_j;
-//             fpreal r_length = r.length();
-//             if(r_length != 0)
-//             {
-//                 Vector e = r / r_length;
-//                 //Vector v_surface = cross(Fluid->refinement_omega[i]/2, rc * e);
-//                 //delatV = rc * rc / (2.0 * r_length) * cross(Fluid->refinement_omega[i], e);
-//                 delatV = rc / r_length * cross(-Fluid->refinement_omega[j] / 2.0, rc * e);
-//                 Fluid->v[j] += delatV;
-//             }
-//         });
-//     });
+    //compute rc
+    fpreal rc = 0;
+    fpreal alpha = 1.25643;
+    fpreal beta = ALPHA;
+    fpreal viscosity = 0.05;
+    rc = beta * std::sqrt(4.0 * alpha * viscosity * dt);
+    //std::cout << "rc: " << rc << std::endl;
+    //computr refinement
+    _for_each_fluid_particle([&](size_t i, Vector x_i)
+     {
+         _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
+         {
+             Vector delatV{0, 0, 0};
+             Vector r = x_i - x_j;
+             fpreal r_length = r.length();
+             if(r_length != 0)
+             {
+                 Vector e = r / r_length;
+                 //Vector v_surface = cross(Fluid->refinement_omega[i]/2, rc * e);
+                 //delatV = rc * rc / (2.0 * r_length) * cross(Fluid->refinement_omega[i], e);
+                 delatV = rc / r_length * cross(-Fluid->refinement_omega[j] / 2.0, rc * e);
+                 Fluid->v[j] += delatV;
+             }
+         });
+     });
 }
 
 void HinaPE::DFSPH_AkinciSolver::compute_vorticity_n1_sph() {

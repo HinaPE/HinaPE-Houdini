@@ -8,7 +8,8 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
 		Particles,
 		void commit() override;
 
-		VectorArrayCPU *p_x;
+        ScalarArrayCPU *lambda;
+        VectorArrayCPU *pred_x, *delta_p, *a_ext;
 )
 
 #endif //HINAPE_SIM_HINA_PARTICLES_PBF_H

@@ -70,7 +70,7 @@ struct DFSPH_AkinciParam
 	real BOUNDARY_VISCOSITY = 0;
     real ALPHA = 0.1;
     real BETA = 0.2;
-	Vector GRAVITY = /*Vector(0, -9.8, 0)*/Vector(5, 0, 0);
+	Vector GRAVITY = Vector(0, -9.8, 0);
 	bool TOP_OPEN = true;
 
 	std::vector<real> BOUNDARY_REST_DENSITY;
