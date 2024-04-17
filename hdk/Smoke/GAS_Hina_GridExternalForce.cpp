@@ -7,6 +7,8 @@ GAS_HINA_SUBSOLVER_IMPLEMENT(
 		true,
 		false,
 		HINA_FLOAT_PARAMETER(Gravity, 9.8) \
+        HINA_FLOAT_PARAMETER(DensityFactor, -0.000625) \
+        HINA_FLOAT_PARAMETER(TemperatureFactor, 5.0) \
         ACTIVATE_GAS_SOURCE \
         ACTIVATE_GAS_DENSITY \
         ACTIVATE_GAS_TEMPERATURE \
@@ -30,13 +32,14 @@ bool GAS_Hina_GridExternalForce::_solve(SIM_Engine &engine, SIM_Object *obj, SIM
 	if (!V->isFaceSampled())
 		return false;
 
-	_apply(timestep, V->getXField(), V->getYField(), V->getZField());
+	_apply_gravity(timestep, V->getYField());
+	fpreal t_amb = T->getField()->average() / T->getField()->getVoxelVolume();
+	_apply_buoyancy(timestep, V->getYField(), D->getField(), T->getField(), t_amb);
 
 	return true;
 }
-void GAS_Hina_GridExternalForce::_applyPartial(float dt, SIM_RawField *V_X, SIM_RawField *V_Y, SIM_RawField *V_Z, const UT_JobInfo &info)
+void GAS_Hina_GridExternalForce::_apply_gravityPartial(float dt, SIM_RawField *V_Y, const UT_JobInfo &info)
 {
-	// Apply Gravity
 	UT_VoxelArrayIteratorF vit;
 	V_Y->getPartialRange(vit, info);
 	vit.setCompressOnExit(true);
@@ -44,5 +47,18 @@ void GAS_Hina_GridExternalForce::_applyPartial(float dt, SIM_RawField *V_X, SIM_
 	{
 		auto value = V_Y->field()->getValue(vit.x(), vit.y(), vit.z());
 		vit.setValue(value + dt * getGravity());
+	}
+}
+void GAS_Hina_GridExternalForce::_apply_buoyancyPartial(float dt, SIM_RawField *V_Y, const SIM_RawField *D, const SIM_RawField *T, fpreal t_amb, const UT_JobInfo &info)
+{
+	UT_VoxelArrayIteratorF vit;
+	V_Y->getPartialRange(vit, info);
+	vit.setCompressOnExit(true);
+	for (vit.rewind(); !vit.atEnd(); vit.advance())
+	{
+		auto pos = V_Y->indexToPos({vit.x(), vit.y(), vit.z()});
+		auto fBuoy = getDensityFactor() * D->field()->getValue(vit.x(), vit.y(), vit.z()) + getTemperatureFactor() * (T->field()->getValue(vit.x(), vit.y(), vit.z()) - t_amb);
+		auto value = V_Y->field()->getValue(vit.x(), vit.y(), vit.z());
+		vit.setValue(value + dt * fBuoy);
 	}
 }
