@@ -46,7 +46,7 @@ const char AIR = 1;
 const char BOUNDARY = 2;
 struct FieldUtil
 {
-	THREADED_METHOD3(GAS_Hina_GridBuildMarker, OutMarker->shouldMultiThread(), _build, SIM_RawField *, OutMarker, const SIM_RawField *, BoundarySDF, const SIM_RawField *, FluidSDF);
+	THREADED_METHOD3(FieldUtil, OutMarker->shouldMultiThread(), _build, SIM_RawField *, OutMarker, const SIM_RawField *, BoundarySDF, const SIM_RawField *, FluidSDF);
 	void _buildPartial(SIM_RawField *OutMarker, const SIM_RawField * BoundarySDF, const SIM_RawField * FluidSDF, const UT_JobInfo &info);
 };
 }

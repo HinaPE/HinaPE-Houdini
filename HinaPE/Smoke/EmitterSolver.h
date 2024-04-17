@@ -7,8 +7,11 @@ namespace HinaPE
 {
 struct EmitterSolver
 {
-	THREADED_METHOD5(GAS_Hina_GridSourceEmitter, OutField->shouldMultiThread(), _emit, SIM_RawField * , OutField, const SIM_RawField *, InField, SIM_RawField *, OutFlow_X, SIM_RawField *, OutFlow_Y, SIM_RawField *, OutFlow_Z);
-	void _emitPartial(SIM_RawField *OutField, const SIM_RawField *InField, SIM_RawField *OutFlow_X, SIM_RawField *OutFlow_Y, SIM_RawField *OutFlow_Z, const UT_JobInfo &info);
+	void solve(SIM_RawField *IO_Field, SIM_RawField *IO_V_X, SIM_RawField *IO_V_Y, SIM_RawField *IO_V_Z);
+
+private:
+	THREADED_METHOD4(EmitterSolver, IO_Field->shouldMultiThread(), _emit, SIM_RawField * , IO_Field, SIM_RawField *, IO_V_X, SIM_RawField *, IO_V_Y, SIM_RawField *, IO_V_Z);
+	void _emitPartial(SIM_RawField *IO_Field, SIM_RawField *IO_V_X, SIM_RawField *IO_V_Y, SIM_RawField *IO_V_Z, const UT_JobInfo &info);
 };
 }
 

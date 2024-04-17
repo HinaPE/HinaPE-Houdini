@@ -1,5 +1,38 @@
 #include "BoundarySolver.h"
 
+void HinaPE::BoundarySolver::solve(SIM_RawField *IO_V_X, SIM_RawField *IO_V_Y, SIM_RawField *IO_V_Z, const SIM_RawField *CollisionSDF, const size_t iter)
+{
+	SIM_RawField MarkerX0;
+	SIM_RawField MarkerY0;
+	SIM_RawField MarkerZ0;
+	_build_marker(&MarkerX0, IO_V_X, CollisionSDF, UT_Axis3::XAXIS);
+	_build_marker(&MarkerY0, IO_V_Y, CollisionSDF, UT_Axis3::YAXIS);
+	_build_marker(&MarkerZ0, IO_V_Z, CollisionSDF, UT_Axis3::ZAXIS);
+	SIM_RawField MarkerX1 = MarkerX0;
+	SIM_RawField MarkerY1 = MarkerY0;
+	SIM_RawField MarkerZ1 = MarkerZ0;
+	for (int i = 0; i < iter; ++i)
+	{
+		if (i % 2)
+		{
+			_extrapolate(IO_V_X, &MarkerX1, &MarkerX0);
+			_extrapolate(IO_V_Y, &MarkerY1, &MarkerY0);
+			_extrapolate(IO_V_Z, &MarkerZ1, &MarkerZ0);
+		} else
+		{
+			_extrapolate(IO_V_X, &MarkerX0, &MarkerX1);
+			_extrapolate(IO_V_Y, &MarkerY0, &MarkerY1);
+			_extrapolate(IO_V_Z, &MarkerZ0, &MarkerZ1);
+		}
+	}
+	SIM_RawField VEL_X0 = *IO_V_X;
+	SIM_RawField VEL_Y0 = *IO_V_Y;
+	SIM_RawField VEL_Z0 = *IO_V_Z;
+	_fractional(IO_V_X, &VEL_X0, &VEL_Y0, &VEL_Z0, CollisionSDF, UT_Axis3::XAXIS);
+	_fractional(IO_V_Y, &VEL_Y0, &VEL_X0, &VEL_Z0, CollisionSDF, UT_Axis3::YAXIS);
+	_fractional(IO_V_Z, &VEL_Z0, &VEL_X0, &VEL_Y0, CollisionSDF, UT_Axis3::ZAXIS);
+	_enforce_boundary(IO_V_X, IO_V_Y, IO_V_Z);
+}
 void HinaPE::BoundarySolver::_build_markerPartial(SIM_RawField *OUT_Marker, SIM_RawField *OUT_V, const SIM_RawField *CollisionSDF, const UT_Axis3::axis &AXIS, const UT_JobInfo &info)
 {
 	UT_VoxelArrayIteratorF vit;

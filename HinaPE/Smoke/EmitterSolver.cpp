@@ -1,15 +1,17 @@
 #include "EmitterSolver.h"
 
-void HinaPE::EmitterSolver::_emitPartial(SIM_RawField *OutField, const SIM_RawField *InField, SIM_RawField *OutFlow_X, SIM_RawField *OutFlow_Y, SIM_RawField *OutFlow_Z, const UT_JobInfo &info)
+void HinaPE::EmitterSolver::solve(SIM_RawField *IO_Field, SIM_RawField *IO_V_X, SIM_RawField *IO_V_Y, SIM_RawField *IO_V_Z)
+{
+	_emit(IO_Field, IO_V_X, IO_V_Y, IO_V_Z);
+}
+void HinaPE::EmitterSolver::_emitPartial(SIM_RawField *IO_Field, SIM_RawField *IO_V_X, SIM_RawField *IO_V_Y, SIM_RawField *IO_V_Z, const UT_JobInfo &info)
 {
 	UT_VoxelArrayIteratorF vit;
-	OutField->getPartialRange(vit, info);
+	IO_Field->getPartialRange(vit, info);
 	vit.setCompressOnExit(true);
 	for (vit.rewind(); !vit.atEnd(); vit.advance())
 	{
-		UT_Vector3 pos;
-		OutField->indexToPos(vit.x(), vit.y(), vit.z(), pos);
-		auto value = InField->getValue(pos);
+		auto value = IO_Field->field()->getValue(vit.x(), vit.y(), vit.z());
 		if (value > std::numeric_limits<fpreal32>::epsilon())
 		{
 			auto old_value = vit.getValue();

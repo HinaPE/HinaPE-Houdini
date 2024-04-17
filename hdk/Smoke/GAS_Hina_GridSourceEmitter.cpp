@@ -36,7 +36,7 @@ bool GAS_Hina_GridSourceEmitter::_solve(SIM_Engine &engine, SIM_Object *obj, SIM
 	static HinaPE::EmitterSolver _;
 	if (!getEmitOnce() || !this->emitted)
 	{
-		_._emit(D->getField(), S->getField(), V->getXField(), V->getYField(), V->getZField());
+		_.solve(D->getField(), V->getXField(), V->getYField(), V->getZField());
 		this->emitted = true;
 	}
 

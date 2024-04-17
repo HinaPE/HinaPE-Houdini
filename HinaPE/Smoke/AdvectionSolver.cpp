@@ -1,5 +1,9 @@
 #include "AdvectionSolver.h"
 
+void HinaPE::AdvectionSolver::solve(float dt, SIM_RawField *IO_Field, const SIM_RawField *Flow_X, const SIM_RawField *Flow_Y, const SIM_RawField *Flow_Z)
+{
+	_advect(dt, IO_Field, IO_Field, Flow_X, Flow_Y, Flow_Z);
+}
 void HinaPE::AdvectionSolver::_advectPartial(float dt, SIM_RawField *OutField, const SIM_RawField *InField, const SIM_RawField *Flow_X, const SIM_RawField *Flow_Y, const SIM_RawField *Flow_Z, const UT_JobInfo &info)
 {
 	UT_VoxelArrayIteratorF vit;

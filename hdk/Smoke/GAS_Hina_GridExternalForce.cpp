@@ -36,9 +36,7 @@ bool GAS_Hina_GridExternalForce::_solve(SIM_Engine &engine, SIM_Object *obj, SIM
 	_.GRAVITY = getGravity();
 	_.DENSITY_FACTOR = getDensityFactor();
 	_.TEMPERATURE_FACTOR = getTemperatureFactor();
-	_._apply_gravity(timestep, V->getYField());
-	fpreal t_amb = T->getField()->average() / T->getField()->getVoxelVolume();
-	_._apply_buoyancy(timestep, V->getYField(), D->getField(), T->getField(), t_amb);
+	_.solve(timestep, V->getYField(), D->getField(), T->getField());
 
 	return true;
 }

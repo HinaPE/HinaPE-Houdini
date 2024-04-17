@@ -1,15 +1,18 @@
 #include "GAS_Hina_GridDiffusion.h"
 
+#include <HinaPE/Smoke/DiffusionSolver.h>
+
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		GridDiffusion,
 		true,
 		false,
+		HINA_INT_PARAMETER(Diffusion, 0.1f) \
 		ACTIVATE_GAS_SOURCE \
         ACTIVATE_GAS_DENSITY \
         ACTIVATE_GAS_TEMPERATURE \
         ACTIVATE_GAS_COLLISION \
         ACTIVATE_GAS_VELOCITY \
-		ACTIVATE_GAS_MARKER \
+        ACTIVATE_GAS_MARKER \
 )
 
 void GAS_Hina_GridDiffusion::_init() {}
@@ -29,14 +32,9 @@ bool GAS_Hina_GridDiffusion::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Tim
 	if (!V->isFaceSampled())
 		return false;
 
-	SIM_RawField VX_Copy = *V->getXField();
-	SIM_RawField VY_Copy = *V->getYField();
-	SIM_RawField VZ_Copy = *V->getZField();
-	_diffusion(timestep, 0.1, V->getXField(), &VX_Copy, nullptr, nullptr);
+	static HinaPE::DiffusionSolver _;
+	_.DIFFUSION = getDiffusion();
+	_.solve(D->getField(), C->getField());
 
 	return true;
-}
-void GAS_Hina_GridDiffusion::_diffusionPartial(float dt, float coefficient, SIM_RawField *OutField, const SIM_RawField *InField, const SIM_RawField *BoundarySDF, const SIM_RawField *FluidSDF, const UT_JobInfo &info)
-{
-
 }

@@ -30,7 +30,7 @@ bool GAS_Hina_GridAdvect::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_Time t
 
 	SIM_RawField D_Copy = *D->getField(); // would there be error?
 	static HinaPE::AdvectionSolver _;
-	_._advect(timestep, D->getField(), &D_Copy, V->getXField(), V->getYField(), V->getZField());
+	_.solve(timestep, D->getField(), V->getXField(), V->getYField(), V->getZField());
 
 	return true;
 }

@@ -1,5 +1,11 @@
 #include "ExternalForceSolver.h"
 
+void HinaPE::ExternalForceSolver::solve(const float dt, SIM_RawField *IO_V_Y, const SIM_RawField *IN_D, const SIM_RawField *IN_T)
+{
+	_apply_gravity(dt, IO_V_Y);
+	fpreal t_amb = IN_T->average() / IN_T->getVoxelVolume();
+	_apply_buoyancy(dt, IO_V_Y, IN_D, IN_T, t_amb);
+}
 void HinaPE::ExternalForceSolver::_apply_gravityPartial(float dt, SIM_RawField *V_Y, const UT_JobInfo &info)
 {
 	UT_VoxelArrayIteratorF vit;

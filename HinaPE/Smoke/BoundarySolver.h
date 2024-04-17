@@ -19,6 +19,9 @@ struct BoundaryParam
 
 struct BoundarySolver : public BoundaryParam
 {
+	void solve(SIM_RawField *IO_V_X, SIM_RawField *IO_V_Y, SIM_RawField *IO_V_Z, const SIM_RawField *CollisionSDF, const size_t iter);
+
+private:
 	THREADED_METHOD4(BoundarySolver, OUT_Marker->shouldMultiThread(), _build_marker, SIM_RawField *, OUT_Marker, SIM_RawField *, OUT_V, const SIM_RawField *, CollisionSDF, const UT_Axis3::axis&, AXIS);
 	void _build_markerPartial(SIM_RawField *OUT_Marker, SIM_RawField *OUT_V, const SIM_RawField *CollisionSDF, const UT_Axis3::axis &AXIS, const UT_JobInfo &info);
 
