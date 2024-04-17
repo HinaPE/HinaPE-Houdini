@@ -273,3 +273,23 @@ void HinaPE::print(const CubbyFlow::FaceCenteredGrid3Ptr &Field)
 	std::cout << "CubbyFlow::FaceCenteredGrid3 Data0 Pos: " << Field->DataPosition(1)({0, 0, 0}).x << ", " << Field->DataPosition(1)({0, 0, 0}).y << ", " << Field->DataPosition(1)({0, 0, 0}).z << std::endl;
 	std::cout << "CubbyFlow::FaceCenteredGrid3 Data0 Pos: " << Field->DataPosition(2)({0, 0, 0}).x << ", " << Field->DataPosition(2)({0, 0, 0}).y << ", " << Field->DataPosition(2)({0, 0, 0}).z << std::endl;
 }
+void HinaPE::FieldUtil::_buildPartial(SIM_RawField *OutMarker, const SIM_RawField *BoundarySDF, const SIM_RawField *FluidSDF, const UT_JobInfo &info)
+{
+	UT_VoxelArrayIteratorF vit;
+	OutMarker->getPartialRange(vit, info);
+	vit.setCompressOnExit(true);
+	for (vit.rewind(); !vit.atEnd(); vit.advance())
+	{
+		UT_Vector3 pos;
+		OutMarker->indexToPos(vit.x(), vit.y(), vit.z(), pos);
+
+		if (BoundarySDF->getValue(pos) < 0.0f)
+			vit.setValue(BOUNDARY);
+		else if (FluidSDF != nullptr && FluidSDF->getValue(pos) < 0.0f)
+			vit.setValue(FLUID);
+		else if (FluidSDF == nullptr)
+			vit.setValue(FLUID);
+		else
+			vit.setValue(AIR);
+	}
+}

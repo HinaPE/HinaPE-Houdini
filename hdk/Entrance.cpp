@@ -16,7 +16,6 @@
 #include <Smoke/GAS_Hina_GridDiffusion.h>
 #include <Smoke/GAS_Hina_GridExternalForce.h>
 #include <Smoke/GAS_Hina_GridSourceEmitter.h>
-#include <Smoke/GAS_Hina_Solver_Smoke.h>
 #include <Smoke/GAS_Hina_ShowInfo.h>
 
 #include <_Test/GAS_Hina_Test.h>
@@ -40,7 +39,6 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridDiffusion)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridExternalForce)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridSourceEmitter)
-	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Smoke)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_ShowInfo)
 
 	// TEST CLASSES

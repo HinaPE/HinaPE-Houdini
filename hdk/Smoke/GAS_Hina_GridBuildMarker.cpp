@@ -1,8 +1,6 @@
 #include "GAS_Hina_GridBuildMarker.h"
 
-const char FLUID = 0;
-const char AIR = 1;
-const char BOUNDARY = 2;
+#include <HinaPE/Smoke/FieldUtils.h>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		GridBuildMarker,
@@ -33,27 +31,8 @@ bool GAS_Hina_GridBuildMarker::_solve(SIM_Engine &engine, SIM_Object *obj, SIM_T
 	if (!V->isFaceSampled())
 		return false;
 
-	_build(M->getField(), C->getField(), nullptr);
+	static HinaPE::FieldUtil _;
+	_._build(M->getField(), C->getField(), nullptr);
 
 	return true;
-}
-void GAS_Hina_GridBuildMarker::_buildPartial(SIM_RawField *OutMarker, const SIM_RawField *BoundarySDF, const SIM_RawField *FluidSDF, const UT_JobInfo &info)
-{
-	UT_VoxelArrayIteratorF vit;
-	OutMarker->getPartialRange(vit, info);
-	vit.setCompressOnExit(true);
-	for (vit.rewind(); !vit.atEnd(); vit.advance())
-	{
-		UT_Vector3 pos;
-		OutMarker->indexToPos(vit.x(), vit.y(), vit.z(), pos);
-
-		if (BoundarySDF->getValue(pos) < 0.0f)
-			vit.setValue(BOUNDARY);
-		else if (FluidSDF != nullptr && FluidSDF->getValue(pos) < 0.0f)
-			vit.setValue(FLUID);
-		else if (FluidSDF == nullptr)
-			vit.setValue(FLUID);
-		else
-			vit.setValue(AIR);
-	}
 }

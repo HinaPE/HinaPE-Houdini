@@ -1,6 +1,6 @@
 #include "GAS_Hina_GridExternalForce.h"
 
-#include <HinaPE/Smoke/FieldUtils.h>
+#include <HinaPE/Smoke/ExternalForceSolver.h>
 
 GAS_HINA_SUBSOLVER_IMPLEMENT(
 		GridExternalForce,
@@ -32,33 +32,13 @@ bool GAS_Hina_GridExternalForce::_solve(SIM_Engine &engine, SIM_Object *obj, SIM
 	if (!V->isFaceSampled())
 		return false;
 
-	_apply_gravity(timestep, V->getYField());
+	static HinaPE::ExternalForceSolver _;
+	_.GRAVITY = getGravity();
+	_.DENSITY_FACTOR = getDensityFactor();
+	_.TEMPERATURE_FACTOR = getTemperatureFactor();
+	_._apply_gravity(timestep, V->getYField());
 	fpreal t_amb = T->getField()->average() / T->getField()->getVoxelVolume();
-	_apply_buoyancy(timestep, V->getYField(), D->getField(), T->getField(), t_amb);
+	_._apply_buoyancy(timestep, V->getYField(), D->getField(), T->getField(), t_amb);
 
 	return true;
-}
-void GAS_Hina_GridExternalForce::_apply_gravityPartial(float dt, SIM_RawField *V_Y, const UT_JobInfo &info)
-{
-	UT_VoxelArrayIteratorF vit;
-	V_Y->getPartialRange(vit, info);
-	vit.setCompressOnExit(true);
-	for (vit.rewind(); !vit.atEnd(); vit.advance())
-	{
-		auto value = V_Y->field()->getValue(vit.x(), vit.y(), vit.z());
-		vit.setValue(value + dt * getGravity());
-	}
-}
-void GAS_Hina_GridExternalForce::_apply_buoyancyPartial(float dt, SIM_RawField *V_Y, const SIM_RawField *D, const SIM_RawField *T, fpreal t_amb, const UT_JobInfo &info)
-{
-	UT_VoxelArrayIteratorF vit;
-	V_Y->getPartialRange(vit, info);
-	vit.setCompressOnExit(true);
-	for (vit.rewind(); !vit.atEnd(); vit.advance())
-	{
-		auto pos = V_Y->indexToPos({vit.x(), vit.y(), vit.z()});
-		auto fBuoy = getDensityFactor() * D->field()->getValue(vit.x(), vit.y(), vit.z()) + getTemperatureFactor() * (T->field()->getValue(vit.x(), vit.y(), vit.z()) - t_amb);
-		auto value = V_Y->field()->getValue(vit.x(), vit.y(), vit.z());
-		vit.setValue(value + dt * fBuoy);
-	}
 }
