@@ -5,7 +5,11 @@
 
 namespace HinaPE
 {
-struct DiffusionSolver
+struct DiffusionParam
+{
+	float DIFFUSION = 0.0f;
+};
+struct DiffusionSolver : public DiffusionParam
 {
 
 };

@@ -1,5 +1,7 @@
 #include "GAS_Hina_GridBoundarySolver.h"
 
+#include <HinaPE/Smoke/BoundarySolver.h>
+
 enum GridType
 {
 	AIR = 0,
@@ -35,61 +37,37 @@ bool GAS_Hina_GridBoundarySolver::_solve(SIM_Engine &engine, SIM_Object *obj, SI
 	if (!V->isFaceSampled())
 		return false;
 
-	return true;
-}
-void GAS_Hina_GridBoundarySolver::_extrapolatePartial(SIM_RawField *Field, SIM_RawField *Valid, const UT_JobInfo &info)
-{
-	UT_VoxelArrayIteratorF vit;
-	Field->getPartialRange(vit, info);
-	vit.setCompressOnExit(true);
-	for (vit.rewind(); !vit.atEnd(); vit.advance())
+	static HinaPE::BoundarySolver _;
+	SIM_RawField MarkerX0;
+	SIM_RawField MarkerY0;
+	SIM_RawField MarkerZ0;
+	_._build_marker(&MarkerX0, V->getXField(), C->getField(), UT_Axis3::XAXIS);
+	_._build_marker(&MarkerY0, V->getYField(), C->getField(), UT_Axis3::YAXIS);
+	_._build_marker(&MarkerZ0, V->getZField(), C->getField(), UT_Axis3::ZAXIS);
+	SIM_RawField MarkerX1 = MarkerX0;
+	SIM_RawField MarkerY1 = MarkerY0;
+	SIM_RawField MarkerZ1 = MarkerZ0;
+	for (int i = 0; i < getIter(); ++i)
 	{
-		if (Valid->field()->getValue(vit.x(), vit.y(), vit.z()) == GridType::BOUNDARY)
+		if (i % 2)
 		{
-			fpreal32 sum = 0.0f;
-			size_t count = 0;
-
-			if (vit.x() + 1 < Field->field()->getXRes() && Valid->field()->getValue(vit.x() + 1, vit.y(), vit.z()) == GridType::FLUID)
-			{
-				sum += Field->field()->getValue(vit.x() + 1, vit.y(), vit.z());
-				++count;
-			}
-
-			if (vit.x() > 0 && Valid->field()->getValue(vit.x() - 1, vit.y(), vit.z()) == GridType::FLUID)
-			{
-				sum += Field->field()->getValue(vit.x() - 1, vit.y(), vit.z());
-				++count;
-			}
-
-			if (vit.y() + 1 < Field->field()->getYRes() && Valid->field()->getValue(vit.x(), vit.y() + 1, vit.z()) == GridType::FLUID)
-			{
-				sum += Field->field()->getValue(vit.x(), vit.y() + 1, vit.z());
-				++count;
-			}
-
-			if (vit.y() > 0 && Valid->field()->getValue(vit.x(), vit.y() - 1, vit.z()) == GridType::FLUID)
-			{
-				sum += Field->field()->getValue(vit.x(), vit.y() - 1, vit.z());
-				++count;
-			}
-
-			if (vit.z() + 1 < Field->field()->getZRes() && Valid->field()->getValue(vit.x(), vit.y(), vit.z() + 1) == GridType::FLUID)
-			{
-				sum += Field->field()->getValue(vit.x(), vit.y(), vit.z() + 1);
-				++count;
-			}
-
-			if (vit.z() > 0 && Valid->field()->getValue(vit.x(), vit.y(), vit.z() - 1) == GridType::FLUID)
-			{
-				sum += Field->field()->getValue(vit.x(), vit.y(), vit.z() - 1);
-				++count;
-			}
-
-			if (count > 0)
-			{
-				Field->fieldNC()->setValue(vit.x(), vit.y(), vit.z(), (sum / count));
-				Valid->fieldNC()->setValue(vit.x(), vit.y(), vit.z(), GridType::FLUID);
-			}
+			_._extrapolate(V->getXField(), &MarkerX1, &MarkerX0);
+			_._extrapolate(V->getYField(), &MarkerY1, &MarkerY0);
+			_._extrapolate(V->getZField(), &MarkerZ1, &MarkerZ0);
+		} else
+		{
+			_._extrapolate(V->getXField(), &MarkerX0, &MarkerX1);
+			_._extrapolate(V->getYField(), &MarkerY0, &MarkerY1);
+			_._extrapolate(V->getZField(), &MarkerZ0, &MarkerZ1);
 		}
 	}
+	SIM_RawField VEL_X0 = *V->getXField();
+	SIM_RawField VEL_Y0 = *V->getYField();
+	SIM_RawField VEL_Z0 = *V->getZField();
+	_._fractional(V->getXField(), &VEL_X0, &VEL_Y0, &VEL_Z0, C->getField(), UT_Axis3::XAXIS);
+	_._fractional(V->getYField(), &VEL_Y0, &VEL_X0, &VEL_Z0, C->getField(), UT_Axis3::YAXIS);
+	_._fractional(V->getZField(), &VEL_Z0, &VEL_X0, &VEL_Y0, C->getField(), UT_Axis3::ZAXIS);
+	_._enforce_boundary(V->getXField(), V->getYField(), V->getZField());
+
+	return true;
 }
