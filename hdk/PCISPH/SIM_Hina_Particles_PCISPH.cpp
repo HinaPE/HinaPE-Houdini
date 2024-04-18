@@ -18,6 +18,7 @@ void SIM_Hina_Particles_PCISPH::_init_Particles_PCISPH() {
     this->pred_v = nullptr;
     this->a_ext = nullptr;
     this->a_pressure = nullptr;
+    this->delta = nullptr;
 }
 
 void SIM_Hina_Particles_PCISPH::_makeEqual_Particles_PCISPH(const SIM_Hina_Particles_PCISPH *src) {
@@ -28,6 +29,7 @@ void SIM_Hina_Particles_PCISPH::_makeEqual_Particles_PCISPH(const SIM_Hina_Parti
     this->pred_v = src->pred_v;
     this->a_ext = src->a_ext;
     this->a_pressure = src->a_pressure;
+    this->delta = src->delta;
 }
 
 void SIM_Hina_Particles_PCISPH::_setup_gdp(GU_Detail *gdp) const {
@@ -39,6 +41,7 @@ void SIM_Hina_Particles_PCISPH::_setup_gdp(GU_Detail *gdp) const {
     HINA_GEOMETRY_POINT_ATTRIBUTE("pred_v", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
     HINA_GEOMETRY_POINT_ATTRIBUTE("a_ext", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
     HINA_GEOMETRY_POINT_ATTRIBUTE("a_pressure", HINA_GEOMETRY_ATTRIBUTE_TYPE_VECTOR3)
+    HINA_GEOMETRY_POINT_ATTRIBUTE("delta", HINA_GEOMETRY_ATTRIBUTE_TYPE_FLOAT)
 }
 
 void SIM_Hina_Particles_PCISPH::commit() {
@@ -58,6 +61,7 @@ void SIM_Hina_Particles_PCISPH::commit() {
     GA_RWHandleV3 pred_v_handle = gdp.findPointAttribute("pred_v");
     GA_RWHandleV3 a_ext_handle = gdp.findPointAttribute("a_ext");
     GA_RWHandleV3 a_pressure_handle = gdp.findPointAttribute("a_pressure");
+    GA_RWHandleF delta_handle = gdp.findPointAttribute("delta");
 
     GA_Offset pt_off;
     GA_FOR_ALL_PTOFF(&gdp, pt_off)
@@ -69,6 +73,7 @@ void SIM_Hina_Particles_PCISPH::commit() {
         UT_Vector3 pv = (*pred_v)[offset2index[pt_off]];
         UT_Vector3 ae = (*a_ext)[offset2index[pt_off]];
         UT_Vector3 ap = (*a_pressure)[offset2index[pt_off]];
+        real d = (*delta)[offset2index[pt_off]];
 
         pred_density_handle.set(pt_off, pd);
         pressure_handle.set(pt_off, p);
@@ -77,5 +82,6 @@ void SIM_Hina_Particles_PCISPH::commit() {
         pred_v_handle.set(pt_off, pv);
         a_ext_handle.set(pt_off, ae);
         a_pressure_handle.set(pt_off, ap);
+        delta_handle.set(pt_off, d);
     }
 }

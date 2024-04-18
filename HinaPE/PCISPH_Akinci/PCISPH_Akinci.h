@@ -46,6 +46,7 @@ namespace HinaPE
         ScalarArrayCPU d_error;
         VectorArrayCPU a_ext;
         VectorArrayCPU a_pressure;
+        ScalarArrayCPU delta;
     };
 
     struct PCISPH_AkinciParam
@@ -62,8 +63,8 @@ namespace HinaPE
         bool ENABLE_VISCOSITY = true;
         real FLUID_KERNEL_RADIUS = 0.04;
 
-        int MIN_ITERATIONS = 5;
-        int MAX_ITERATIONS = 8;
+        int MIN_ITERATIONS = 3;
+        int MAX_ITERATIONS = 5;
 
         bool DENSITY_ERROR_TOO_LARGE = true;
         real MAX_DENSITY_ERROR_RATIO = 0.01;
@@ -85,17 +86,17 @@ namespace HinaPE
         void compute_density();
         void accumulate_non_pressure_force();
         void initialize_pressure_and_pressure_force() const;
-        void prediction_correction_step(real dt,real delta);
+        void prediction_correction_step(real dt);
         void predict_velocity_and_position(real dt);
         void predict_density();
-        void update_pressure(real delta);
+        void update_pressure(real dt);
         void accumulate_pressure_force();
         void correct_velocity_and_position(real dt);
         void enforce_boundary();
     private:
         void _resize();
         void _update_akinci_boundaries();
-        real _compute_delta(real dt);
+        void _compute_delta(real dt);
         void _for_each_fluid_particle(const std::function<void(size_t, Vector)> &);
         void _for_each_neighbor_fluid(size_t, const std::function<void(size_t, Vector)> &);
         void _for_each_neighbor_boundaries(size_t i, const std::function<void(size_t, Vector, size_t)> &f);

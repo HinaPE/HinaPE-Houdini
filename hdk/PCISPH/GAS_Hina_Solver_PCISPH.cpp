@@ -105,6 +105,7 @@ void GAS_Hina_Solver_PCISPH::init_data(SIM_Hina_Particles_PCISPH *PCISPH_particl
             PCISPH_particles->d_error = &PCISPH_AkinciSolverPtr->Fluid->d_error;
             PCISPH_particles->a_ext = &PCISPH_AkinciSolverPtr->Fluid->a_ext;
             PCISPH_particles->a_pressure = &PCISPH_AkinciSolverPtr->Fluid->a_pressure;
+            PCISPH_particles->delta = &PCISPH_AkinciSolverPtr->Fluid->delta;
 
             std::vector<SIM_Hina_Particles_Akinci *> akinci_boundaries = FetchAllAkinciBoundaries(obj);
             for (auto &akinci_boundary: akinci_boundaries)

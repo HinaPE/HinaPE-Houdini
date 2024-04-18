@@ -12,7 +12,7 @@ SIM_HINA_DERIVED_GEOMETRY_CLASS(
         Particles,
         void commit() override;
 
-        ScalarArrayCPU *pred_density, *pressure, *d_error;
+        ScalarArrayCPU *pred_density, *pressure, *d_error, *delta;
         VectorArrayCPU *pred_x, *pred_v, *a_ext , *a_pressure;
 )
 
