@@ -2,8 +2,8 @@
 // Created by LiYifan on 2024/4/15.
 //
 
-#ifndef HINAPE_HOUDINI_GAS_HINA_SOLVER_DFSPH_H
-#define HINAPE_HOUDINI_GAS_HINA_SOLVER_DFSPH_H
+#ifndef HINAPE_HOUDINI_GAS_HINA_SOLVER_WCSPH_H
+#define HINAPE_HOUDINI_GAS_HINA_SOLVER_WCSPH_H
 
 #include <SIM/SIM_SingleSolver.h>
 #include <SIM/SIM_OptionsUser.h>
@@ -64,7 +64,7 @@ protected:
 #include <vector>
 #include <string>
 
-static struct Logger
+static struct WCSPHLogger
 {
     SIM_Solver::SIM_Result report()
     {
@@ -75,6 +75,6 @@ static struct Logger
     void error_nullptr(const std::string &type) { log.emplace_back("NullPointerError::" + type); }
 
     std::vector<std::string> log;
-} Log;
+} WCSPHLog;
 
-#endif //HINAPE_HOUDINI_GAS_HINA_SOLVER_DFSPH_H
+#endif //HINAPE_HOUDINI_GAS_HINA_SOLVER_WCSPH_H

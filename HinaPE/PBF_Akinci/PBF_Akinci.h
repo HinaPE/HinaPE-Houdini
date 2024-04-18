@@ -20,7 +20,7 @@ namespace HinaPE
 using real = float;
 using Vector = UT_Vector3T<real>;
 using PolyKernel = Poly6<real, Vector>;
-using Kernel = ICubic<real, Vector>;
+//using Kernel = ICubic<real, Vector>;
 using ScalarArrayCPU = std::vector<real>;
 using VectorArrayCPU = std::vector<Vector>;
 using FluidCPU = IFluid<real, Vector, ScalarArrayCPU, VectorArrayCPU>;

@@ -8,7 +8,6 @@ HinaPE::PBF_AkinciSolver::PBF_AkinciSolver(HinaPE::real _r, HinaPE::Vector _b)
 		: NeighborBuilder(_r), MaxBound(_b / 2.), NeighborBuilderInited(false)
 {
     PolyKernel::set_radius(_r);
-    Kernel::set_radius(_r);
 	Fluid = std::make_shared<PBF_AkinciFluid>();
 }
 void HinaPE::PBF_AkinciSolver::Solve(HinaPE::real dt)
@@ -356,7 +355,7 @@ void HinaPE::PBF_AkinciSolver::update_position_and_velocity(HinaPE::real dt) {
                  Vector r = Fluid->pred_x[i] - x_j;
                  const real r2 = r.dot(r);
                  real v_xy = (Fluid->v[i] - Fluid->v[j]).dot(r);
-                 const real kr2 = Kernel::_r * Kernel::_r;
+                 const real kr2 = PolyKernel::_r * PolyKernel::_r;
                  Vector f_v = 10 * BOUNDARY_VISCOSITY * (BOUNDARY_REST_DENSITY[b_set] * Boundaries[b_set]->V[j] / Fluid->rho[i]) * v_xy / (r2 + 0.01f * kr2) * PolyKernel::gradW(r);
                  viscosity_force += f_v;
              });

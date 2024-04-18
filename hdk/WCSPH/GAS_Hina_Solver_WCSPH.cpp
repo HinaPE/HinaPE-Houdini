@@ -2,7 +2,7 @@
 // Created by LiYifan on 2024/4/15.
 //
 
-#include "GAS_Hina_Solver_DFSPH.h"
+#include "GAS_Hina_Solver_WCSPH.h"
 #include "SpatialGrid.h"
 
 #include <PRM/PRM_Name.h>
@@ -88,7 +88,7 @@ const SIM_DopDescription *SPHSolver::GetDescription() {
 SIM_Solver::SIM_Result
 SPHSolver::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM_ObjectArray &feedbacktoobjects,
                                      const SIM_Time &timestep, bool newobject) {
-    Log.reset();
+    WCSPHLog.reset();
     static bool NeedReBuild = true;
     if (NeedReBuild || newobject) {
         init(object);
@@ -96,7 +96,7 @@ SPHSolver::solveSingleObjectSubclass(SIM_Engine &engine, SIM_Object &object, SIM
     }else{
         solve(object, timestep);
     }
-    return Log.report();
+    return WCSPHLog.report();
 }
 
 void SPHSolver::init(SIM_Object &obj)
@@ -107,7 +107,7 @@ void SPHSolver::init(SIM_Object &obj)
     geo = SIM_DATA_CREATE(obj, "Geometry", SIM_GeometryCopy,
                           SIM_DATA_RETURN_EXISTING | SIM_DATA_ADOPT_EXISTING_ON_DELETE);
     if (!geo)
-        Log.error_nullptr("INIT::SIM_GeometryCopy");
+        WCSPHLog.error_nullptr("INIT::SIM_GeometryCopy");
 
     {
         SIM_GeometryAutoWriteLock lock(geo);
@@ -119,6 +119,7 @@ void SPHSolver::init(SIM_Object &obj)
             GA_RWAttributeRef density_ref = gdp.addFloatTuple(GA_ATTRIB_POINT, DensityAttributeName, 1, GA_Defaults(0));
             GA_RWAttributeRef pressure_ref = gdp.addFloatTuple(GA_ATTRIB_POINT, PressureAttributeName, 1, GA_Defaults(0));
             GA_RWAttributeRef oneOverDensity_ref = gdp.addFloatTuple(GA_ATTRIB_POINT, OneDensityAttributeName, 1, GA_Defaults(0));
+            GA_RWAttributeRef neighbor_num_ref = gdp.addIntTuple(GA_ATTRIB_POINT, "nNum", 1, GA_Defaults(0));
         }
     }
     precomputeKernelCoefficients();
@@ -182,7 +183,7 @@ void SPHSolver::run(fpreal time, SIM_Object &obj) {
     geo = SIM_DATA_CREATE(obj, "Geometry", SIM_GeometryCopy,
                           SIM_DATA_RETURN_EXISTING | SIM_DATA_ADOPT_EXISTING_ON_DELETE);
     if (!geo)
-        Log.error_nullptr("INIT::SIM_GeometryCopy");
+        WCSPHLog.error_nullptr("INIT::SIM_GeometryCopy");
 
     {
         SIM_GeometryAutoWriteLock lock(geo);
@@ -194,6 +195,7 @@ void SPHSolver::run(fpreal time, SIM_Object &obj) {
         GA_RWHandleF density_handle = gdp.findPointAttribute(DensityAttributeName);
         GA_RWHandleF pressure_handle = gdp.findPointAttribute(PressureAttributeName);
         GA_RWHandleF oneOverDensity_handle = gdp.findPointAttribute(OneDensityAttributeName);
+        GA_RWHandleI neighbor_num_handle = gdp.findPointAttribute("nNum");
 
         long long particle_size = gdp.getNumPoints();
 
@@ -225,6 +227,7 @@ void SPHSolver::run(fpreal time, SIM_Object &obj) {
         std::vector<long*> nearbyParticles;
         for (long p=0; p<particle_size; ++p)
         {
+            int neighbor_num = 0;
             GA_Offset offset = gdp.pointOffset(p);
             UT_Vector3 pos = pos_handle.get(offset);
             // Get nearby particles
@@ -251,8 +254,10 @@ void SPHSolver::run(fpreal time, SIM_Object &obj) {
                     // Yup! Add the particle to the neighbors list along with
                     // some precomputed informations
                     _neighbors[p].emplace_back(nID, xij, sqrt(dist2));
+                    neighbor_num++;
                 }
             }
+            neighbor_num_handle.set(offset, neighbor_num);
         }
 
         /// 2.computeDensityAndPressure

@@ -16,6 +16,7 @@ file(GLOB HINAPE_COMMON common/particles.h common/neighbors.h common/kernels.h c
 file(GLOB_RECURSE HINAPE_DFSPH_AKINCI_SOURCE DFSPH_Akinci/*.h DFSPH_Akinci/*.cpp)
 file(GLOB_RECURSE HINAPE_PBF_AKINCI_SOURCE PBF_Akinci/*.h PBF_Akinci/*.cpp)
 file(GLOB_RECURSE HINAPE_PBF_SOURCE PBF/*.h PBF/*.cpp)
+file(GLOB_RECURSE HINAPE_PCISPH_SOURCE PCISPH_Akinci/*.h PCISPH_Akinci/*.cpp)
 #file(GLOB_RECURSE HINAPE_RIGIDBODY_SOURCE RigidBody/*.h RigidBody/*.cpp)
 file(GLOB_RECURSE HINAPE_SMOKE_SOURCE Smoke/*.h Smoke/*.cpp)
 
@@ -25,6 +26,7 @@ add_library(HinaPE STATIC
         ${HINAPE_DFSPH_AKINCI_SOURCE}
         ${HINAPE_PBF_AKINCI_SOURCE}
         ${HINAPE_PBF_SOURCE}
+        ${HINAPE_PCISPH_SOURCE}
 #        ${HINAPE_RIGIDBODY_SOURCE}
         ${HINAPE_SMOKE_SOURCE}
 )

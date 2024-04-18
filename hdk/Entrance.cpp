@@ -11,7 +11,9 @@
 #include <Rigid/SIM_Hina_RigidBody.h>
 #include <Rigid/GAS_Hina_Solver_Rigid.h>
 #include <Smoke/GAS_Hina_Solver_Smoke.h>
-#include "WCSPH/GAS_Hina_Solver_DFSPH.h"
+#include "WCSPH/GAS_Hina_Solver_WCSPH.h"
+#include <PCISPH/SIM_Hina_Particles_PCISPH.h>
+#include <PCISPH/GAS_Hina_Solver_PCISPH.h>
 
 #include <_Test/GAS_Hina_Test.h>
 
@@ -24,6 +26,8 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_DFSPH)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_PBF)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_PBF)
+    IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_PCISPH)
+    IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_PCISPH)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_Akinci)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_SDF_Boundary)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBody)
@@ -32,5 +36,5 @@ void initializeSIM(void *)
 
 	// TEST CLASSES
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Test)
-    IMPLEMENT_DATAFACTORY(SPHSolver);
+    IMPLEMENT_DATAFACTORY(SPHSolver)
 }
