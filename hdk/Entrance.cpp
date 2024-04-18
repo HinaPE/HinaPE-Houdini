@@ -15,6 +15,7 @@
 #include <Smoke/GAS_Hina_GridBuildMarker.h>
 #include <Smoke/GAS_Hina_GridDiffusion.h>
 #include <Smoke/GAS_Hina_GridExternalForce.h>
+#include <Smoke/GAS_Hina_GridPressure.h>
 #include <Smoke/GAS_Hina_GridSourceEmitter.h>
 #include <Smoke/GAS_Hina_ShowInfo.h>
 
@@ -22,7 +23,7 @@
 
 void initializeSIM(void *)
 {
-	// Completed Classes
+	// Particle Based Classes
 	IMPLEMENT_DATAFACTORY(GAS_CFL_SubStep)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_DFSPH)
@@ -32,11 +33,14 @@ void initializeSIM(void *)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_Particles_Akinci)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_SDF_Boundary)
 	IMPLEMENT_DATAFACTORY(SIM_Hina_RigidBody)
+
+	// Grid Based Classes
 	IMPLEMENT_DATAFACTORY(GAS_Hina_Solver_Rigid)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridAdvect)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridBoundarySolver)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridBuildMarker)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridDiffusion)
+	IMPLEMENT_DATAFACTORY(GAS_Hina_GridPressure)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridExternalForce)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_GridSourceEmitter)
 	IMPLEMENT_DATAFACTORY(GAS_Hina_ShowInfo)

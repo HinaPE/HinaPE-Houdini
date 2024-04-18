@@ -7,7 +7,7 @@ namespace HinaPE
 {
 struct AdvectionSolver
 {
-	void solve(float dt, SIM_RawField *IO_Field, const SIM_RawField *Flow_X, const SIM_RawField *Flow_Y, const SIM_RawField *Flow_Z);
+	void solve(const float dt, SIM_RawField *IO_Field, const SIM_RawField *Flow_X, const SIM_RawField *Flow_Y, const SIM_RawField *Flow_Z);
 
 private:
 	THREADED_METHOD6(AdvectionSolver, OutField->shouldMultiThread(), _advect, float, dt, SIM_RawField *, OutField, const SIM_RawField *, InField, const SIM_RawField *, Flow_X, const SIM_RawField *, Flow_Y, const SIM_RawField *, Flow_Z);
