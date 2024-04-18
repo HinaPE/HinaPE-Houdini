@@ -62,10 +62,11 @@ namespace HinaPE
         bool ENABLE_VISCOSITY = true;
         real FLUID_KERNEL_RADIUS = 0.04;
 
-        int MIN_ITERATIONS = 3;
-        int MAX_ITERATIONS = 5;
+        int MIN_ITERATIONS = 5;
+        int MAX_ITERATIONS = 8;
 
-        bool DENSITY_ERROR_TOO_LARGE = false;
+        bool DENSITY_ERROR_TOO_LARGE = true;
+        real MAX_DENSITY_ERROR_RATIO = 0.01;
 
         std::vector<real> BOUNDARY_REST_DENSITY;
         std::vector<bool> BOUNDARY_DYNAMICS;

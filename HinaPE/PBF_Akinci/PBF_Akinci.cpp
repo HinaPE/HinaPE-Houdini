@@ -133,7 +133,7 @@ void HinaPE::PBF_AkinciSolver::build_neighbors()
                         b_set + 1, b_set + 1, i,
                         [&](size_t j, Vector x_j)
                         {
-                            V += PolyKernel::W(x_i - x_j);
+                            V += PolyKernel::W(x_j - x_i);
                         });
                 Boundaries[b_set]->V[i] = static_cast<real>(1.f) / V;
                 Boundaries[b_set]->m[i] = Boundaries[b_set]->V[i] * BOUNDARY_REST_DENSITY[b_set];
@@ -158,11 +158,11 @@ void HinaPE::PBF_AkinciSolver::compute_density()
 				real rho_i = Fluid->V[i] * PolyKernel::W_zero();
 				_for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
 				{
-					rho_i += Fluid->V[j] * PolyKernel::W(x_i - Fluid->pred_x[j]);
+					rho_i += Fluid->V[j] * PolyKernel::W(Fluid->pred_x[j]-x_i);
 				});
                 _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
                 {
-                    rho_i += Boundaries[b_set]->V[j] * PolyKernel::W(x_i - x_j);
+                    rho_i += Boundaries[b_set]->V[j] * PolyKernel::W(x_j - x_i);
                 });
 				Fluid->rho[i] = rho_i * FLUID_REST_DENSITY;
 			});
@@ -271,13 +271,13 @@ void HinaPE::PBF_AkinciSolver::compute_lambda() {
               Vector grad_C_i = Vector(0, 0, 0);
               _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
               {
-                  Vector grad_C_ij = - Fluid->V[i]  * PolyKernel::gradW(pred_x_i - Fluid->pred_x[j]);
+                  Vector grad_C_ij = - Fluid->V[i]  * PolyKernel::gradW(Fluid->pred_x[j] - pred_x_i);
                   sum_grad_C_i_squared += grad_C_ij.length2();
                   grad_C_i -= grad_C_ij;
               });
               _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
               {
-                  Vector grad_C_ij = - Boundaries[b_set]->V[j] * PolyKernel::gradW(pred_x_i - x_j);
+                  Vector grad_C_ij = - Boundaries[b_set]->V[j] * PolyKernel::gradW(x_j - pred_x_i);
                   sum_grad_C_i_squared += grad_C_ij.length2();
                   grad_C_i -= grad_C_ij;
               });
@@ -300,19 +300,19 @@ void HinaPE::PBF_AkinciSolver::compute_delta_p() {
           _for_each_neighbor_fluid(i, [&](size_t j, Vector x_j)
           {
               const auto w_corr = PolyKernel::W(q_corr * FLUID_PARTICLE_RADIUS);
-              const auto ratio = PolyKernel::W((pred_x_i - Fluid->pred_x[j]).length()) / w_corr;
+              const auto ratio = PolyKernel::W((Fluid->pred_x[j] - pred_x_i).length()) / w_corr;
               /*if((pred_x_i - Fluid->pred_x[j]).length() == 0)
                   std::cout << "r is zero" << std::endl;
               if(PolyKernel::gradW(pred_x_i - Fluid->pred_x[j]) == Vector(0, 0, 0))
               std::cout << "gradW is zero" << std::endl;*/
               const auto s_corr = -k_corr * pow(ratio, n_corr);
 
-              Vector grad_C_ij = - Fluid->V[i]  * PolyKernel::gradW(pred_x_i - Fluid->pred_x[j]);
+              Vector grad_C_ij = - Fluid->V[i]  * PolyKernel::gradW(Fluid->pred_x[j] - pred_x_i);
               delta_p_i -= (Fluid->lambda[i] + Fluid->lambda[j] + s_corr) * grad_C_ij;
           });
             _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
             {
-                Vector grad_C_ij = - Fluid->V[i]  * PolyKernel::gradW(pred_x_i - x_j);
+                Vector grad_C_ij = - Fluid->V[i]  * PolyKernel::gradW(x_j - pred_x_i);
                 delta_p_i += (Fluid->lambda[i]) * grad_C_ij;
             });
           Fluid->delta_p[i] = delta_p_i;

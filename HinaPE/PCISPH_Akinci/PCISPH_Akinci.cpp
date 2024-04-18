@@ -19,11 +19,13 @@ HinaPE::PCISPH_AkinciSolver::PCISPH_AkinciSolver(HinaPE::real _r, HinaPE::Vector
 void HinaPE::PCISPH_AkinciSolver::Solve(HinaPE::real dt) {
     _resize();
     _update_akinci_boundaries();
-    real delta = _compute_delta(dt);
     build_neighbors();
     compute_density();
     accumulate_non_pressure_force();
     initialize_pressure_and_pressure_force();
+    real delta = _compute_delta(dt);
+    std::cout << "delta: " << delta << std::endl;
+    delta = delta * 0.001;
     prediction_correction_step(dt,delta);
     correct_velocity_and_position(dt);
     enforce_boundary();
@@ -138,6 +140,7 @@ void HinaPE::PCISPH_AkinciSolver::prediction_correction_step(real dt, real delta
         accumulate_pressure_force();
         iteration++;
     }
+    //std::cout << "iteration: " << iteration << std::endl;
 }
 
 void HinaPE::PCISPH_AkinciSolver::predict_velocity_and_position(real dt){
@@ -146,6 +149,48 @@ void HinaPE::PCISPH_AkinciSolver::predict_velocity_and_position(real dt){
         Fluid->pred_v[i] = Fluid->v[i] + dt * (Fluid->a_ext[i] + Fluid->a_pressure[i]);
         Fluid->pred_x[i] = Fluid->x[i] + dt * Fluid->pred_v[i];
     });
+
+    /*_for_each_fluid_particle(
+    [&](size_t i, Vector x_i)
+    {
+        Vector collision_normal{0, 0, 0};
+        if (x_i.x() > MaxBound.x())
+        {
+            Fluid->pred_x[i].x() = MaxBound.x();
+            collision_normal.x() += 1;
+        }
+        if (x_i.x() < -MaxBound.x())
+        {
+            Fluid->pred_x[i].x() = -MaxBound.x();
+            collision_normal.x() -= 1;
+        }
+        if (!TOP_OPEN)
+        {
+            if (x_i.y() > MaxBound.y())
+            {
+                Fluid->pred_x[i].y() = MaxBound.y();
+                collision_normal.y() += 1;
+            }
+        }
+        if (x_i.y() < -MaxBound.y())
+        {
+            Fluid->pred_x[i].y() = -MaxBound.y();
+            collision_normal.y() -= 1;
+        }
+        if (x_i.z() > MaxBound.z())
+        {
+            Fluid->pred_x[i].z() = MaxBound.z();
+            collision_normal.z() += 1;
+        }
+        if (x_i.z() < -MaxBound.z())
+        {
+            Fluid->pred_x[i].z() = -MaxBound.z();
+            collision_normal.z() -= 1;
+        }
+        collision_normal.normalize();
+        constexpr real c_f = static_cast<real>(0.5f);
+        Fluid->pred_v[i] -= (1. + c_f) * Fluid->pred_v[i].dot(collision_normal) * collision_normal;
+    });*/
 }
 
 void HinaPE::PCISPH_AkinciSolver::predict_density()
@@ -183,6 +228,7 @@ void HinaPE::PCISPH_AkinciSolver::update_pressure(real delta) {
 
 void HinaPE::PCISPH_AkinciSolver::accumulate_pressure_force()
 {
+    std::fill(Fluid->a_pressure.begin(), Fluid->a_pressure.end(), Vector(0, 0, 0));
     _for_each_fluid_particle([&](size_t i, Vector x_i)
     {
         Vector f_pressure(0, 0, 0);
@@ -190,24 +236,37 @@ void HinaPE::PCISPH_AkinciSolver::accumulate_pressure_force()
         {
             real dist = (Fluid->pred_x[i] - Fluid->pred_x[j]).length();
             if(dist > EPSILON && Fluid->pred_density[j] > EPSILON)
-                f_pressure -= Fluid->V[j] * (Fluid->pressure[i] / (Fluid->pred_density[i] * Fluid->pred_density[i]) + Fluid->pressure[j] / (Fluid->pred_density[j] * Fluid->pred_density[j])) * SpikyKernel::gradW(Fluid->pred_x[j] - Fluid->pred_x[i]);
+                f_pressure -= Fluid->m[i] * Fluid->m[j] * (Fluid->pressure[i] / (Fluid->pred_density[i] * Fluid->pred_density[i]) + Fluid->pressure[j] / (Fluid->pred_density[j] * Fluid->pred_density[j])) * SpikyKernel::gradW(Fluid->pred_x[j] - Fluid->pred_x[i]);
         });
         _for_each_neighbor_boundaries(i, [&](size_t j, Vector x_j, size_t b_set)
         {
-            real dist = (Fluid->pred_x[i] - x_j).length();
-            Vector Boundary_force = -(Fluid->pressure[i] / (Fluid->pred_density[i] * Fluid->pred_density[i])) * SpikyKernel::gradW(x_j - Fluid->pred_x[i]);
-            f_pressure += Boundaries[b_set]->V[j] * Boundary_force;
+            Vector Boundary_force = Fluid->m[i] * FLUID_REST_DENSITY * Boundaries[b_set]->V[j] * 2 * Fluid->pressure[i] / (Fluid->pred_density[i] * Fluid->pred_density[i]) * SpikyKernel::gradW(x_j - Fluid->pred_x[i]);
+            f_pressure -= Boundary_force;
 
             if (BOUNDARY_DYNAMICS[b_set]) // Dynamic Rigid Body
-                Boundaries[b_set]->a[j] += -Boundary_force;
+                Boundaries[b_set]->a[j] += -Boundary_force / Boundaries[b_set]->m[j];
         });
-        Fluid->a_pressure[i] = f_pressure;
+        Fluid->a_pressure[i] = f_pressure / Fluid->m[i];
     });
+
+    real maxDensityError = 0.0;
+    real DensityErrorRatio;
+
+    _for_each_fluid_particle([&](size_t i, Vector x_i)
+    {
+        maxDensityError = std::max(maxDensityError, std::abs(Fluid->d_error[i]));
+    });
+    DensityErrorRatio = maxDensityError / FLUID_REST_DENSITY;
+    if(abs(DensityErrorRatio) < MAX_DENSITY_ERROR_RATIO)
+    {
+        DENSITY_ERROR_TOO_LARGE = false;
+    }
 }
 
 void HinaPE::PCISPH_AkinciSolver::correct_velocity_and_position(real dt) {
     _for_each_fluid_particle([&](size_t i, Vector x_i)
     {
+        Fluid->a[i] = Fluid->a_pressure[i] + Fluid->a_ext[i];
         Fluid->v[i] += (Fluid->a_pressure[i] + Fluid->a_ext[i]) * dt;
         Fluid->x[i] += Fluid->v[i] * dt;
     });
@@ -215,12 +274,16 @@ void HinaPE::PCISPH_AkinciSolver::correct_velocity_and_position(real dt) {
 }
 
 HinaPE::real HinaPE::PCISPH_AkinciSolver::_compute_delta(real dt) {
-    UT_Vector3 sumGradW = UT_Vector3(0, 0, 0);
-    fpreal sumGradW2 = 0.0;
+    real d = static_cast<real>(2.f) * FLUID_PARTICLE_RADIUS;
+    real volume = static_cast<real>(.8f) * d * d * d;
+    Vector sumGradW = UT_Vector3(0, 0, 0);
+    real sumGradW2 = 0.0;
     const float supportRadius = FLUID_KERNAL_RADIUS;
-    const fpreal diam = static_cast<fpreal>(2.0) * FLUID_PARTICLE_RADIUS;
-    const UT_Vector3 xi(0, 0, 0);
-    UT_Vector3 xj = {-supportRadius, -supportRadius, -supportRadius};
+    const real diam = static_cast<real>(2.0) * FLUID_PARTICLE_RADIUS;
+    const Vector xi(0, 0, 0);
+    Vector xj = {-supportRadius, -supportRadius, -supportRadius};
+
+    //std::cout << xj.x() << "," << xj.y() << "," << xj.z() << std::endl;
 
     while(xj.x() <= supportRadius)
     {
@@ -228,11 +291,11 @@ HinaPE::real HinaPE::PCISPH_AkinciSolver::_compute_delta(real dt) {
         {
             while (xj.z() <= supportRadius)
             {
-                fpreal dist = (xi - xj).length();
+                real dist = (xi - xj).length();
                 if (dist * dist < supportRadius * supportRadius)
                 {
-                    UT_Vector3 dir = xi - xj;
-                    const UT_Vector3 gradW = SpikyKernel::gradW(dir);
+                    Vector dir = xi - xj;
+                    const Vector gradW = PolyKernel::gradW(dir);
                     sumGradW += gradW;
                     sumGradW2 += gradW.dot(gradW);
                 }
@@ -246,8 +309,10 @@ HinaPE::real HinaPE::PCISPH_AkinciSolver::_compute_delta(real dt) {
         xj.z() = -supportRadius;
     }
 
-    fpreal denom = -sumGradW.dot(sumGradW) - sumGradW2;
-    fpreal beta = 2 * dt * dt * Fluid->V[0] * Fluid->V[0];
+    real denom = -sumGradW.dot(sumGradW) - sumGradW2;
+    //std::cout << "denom: " << denom << std::endl;
+    real beta = 2 * dt * dt * volume * volume;
+    //std::cout << "beta: " << beta << std::endl;
     return (std::fabs(denom) > 0) ? -1 / (beta * denom) : 0;
 }
 

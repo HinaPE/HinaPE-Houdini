@@ -84,7 +84,7 @@ struct Poly6
         const real h3 = _r * _r * _r;
         const real h9 = h3 * h3 * h3;
         _k = static_cast<real>(315.0) / (static_cast<real>(64.0) * pi * h9);
-        _l = static_cast<real>(945.0) / (static_cast<real>(32.0) * pi * h9);
+        _l = -static_cast<real>(945.0) / (static_cast<real>(32.0) * pi * h9);
         _m = _l;
         _W_0 = W(Vector3{0, 0, 0});
     }
@@ -162,7 +162,7 @@ struct Spiky
         const real h3 = _r * _r * _r;
         const real h6 = h3 * h3;
         _k = static_cast<real>(15.0) / (pi * h6);
-        _l = static_cast<real>(45.0) / (pi * h6);
+        _l = -static_cast<real>(45.0) / (pi * h6);
         _W_0 = W(Vector3{0, 0, 0});
     }
 
@@ -176,7 +176,7 @@ struct Spiky
         const real h2 = _r * _r;
         if (r <= _r)
         {
-            res = _k * pow(_r - r, static_cast<real>(3.0));
+            res = _k * (_r - r) * (_r - r) * (_r - r);
         }
         return res;
     }
@@ -197,7 +197,7 @@ struct Spiky
         const real h2 = _r * _r;
         if(r2 < h2)
         {
-            res = _l * pow(_r - rl, static_cast<real>(2.0)) * r * (static_cast<real>(1.0) / rl);
+            res = _l * (_r - rl) * (_r - rl) * r * (static_cast<real>(1.0) / rl);
         } else
             res = Vector3{0, 0, 0};
         return res;
