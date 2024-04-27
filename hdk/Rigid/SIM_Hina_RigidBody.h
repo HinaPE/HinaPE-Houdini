@@ -14,6 +14,7 @@ SIM_HINA_DATA_CLASS(
 		HINA_GETSET_PARAMETER(Friction, GETSET_DATA_FUNCS_F)
 		reactphysics3d::RigidBody *rb;
 		int b_set_index; // FOR FLUID SOLVER
+		UT_Vector3 center_of_mass;
 
 		float *V; // ONLY USED FOR GUIDE GEOMETRY
 		int *I; // ONLY USED FOR GUIDE GEOMETRY

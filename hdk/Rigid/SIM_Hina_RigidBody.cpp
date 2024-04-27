@@ -14,6 +14,7 @@ void SIM_Hina_RigidBody::_init_RigidBody()
 {
 	this->rb = nullptr;
 	this->b_set_index = -1;
+	this->center_of_mass = UT_Vector3{0, 0, 0};
 
 	this->V = nullptr;
 	this->I = nullptr;
@@ -26,6 +27,7 @@ void SIM_Hina_RigidBody::_makeEqual_RigidBody(const SIM_Hina_RigidBody *src)
 {
 	this->rb = src->rb;
 	this->b_set_index = src->b_set_index;
+	this->center_of_mass = src->center_of_mass;
 
 	this->V = src->V;
 	this->I = src->I;
@@ -122,6 +124,7 @@ void InitAllRigidBodies(SIM_Object *obj, reactphysics3d::PhysicsCommon &physicsC
 						vertices[pt_idx * 3 + 2] = pos.z() - center_of_mass.z();
 					}
 			}
+			rigidbody->center_of_mass = center_of_mass;
 			rigidbody->V = vertices;
 			rigidbody->v_size = gdp->getNumPoints();
 			GA_Size prim_vertex_count = 0;
